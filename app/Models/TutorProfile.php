@@ -24,7 +24,7 @@ class TutorProfile extends Model
         'bankName',
         'accountName',
         'accountNumber',
-        'status',
+        'Approved',
         'approvalRemark',
         'video',
     ];

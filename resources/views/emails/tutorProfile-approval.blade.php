@@ -21,17 +21,24 @@
         <!-- Body Section -->
         <div class="p-6">
             <p class="text-lg font-medium mb-4">Hello {{ $tutorProfile['fullName'] }},</p>
-            <p>We have reviewed you tutor profile details and have updated it's status. See details below:</p>
+            <p>We have reviewed your tutor profile details and have updated it's status. See details below:</p>
 
             <!-- Request Details -->
             <div class="mt-6 bg-gray-50 p-4 rounded-lg shadow">
+                @php
+                    if($tutorProfile['Approved'] == false ){
+                        $status = 'Review Profile';
+                    }else{
+                        $status = 'Approved';
+                    }
+                @endphp
                 <ul class="space-y-2 text-sm">
-                    <li><strong>Status:</strong> {{ $tutorProfile['status'] }}</li>
+                    <li><strong>Status:</strong> {{ $status }}</li>
                     <li><strong>Remark:</strong> {{ $tutorProfile['approvalRemark'] }}</li>
                 </ul>
             </div>
 
-            @if ($tutorProfile['status'] == 'Approved')
+            @if ($status == 'Approved' )
             <p class="mt-6 text-gray-600">Congratulations! You are now eligible for tutoring roles with MephEd. Do join our tutors community for exciting updates</p>  
 
             @else

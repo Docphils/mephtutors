@@ -28,8 +28,8 @@ class NewsletterMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->content['title'],
-            from: 'no-reply@mephed.ng'
+            subject: $this->content['subject'],
+            from: 'support@mephed.ng'
         );
     }
 

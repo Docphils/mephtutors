@@ -3,5 +3,7 @@
 @tailwind utilities;
 
 .active {
-    @apply text-cyan-300; /* Or your desired color */
+    @apply text-cyan-300;
 }
+
+

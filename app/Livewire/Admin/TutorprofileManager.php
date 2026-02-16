@@ -48,7 +48,7 @@ class TutorprofileManager extends Component
         Gate::authorize('Admin');
 
         $this->tutorProfileId = $profile->id;
-        $this->status = $profile->status;
+        $this->status = $profile->Approved;
         $this->approvalRemark = $profile->approvalRemark;
 
         $this->showModal = true;
@@ -65,8 +65,13 @@ class TutorprofileManager extends Component
         ]);
 
         $profile = TutorProfile::findOrFail($this->tutorProfileId);
+        if($this->status == 'Approved'){
+            $approvalStatus = true;
+        }else{
+            $approvalStatus = false;
+        }
         $profile->update([
-            'Approved' => $this->status,
+            'Approved' => $approvalStatus,
             'approvalRemark' => $this->approvalRemark,
         ]);
 
@@ -96,13 +101,19 @@ class TutorprofileManager extends Component
                 ->orWhere('address', 'like', '%' . $this->search . '%');
         } elseif ($this->activeTab !== 'All') {
             // Filter by qualification or discipline if activeTab is set and not 'All'
-            $query->where(function ($q) {
-                $q->where('qualification', $this->activeTab)
-                ->orWhere('discipline', $this->activeTab);
+           $query->where(function ($q) {
+                if ($this->activeTab === 'Approved') {
+                    $q->where('Approved', true); // Fetch only approved records
+                } elseif ($this->activeTab === 'Pending') {
+                    $q->where('Approved', false); // Fetch only pending records
+                } else {
+                    $q->where('qualification', $this->activeTab)
+                    ->orWhere('discipline', $this->activeTab);
+                }
             });
         }
 
-        return $query->paginate(10);
+        return $query->latest()->paginate(10);
     }
 
     #[Layout('layouts.app')]

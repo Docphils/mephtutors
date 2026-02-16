@@ -27,8 +27,8 @@ class TutorProfileApprovalEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Tutor Profile ' . $this->tutorProfile->status . ' Notification',
-            from: 'no-reply@mephed.ng'
+            subject: 'Tutor Profile Status Notification',
+            from: 'support@mephed.ng'
         );
     }
 

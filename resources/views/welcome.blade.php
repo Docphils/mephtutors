@@ -8,38 +8,225 @@
      <link rel="preconnect" href="https://fonts.bunny.net">
      <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
+    <meta property="og:title" content="MephEd - Nigeria's best platform for matching exceptional tutors with learners" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.mephed.ng" />
+    <meta property="og:site_name" content="MephEd" />
+    <meta property="og:image" content="https://mephed.ng/images/banner.jpg" />
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:description" content="Welcome to Nigeria's foremost tutor matching platform. We match desiring learners with exceptional tutors for all subjects and levels. We are also your best call for coding classes and extra-curricula clubs" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@mephed" />
+    <meta name="twitter:title" content="MephEd - Nigeria's best platform for matching exceptional tutors with learners" />
+    <meta name="twitter:description" content="Welcome to Nigeria's foremost tutor matching platform. We match desiring learners with exceptional tutors for all subjects and levels. We are also your best call for coding classes and extra-curricula clubs" />
+    <meta name="twitter:image:src" content="https://mephed.ng/images/banner.jpg" />
+    <meta property="twitter:image:type" content="image/png">
+    <meta name="twitter:domain" content="https://www.mephed.ng" />
+
+
      <style>
         .text-container span {
             display: none;
         }
+
+        .carousel-button {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.4);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        border: none;
+        z-index: 100;
+    }
+    .carousel-button:hover {
+        background: rgba(0, 0, 0, 0.6);
+    }
     </style>
       
       @vite(['resources/css/app.css', 'resources/js/app.js'])
       @livewireStyles
+
+      <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17506686809">
+        </script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'AW-17506686809');
+        </script>
 </head>
 
 <body class="bg-cyan-300 font-sans leading-normal tracking-normal">
     <!-- Header Section -->
     @include('layouts.header')
 
-    <!-- Welcome Banner -->
-    <section class="my-4 text-center py-36 bg-cover bg-center rounded-sm shadow-md" style="background-image: url('/images/banner.png');">
-        <h2 class="text-5xl font-bold text-white">Welcome to Meph<span class="text-cyan-300">Ed</span></h2>
-        <div class="relative flex mx-auto items-baseline rounded-lg justify-center mt-5 text-2xl text-cyan-300 font-bold gap-1">Your one-stop solution for 
-            <div class="text-container flex text-2xl bg-cyan-800 rounded-lg p-1 text-cyan-200">
-                <span> Home Tutoring</span>
-                <span> Coding</span>
-                <span> Clubs</span>
+    <!-- Carousel Banner -->
+    <section class="mb-4 text-center bg-cover bg-center rounded-sm shadow-md relative overflow-hidden" style="height: 550px;">
+        <div id="carousel" class="carousel-slides h-full w-full relative">
+            <!-- Slide 1 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100 z-10" style="background-image: url('/images/banner.jpg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50 space-y-2">
+                    <h2 class="text-5xl font-bold">Welcome to Meph<span class="text-cyan-300">Ed</span></h2>
+                    <p class="mt-4 text-2xl text-cyan-200">Your one-stop solution for personalized;</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="text-xl text-cyan-300">- Home Tutoring</li>
+                            <li class="text-xl text-cyan-300">- Coding and IT Instructions</li>
+                            <li class="text-xl text-cyan-300">- Club Management and EdTech Services</li>
+                        </ul>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100 z-10" style="background-image: url('/images/b-home-tutoring.jpg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50 space-y-2">
+                    <h2 class="text-4xl font-bold text-cyan-300">Home Lessons That Deliver Results</h2>
+                    <p class="mt-4 text-2xl ">Unlock personalized academic support from the comfort of your home.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="text-xl text-cyan-200">Math, Sciences, English & more — tailored to your child’s needs.</li>
+                            
+                        </ul>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Book a Home Tutor
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-1000 z-0" style="background-image: url('/images/coding-banner2.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50">
+                    <h2 class="text-4xl font-bold"> Learn to Code;  <span class="text-cyan-300">Beginner to Pro</span></h2>
+                    <p class="mt-4 text-2xl text-cyan-100">Master modern coding stacks with expert guidance.</p>
+                    <p class="mt-4 text-xl text-cyan-200">Frontend, Backend, Fullstack (HTML, CSS, JavaScript, React, PHP, Laravel, MERN).</p>
+                    <a href="https://forms.gle/omFaQV4wnWaCwTQz6"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Start Your Coding Journey
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 4 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-1000 z-0" style="background-image: url('/images/b-waec.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50">
+                    <h2 class="text-4xl font-bold"> Be Exam-Ready.   <span class="text-cyan-300">Always.</span></h2>
+                    <p class="mt-4 text-2xl text-cyan-100">WAEC, NECO, JAMB, BECE, IELTS - we’ve got you covered.</p>
+                    <p class="mt-4 text-xl text-cyan-200">📘 Structured revision plans. Smart practice strategies.</p>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Enroll for Exam Prep
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 5 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-1000 z-0" style="background-image: url('/images/coding-banner2.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50">
+                    <h2 class="text-4xl font-bold"><span class="text-cyan-300">Private Coding Lessons at </span>Your Pace</h2>
+                    <p class="mt-4 text-2xl text-cyan-100">One-on-one or group classes, online or at home.</p>
+                    <p class="mt-4 text-xl text-cyan-200">Ideal for kids, teens, and professionals.</p>
+                    <a  href="https://forms.gle/omFaQV4wnWaCwTQz6"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Request a Coding Instructor
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 6 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-1000 z-0" style="background-image: url('/images/b-home-lessons.jpg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50">
+                    <h2 class="text-4xl font-bold"><span class="text-cyan-300">Struggling with Math or Science?</span></h2>
+                    <p class="mt-4 text-2xl text-cyan-100">Targeted improvement classes for key subjects.</p>
+                    <p class="mt-4 text-xl text-cyan-200">📈 Boost confidence and academic performance.</p>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Get Academic Support
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 7 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100 z-10" style="background-image: url('/images/coding-banner.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50 space-y-2">
+                    <h2 class="text-4xl font-bold text-cyan-300">Speak French with Confidence</h2>
+                    <p class="mt-4 text-2xl ">Practical French lessons from beginner to fluent.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="text-xl text-cyan-200">🇫🇷 For students, travelers, and professionals.</li>
+                            
+                        </ul>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Book a French Tutor
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 8 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100 z-10" style="background-image: url('/images/b-graphic-design.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50 space-y-2">
+                    <h2 class="text-4xl font-bold text-cyan-300">Master Graphic Design</h2>
+                    <p class="mt-4 text-2xl ">🎨 Learn graphic design with zero prior experience.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="text-xl text-cyan-200">Perfect for students, creators, marketers & small businesses.</li>
+                            
+                        </ul>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Start Now
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 8 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100 z-10" style="background-image: url('/images/b-smartSchool.png');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50 space-y-2">
+                    <h2 class="text-4xl font-bold text-cyan-300">Smart School Clubs. Powered by MephEd.</h2>
+                    <p class="mt-4 text-2xl ">We help schools run vibrant clubs that build real skills.</p>
+                        <ul class="space-y-2 mb-4">
+                            <li class="text-xl text-cyan-200">🎯 Coding • Music • Chess • STEM • Taekwondo • French & more.</li>
+                            
+                        </ul>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Partner With Us
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 9 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-1000 z-0" style="background-image: url('/images/b-musicClasses.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50">
+                    <h2 class="text-4xl font-bold"> Music Lessons That Move  <span class="text-cyan-300">You</span></h2>
+                    <p class="mt-4 text-2xl text-cyan-100">🎵 Piano, Voice, Guitar, Recorder & More.</p>
+                    <p class="mt-4 text-xl text-cyan-200">Expert instructors for kids, teens, and adults.</p>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Book Sessions
+                    </a>
+                </div>
+            </div>
+            <!-- Slide 10 -->
+            <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-1000 z-0" style="background-image: url('/images/b-edtechStrategy.jpeg');">
+                <div class="flex flex-col items-center justify-center h-full bg-black text-white px-4 bg-opacity-50">
+                    <h2 class="text-4xl font-bold"> Need IT or   <span class="text-cyan-300">EdTech</span> Strategy?</h2>
+                    <p class="mt-4 text-2xl text-cyan-100">We help schools and organizations scale with smart digital solutions.</p>
+                    <p class="mt-4 text-xl text-cyan-200">🔧 IT consultancy tailored to your goals.</p>
+                    <a wire:navigate href="{{ route('client.tutorRequests.create') }}"
+                        class="mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-pink-700">
+                        Request a Consultation
+                    </a>
+                </div>
             </div>
         </div>
 
-            <div class="mt-5">
-                <a wire:navigate class="inline-flex rounded-lg bg-pink-600 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-pink-600 hover:bg-pink-700 hover:ring-pink-700"
-                    href="{{ route('client.tutorRequests.create') }}">
-                    Request Tutor
-                </a>
-            </div>
+        <!-- Navigation Buttons -->
+        <button id="prevSlide" class="carousel-button" style="left: 16px;">‹</button>
+        <button id="nextSlide" class="carousel-button" style="right: 16px;">›</button>
     </section>
+
 
     <!-- Main Content Section -->
 
@@ -47,7 +234,7 @@
         
 
         <!-- Services Section -->
-        <section class="py-20">
+        <section class="py-10">
             <h3 class="text-3xl font-semibold text-gray-800 text-center">Our Services</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
                 <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300">
@@ -119,18 +306,45 @@
 
     <!-- Scripts -->
     <script>
-      const spans = document.querySelectorAll('.text-container span');
-      let currentIndex = 0;
 
-      function showNextSpan() {
-          spans.forEach(span => span.style.display = 'none');
-          spans[currentIndex].style.display = 'inline';
-          currentIndex = (currentIndex + 1) % spans.length;
-      }
+      //Carousel Script
 
-      setInterval(showNextSpan, 3000); // Change text every 3 seconds
-      showNextSpan(); // Show the first span initially
+        const slides = document.querySelectorAll('.carousel-item');
+        const totalSlides = slides.length;
+        let current = 0;
+
+        const showSlide = index => {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('opacity-100', 'z-10');
+                slide.classList.add('opacity-0', 'z-0');
+                if (i === index) {
+                    slide.classList.add('opacity-100', 'z-10');
+                }
+            });
+        };
+
+        document.getElementById('prevSlide').addEventListener('click', () => {
+            current = (current - 1 + totalSlides) % totalSlides;
+            showSlide(current);
+        });
+
+        document.getElementById('nextSlide').addEventListener('click', () => {
+            current = (current + 1) % totalSlides;
+            showSlide(current);
+        });
+
+        // Autoplay
+        setInterval(() => {
+            current = (current + 1) % totalSlides;
+            showSlide(current);
+        }, 7000); // every 5 seconds
+
+        // Initial display
+        showSlide(current);
   </script>
+
+  
+
    @livewireScripts
 </body>
 </html>

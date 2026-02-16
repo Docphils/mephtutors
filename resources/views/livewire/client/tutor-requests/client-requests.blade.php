@@ -1,6 +1,6 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-cyan-200 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-cyan-200 leading-tight">
             {{ __('Your Tutor Requests') }}
         </h2>
     </x-slot>
@@ -26,8 +26,8 @@
         <!-- Pending Requests -->
         <div class="text-cyan-50 text-3xl mb-2 mx-6 sm:mx-16">New Requests</div>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-6">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-sm sm:rounded-md border border-b-2 border-b-cyan-900">
-                <div class="px-6 p-3 sm:p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm rounded-sm sm:rounded-md border border-b-2 border-b-cyan-900">
+                <div class="px-6 p-3 sm:p-6 text-gray-900">
                     <div class="relative font-bold text-lg flex justify-between items-center px-6 p-3 border border-b-2 border-b-cyan-900">
                         <div class="w-full">Subjects</div>
                         <div class="w-full">Start Date</div>
@@ -51,8 +51,8 @@
         <!-- Assigned Requests -->
         <div class="text-cyan-50 text-3xl mb-2 mx-6 sm:mx-16">Assigned Requests</div>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-6">
-            <div class="bg-cyan-50 dark:bg-gray-800 overflow-hidden shadow-sm rounded-sm sm:rounded-md border border-b-2 border-b-cyan-900">
-                <div class="px-6 p-3 sm:p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-cyan-50 overflow-hidden shadow-sm rounded-sm sm:rounded-md border border-b-2 border-b-cyan-900">
+                <div class="px-6 p-3 sm:p-6 text-gray-900">
                     <div class="relative font-bold text-lg flex justify-between items-center px-6 p-3 border border-b-2 border-b-cyan-900">
                         <div class="w-full">Subjects</div>
                         <div class="w-full">Start Date</div>

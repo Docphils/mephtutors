@@ -51,8 +51,8 @@
                         <button wire:click="openDelete({{ $user->id }})" class="px-2 py-1 rounded-md bg-red-500">Delete</button>
                     </div>
                 </div>
-                
             @endforeach
+           
 
             @elseif ($roleFilter === 'client')
             @foreach ($clients as $client)

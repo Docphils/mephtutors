@@ -50,6 +50,12 @@
             <button wire:click="setTab('Commerce')" class="px-4 py-2 rounded-lg text-white bg-teal-500 hover:bg-teal-600 {{ $activeTab == 'Commerce' ? 'font-bold' : '' }}">
                 Commerce
             </button>
+            <button wire:click="setTab('Approved')" class="px-4 py-2 rounded-lg text-white bg-teal-500 hover:bg-teal-600 {{ $activeTab == 'Approved' ? 'font-bold' : '' }}">
+                Approved
+            </button>
+            <button wire:click="setTab('Pending')" class="px-4 py-2 rounded-lg text-white bg-teal-500 hover:bg-teal-600 {{ $activeTab == 'Pending' ? 'font-bold' : '' }}">
+                Pending
+            </button>
         </div>
     </div>
 
@@ -80,8 +86,15 @@
                         {{ $qualification }}</div>
                     <div class="hidden sm:block px-4 py-3 text-sm text-gray-700">{{ $profile->experience }}</div>
                     <div class="hidden sm:block px-4 py-3 text-sm text-gray-700">
-                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $profile->status == 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                            {{ $profile->status }}
+                        @php
+                            if($profile->Approved){
+                                $status = 'Approved';
+                            }else{
+                                $status = 'Pending';
+                            }
+                        @endphp
+                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $status == 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                            {{ $status }}
                         </span>
                     </div>
                     <div class="px-4 py-3 text-sm text-gray-700">
@@ -155,7 +168,14 @@
             <div class="p-4 bg-purple-50 rounded-md mb-4">
                 <h4 class="font-semibold text-purple-700 mb-2">Professional Information</h4>
                 <p><strong>Career Profile:</strong> {{ $selectedProfile->careerProfile }}</p>
-                <p><strong>Status:</strong> <span class="{{ $selectedProfile->status == 'Approved' ? 'text-green-600' : 'text-yellow-600' }}">{{ $selectedProfile->status }}</span></p>
+                 @php
+                    if($selectedProfile->Approved){
+                        $profileStatus = 'Approved';
+                    }else{
+                        $profileStatus = 'Pending';
+                    }
+                @endphp
+                <p><strong>Status:</strong> <span class="{{ $profileStatus == 'Approved' ? 'text-green-600' : 'text-yellow-600' }}">{{ $profileStatus }}</span></p>
             </div>
 
             <!-- Additional Info Section -->
