@@ -161,7 +161,7 @@
         </script>     
 </head>
 
-    <body class="bt-body  font-sans leading-normal tracking-normal">
+    <body class="bt-body  font-sans leading-normal tracking-normal h-screen">
         <!-- Header Section -->
         <header x-data="{ open: false }" class="bg-gradient-to-r from-sky-500 to-cyan-600 text-white py-6 shadow-lg">
             <div class="container mx-auto flex justify-center items-center px-6">
@@ -222,7 +222,7 @@
 
                     
 
-
+        @include('layouts.footer')
         @livewireScripts
     </body>
 </html>

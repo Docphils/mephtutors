@@ -15,7 +15,6 @@ use App\Models\Crm;
 use App\Models\Payment;
 
 
-
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -60,7 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     public function tutorProfile(){
-        return $this->hasOne(tutorProfile::class);
+        return $this->hasOne(TutorProfile::class);
     }
 
     public function tutorRequests(){
@@ -82,4 +81,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function testimonials(){
         return $this->hasMany(Testimonial::class);
     }
+
+    // TUTOR MATCHES
+    public function tutorMatches()
+    {
+        return $this->hasMany(TutorMatch::class, 'tutor_id');
+    }
+
+    // Accepted tutoring sessions
+    public function acceptedTutorMatches()
+    {
+        return $this->hasMany(TutorMatch::class, 'tutor_id')
+            ->where('status', 'accepted');
+    }
+
 }

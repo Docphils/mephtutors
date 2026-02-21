@@ -10,6 +10,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
+#[Layout('layouts.app')]
 #[Title('Manage testimonials - MephEd')]
 class AdminIndexTestimonials extends Component
 {
@@ -78,7 +79,6 @@ class AdminIndexTestimonials extends Component
         return redirect()->route('admin.testimonials');
     }
 
-    #[Layout('layouts.apps')]
     public function render()
     {
         $query = Testimonial::query();

@@ -6,4 +6,4 @@
     @apply text-cyan-300;
 }
 
-
+[x-cloak] { display: none !important; }

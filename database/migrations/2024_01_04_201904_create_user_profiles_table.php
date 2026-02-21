@@ -15,8 +15,9 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->string('phone');
+            $table->string('state');
+            $table->string('city');
             $table->string('address');
-            $table->string('fullname');
             $table->date('DOB');
             $table->string('image')->nullable();
             $table->enum('gender', ['Male', 'Female']);

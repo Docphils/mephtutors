@@ -13,11 +13,16 @@ class UserProfile extends Model
     protected $fillable = [
         'user_id',
         'phone',
-        'fullname',
+        'state',
+        'city',
         'address',
         'DOB',
         'image',
         'gender',
+    ];
+
+    protected $casts = [
+        'DOB' => 'date:Y-m-d',
     ];
 
     public function user()

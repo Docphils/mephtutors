@@ -12,36 +12,44 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('crms', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->date('start_date');
-            $table->enum('state', [
-                'Abia', 'Adamawa', 'AkwaIbom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'CrossRiver', 'Delta', 
-                'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 
-                'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 
-                'Taraba', 'Yobe', 'Zamfara', 'FCT']);
-            $table->string('full_address');
-            $table->string('languages')->nullable();
-            $table->enum('learnersGrade', ['under_12', 'teen', 'adult']);
-            $table->enum('class_type', ['home_tutoring', 'online'])->nullable();
-            $table->enum('status', ['Pending', 'Cancelled', 'Ongoing', 'Closed'])->default('Pending');
-            $table->string('remarks')->nullable();
-            $table->enum('request_type', ['coding_tutor', 'club']);
-            $table->enum('club_type', ['Coding', 'Music', 'STEM', 'Chess', 'Taekwando', 'Others'])->nullable();
-            $table->string('school_name')->nullable();
-            $table->string('school_address')->nullable();
-            $table->integer('learnersNumber');
-            $table->integer('daysPerWeek');
-            $table->string('days');
-            $table->string('duration');
-            $table->timestamps();
+        $table->id();
+        $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+        // Institution details
+        $table->string('institution_name');
+        $table->text('institution_address');
+        // Service
+        $table->foreignId('service_item_id')->constrained()->cascadeOnDelete();
 
+        $table->integer('number_of_tutors_required')->default(1);
 
+        $table->enum('delivery_mode', ['onsite', 'online', 'hybrid'])->default('onsite');
 
-            // Foreign key constraints linking to the users table
-            $table->foreign('user_id')->references('id')->on('users');
+        $table->text('requirements')->nullable();
 
-        });
+        $table->enum('engagement_type', [
+            'short_term',
+            'long_term',
+            'contract',
+            'club_management'
+        ]);
+
+        $table->enum('status', [
+            'new',
+            'contacted',
+            'proposal_sent',
+            'negotiating',
+            'approved',
+            'rejected',
+            'deployed',
+            'closed'
+        ])->default('new');
+
+        $table->timestamp('contacted_at')->nullable();
+        $table->timestamp('closed_at')->nullable();
+
+        $table->timestamps();
+    });
+
     }
 
     /**

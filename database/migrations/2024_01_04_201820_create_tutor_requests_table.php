@@ -12,26 +12,59 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tutor_requests', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->string('location');
-            $table->string('days_times');
-            $table->string('subjects');
-            $table->string('learners');
-            $table->string('sessions');
-            $table->string('duration');
-            $table->enum('tutor_gender', ['Male', 'Female', 'Any']);
-            $table->enum('curriculum', ['British', 'French', 'Nigerian', 'Blended']);
-            $table->enum('status', ['Pending', 'Cancelled','Assigned'])->default('Pending');
-            $table->string('amount');
-            $table->string('remarks')->nullable();
-            $table->timestamps();
-        
-            // Foreign key constraint linking to the users table
-            $table->foreign('user_id')->references('id')->on('users');
-        });
+        $table->id();
+
+        // Client
+        $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+        $table->boolean('is_for_self')->default(true);
+        $table->json('learners')->nullable();
+
+        // Service
+        $table->foreignId('service_item_id')->constrained()->cascadeOnDelete();
+
+        $table->foreignId('level_id')->nullable()->constrained()->nullOnDelete();
+        $table->foreignId('exam_type_id')->nullable()->constrained()->nullOnDelete();
+        $table->enum('curriculum', ['British', 'French', 'Nigerian', 'Blended', 'N/A'])->default('N/A');
+
+        // Delivery
+        $table->enum('delivery_mode', ['online', 'offline', 'hybrid']);
+        $table->enum('session_type', ['individual', 'group']);
+
+        // Scheduling
+        $table->string('preferred_days')->nullable(); // JSON later
+        $table->string('preferred_time')->nullable();
+        $table->integer('sessions_per_week')->nullable();
+        $table->integer('duration_per_session')->nullable(); // in minutes
+
+        // Budget
+        $table->decimal('budget_min', 10, 2)->nullable();
+        $table->decimal('budget_max', 10, 2)->nullable();
+
+        // Location (for offline)
+        $table->text('lesson_address')->nullable();
+
+        // Preferences
+        $table->enum('preferred_tutor_gender', ['male', 'female', 'any'])->default('any');
+        $table->text('additional_notes')->nullable();
+        $table->json('subjects')->nullable();
+
+        // System
+        $table->enum('status', [
+            'pending',
+            'reviewing',
+            'matched',
+            'in_progress',
+            'completed',
+            'cancelled'
+        ])->default('pending');
+
+        $table->timestamp('matched_at')->nullable();
+        $table->timestamp('started_at')->nullable();
+        $table->timestamp('completed_at')->nullable();
+
+        $table->timestamps();
+    });
+
         
     }
 

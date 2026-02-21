@@ -5,7 +5,11 @@ namespace App\Livewire\Client;
 use Livewire\Component;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
+#[Layout('layouts.app')]
+#[Title('Client Dashboard')]
 class DashboardController extends Component
 {
     public $mainPage = '';

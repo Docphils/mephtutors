@@ -22,28 +22,26 @@ class BookingSeeder extends Seeder
         // Get all users with the 'client' role
         $tutor = User::where('role', 'tutor')->get();
 
-        for ($i = 0; $i < $recordCount; $i++) {
-            $randomTutor = $tutor->random();
-        }
         foreach ($tutorRequests as $tutorRequest) {
+            $randomTutor = $tutor->isNotEmpty() ? $tutor->random() : null;
             Booking::create([
                 'user_id' => $tutorRequest->user_id, // Assuming user is the client
                 'client_id' => $tutorRequest->user_id,
-                'tutor_id' => $randomTutor->id,// Assign tutor based on some logic
-                'tutorRequest_id' => $tutorRequest->id,
-                'start_date' => $tutorRequest->start_date,
-                'end_date' => $tutorRequest->end_date,
-                'location' => $tutorRequest->location,
-                'days_times' => $tutorRequest->days_times,
-                'subjects' => $tutorRequest->subjects,
-                'learners' => $tutorRequest->learners,
-                'sessions' => $tutorRequest->sessions,
-                'duration' => $tutorRequest->duration,
-                'tutorGender' => 'Male',
-                'curriculum' => $tutorRequest->curriculum,
+                'tutor_id' => $randomTutor?->id,
+                'tutor_request_id' => $tutorRequest->id,
+                'start_date' => $tutorRequest->started_at ?? null,
+                'end_date' => $tutorRequest->completed_at ?? null,
+                'location' => $tutorRequest->lesson_address ?? $tutorRequest->address ?? null,
+                'days_times' => trim((string)($tutorRequest->preferred_days ?? '')) . ' ' . trim((string)($tutorRequest->preferred_time ?? '')),
+                'subjects' => $tutorRequest->additional_notes ?? null,
+                'learners' => $tutorRequest->learners ?? null,
+                'sessions' => $tutorRequest->sessions_per_week ?? null,
+                'duration' => $tutorRequest->duration_per_session ?? null,
+                'tutorGender' => ucfirst($tutorRequest->preferred_tutor_gender ?? 'any'),
+                'curriculum' => $tutorRequest->curriculum ?? null,
                 'status' => 'Pending',
                 'classes' => 'Adult',
-                'amount' => $tutorRequest->amount,
+                'amount' => $tutorRequest->budget_max ?? $tutorRequest->budget_min ?? 0,
                 'paymentStatus' => 'Pending',
                 'tutorRemarks' => null,
                 'clientAcceptanceRemarks' => null,

@@ -1,52 +1,76 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'MephEd') }}</title>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-        <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
-        <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
-       
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @livewireStyles
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17506686809">
-        </script>
-        <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+    <title>{{ config('app.name', 'MephEd') }}</title>
 
-        gtag('config', 'AW-17506686809');
-        </script>
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-full bg-cyan-800 text-white">
-            @include('layouts.navigation')
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 
-            <!-- Page Heading -->
-            @if (isset($header))
-                <header class="bg-cyan-600 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+</head>
+
+<body class="min-h-screen bg-cyan-50 font-sans antialiased text-slate-900">
+
+    <div x-data="{ sidebarOpen: false, showEditor: false }" @edit-user-profile.window="showEditor = true"
+        x-on:close-profile-editor.window="showEditor = false" class="flex min-h-screen w-full overflow-x-hidden">
+
+        <!-- ===== MOBILE OVERLAY ===== -->
+        <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"
+            class="fixed inset-0 bg-black/50 z-40 sm:hidden" x-cloak></div>
+
+        <!-- ===== SIDEBAR ===== -->
+        @can('Client')
+            @include('layouts.client-sidebar')
+        @endcan
+        @can('Admin')
+            @include('layouts.admin-sidebar')
+        @endcan
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="relative w-full flex-1 flex flex-col min-h-screen">
+
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm border-b">
+                @canany(['Tutor', 'Client'])
+                    @include('layouts.header')
+                @endcanany
+                <div class="relative flex items-center justify-between px-4 sm:px-6 py-4 gap-2">
+
+                    <!-- Mobile Toggle -->
+                    <button @click="sidebarOpen = true" class="sm:hidden text-slate-700 text-xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <!-- Header Slot -->
+                    <div class="relative w-full text-lg font-semibold text-slate-800">
+                        {{ $header ?? 'Dashboard' }}
                     </div>
-                </header>
-            @endif
+
+                </div>
+            </header>
+
+            <div x-show="showEditor">
+                <livewire:partials.user-profile-editor />
+            </div>
 
             <!-- Page Content -->
-            <main>
+            <main class="relative w-full flex-1 p-4 sm:p-6 lg:p-8">
                 {{ $slot }}
             </main>
-        </div>
-        @livewireScripts
 
-    </body>
+        </div>
+
+    </div>
+
+    @livewireScripts
+</body>
+
 </html>

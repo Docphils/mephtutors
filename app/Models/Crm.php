@@ -2,37 +2,36 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Crm extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'user_id',
-        'start_date',
-        'state',
-        'full_address',
-        'days',
-        'daysPerWeek',
-        'learnersNumber',
-        'duration',
-        'learnersGrade',
-        'class_type',
+        'institution_name',
+        'institution_address',
+        'service_item_id',
+        'number_of_tutors_required',
+        'delivery_mode',
+        'engagement_type',
+        'requirements',
         'status',
-        'remarks',
-        'request_type',
-        'club_type',
-        'school_name',
-        'school_address',
-        'languages',
-
+        'contacted_at',
+        'closed_at',
     ];
 
-
+    protected $casts = [
+        'contacted_at' => 'datetime',
+        'closed_at' => 'datetime',
+    ];
 
     public function user(){
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class);   
+    }
+
+    public function serviceItem()
+    {
+        return $this->belongsTo(ServiceItem::class);
     }
 }

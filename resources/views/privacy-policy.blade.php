@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    <body class="bg-cyan-300 font-sans leading-normal tracking-normal"> 
+    <body class="bg-cyan-300 font-sans leading-normal tracking-normal h-screen"> 
         @include('layouts.header')    
         <div class="container mx-auto p-6 bg-white shadow-md rounded-sm">
             <h1 class="text-3xl font-bold mb-4">Privacy Policy</h1>

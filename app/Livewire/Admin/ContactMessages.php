@@ -5,7 +5,11 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Contact;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
+#[Layout('layouts.app')]
+#[Title('MephEd - Contact Messages')]
 class ContactMessages extends Component
 {
     use WithPagination;

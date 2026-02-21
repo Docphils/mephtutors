@@ -10,7 +10,7 @@ class Booking extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'tutorRequest_id',
+        'tutor_request_id',
         'user_id',
         'client_id',
         'tutor_id',
@@ -37,7 +37,7 @@ class Booking extends Model
     ];
 
     public function user(){
-        return $this->belongsToMany(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
     
     public function tutor()
@@ -57,7 +57,7 @@ class Booking extends Model
 
     public function tutorRequest()
     {
-        return $this->belongsTo(TutorRequest::class, 'tutorRequest_id');
+        return $this->belongsTo(TutorRequest::class, 'tutor_request_id');
     }
 
     protected static function boot()
@@ -66,8 +66,10 @@ class Booking extends Model
 
         static::created(function ($booking) {
             $tutorRequest = $booking->tutorRequest;
-            if ($tutorRequest && $tutorRequest->status == 'Pending') {
-                $tutorRequest->status = 'Assigned';
+            // keep tutor request status in sync with new tutor_requests enum
+            if ($tutorRequest && strtolower($tutorRequest->status) === 'pending') {
+                $tutorRequest->status = 'matched';
+                $tutorRequest->matched_at = now();
                 $tutorRequest->save();
             }
         });

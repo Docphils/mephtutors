@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 
-
+#[Layout('layouts.app')]
 #[Title('Add Testimonial - MephEd')]
 class Testimonials extends Component
 {
@@ -33,7 +33,6 @@ class Testimonials extends Component
         return redirect()->route('welcome');
     }
 
-    #[Layout('layouts.apps')]
     public function render()
     {
         return view('livewire.testimonials.testimonials');

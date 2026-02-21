@@ -2,28 +2,39 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\ClientDashboardController;
 use App\Http\Controllers\CrmController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\UserController;
+// Admin Livewire Components
 use App\Livewire\Admin\AdminDashboardController;
 use App\Livewire\Admin\AdminIndexTestimonials;
-use App\Livewire\Admin\Lesson\Create;
-use App\Livewire\Admin\Lesson\EditLesson;
+use App\Livewire\Admin\Lesson\BookingManager;
 use App\Livewire\Admin\Newsletter;
 use App\Livewire\Admin\TutorprofileManager;
-use App\Livewire\Client\CodingAndClubs;
-use App\Livewire\Client\CodingAndClubsIndex;
 use App\Livewire\TermsOfService;
-use App\Livewire\Client\TutorRequests\CreateRequest;
-use App\Livewire\Admin\TutorRequests\RequestIndex;
-use App\Livewire\Client\TutorRequests\ClientRequests;
-use App\Livewire\Client\TutorRequests\EditRequest;
-use App\Livewire\Client\TutorRequests\ShowRequest;
+use App\Livewire\Admin\RequestManager;
+use App\Livewire\Admin\ClientManager;
+use App\Livewire\Admin\ContactMessages;
+use App\Livewire\Admin\UserManager;
+
 use App\Livewire\Testimonials\Testimonials;
 use App\Livewire\Testimonials\IndexTestimonials;
 use App\Livewire\Tutor\DashboardController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use App\Models\GuestRequest;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
+//Client Livewire Components
+use App\Livewire\Client\CrmManager;
+use App\Livewire\Client\DashboardController as ClientDashboard;
+use App\Livewire\Client\TutorRequestsManager;
+use App\Livewire\Client\Lessons;
+use App\Livewire\Requests\RequestWizard;
+use App\Models\ServiceItem;
 
 
 /*
@@ -43,24 +54,26 @@ Route::get('/', function () {
 
 Route::get('/services', function () {
     return view('services');
-});
+})->name('services');
 
 Route::get('/about', function () {
     return view('about');
-});
+})->name('about');
 
 Route::get('/contact', function () {
     return view('contact');
-});
+})->name('contact');
 
 Route::get('/bootcamp', function () {
     return view('bootcamp');
-});
+})->name('bootcamp');
 
 Route::get('/privacy-policy', function () {
-    return view('privacy-policy');
+    return view('privacy-policy')->name('privacy-policy');
 });
 
+// Guest-accessible request forms (multi-step UI)
+Route::get('/apply/{serviceItem:slug}', RequestWizard::class)->name('apply.service');
 
 
 Route::get('/terms-of-service', TermsOfService::class)->name('terms.service');
@@ -77,20 +90,11 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'can:Client'])->group(function () {
     // Client Dashboard
-    Route::get('/client/dashboard', [ClientDashboardController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('client.dashboard');
-    Route::get('/client/lessons', [BookingController::class, 'clientBookings'])->name('client.lessons');
-
-    //Crm Routes
-    Route::get('client/coding-tutor-requests', CodingAndClubsIndex::class)->name('codingRequest.index');
-    Route::get('client/club-requests', CodingAndClubs::class)->name('clubRequest.index');
-    Route::get('client/crm/{id}/edit', [CrmController::class, 'clientedit'])->name('client.crm.edit');
-    Route::put('client/crm/{id}', [CrmController::class, 'update'])->name('client.crm.update');
-    Route::delete('client/crm/{id}', [CrmController::class, 'clientDestroy'])->name('client.crm.destroy');
-    //Tutor Requests Routes
-    Route::get('client/tutor-requests', ClientRequests::class)->name('client.tutorRequests.index');
-    Route::get('/client/tutor-requests/{id}/edit', EditRequest::class)->name('client.tutorRequests.edit');
-    Route::get('/tutor-requests/create', CreateRequest::class)->name('client.tutorRequests.create');
-    Route::get('/tutor-requests/{id}', ShowRequest::class)->name('client.tutorRequests.show');
+    Route::get('/dashboard', ClientDashboard::class)->name('client.dashboard');
+    Route::get('/client/lessons', Lessons::class)->name('client.lessons');
+    // Livewire manager pages
+    Route::get('client/crm-manager', CrmManager::class)->name('client.crm.manager');
+    Route::get('client/tutor-requests-manager', TutorRequestsManager::class)->name('client.tutorRequests.manager');
 
 });
 
@@ -112,13 +116,11 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     // Admin Dashboard
     Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');    
     //Tutor Request Routes
-    Route::get('admin/tutor-requests', RequestIndex::class)->name('tutorRequests.index');
+    Route::get('admin/tutor-requests', RequestManager::class)->name('tutorRequests.index');
     Route::get('admin/testimonials', AdminIndexTestimonials::class)->name('admin.testimonials');
 
-    //Bookings
-    Route::get('/lessons/create', Create::class)->name('bookings.create');
-    Route::get('/lessons/{id}/edit', EditLesson::class)->name('bookings.edit');
-    Route::get('admin/lessons', [BookingController::class, 'index'])->name('lessons.index');
+    //Bookings (consolidated booking manager)
+    Route::get('admin/lessons', BookingManager::class)->name('admin.lessons');
 
     //Crm Routes
     Route::get('admin/crm', [CrmController::class, 'index'])->name('admin.crm.index');
@@ -132,8 +134,11 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
 
 
     //Users Management Routes
-    Route::get('admin/users', [UserController::class, 'index'])->name('admin.users');
+    Route::get('admin/user-manager', UserManager::class)->name('admin.users');
     Route::get('admin/tutor-profile-management', TutorprofileManager::class)->name('admin.tutorProfile');
+    Route::get('admin/client-management', ClientManager::class)->name('admin.clientManager');
+
+    Route::get('admin/contact-messages', ContactMessages::class)->name('admin.contactMessages');
     Route::get('admin/newsletter', Newsletter::class)->name('admin.newsletter');
   
 
