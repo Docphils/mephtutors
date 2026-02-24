@@ -15,10 +15,10 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->string('phone');
-            $table->string('state');
-            $table->string('city');
-            $table->string('address');
-            $table->date('DOB');
+            $table->string('state')->nullable();
+            $table->string('city')->nullable();
+            $table->string('address')->nullable();
+            $table->date('DOB')->nullable();
             $table->string('image')->nullable();
             $table->enum('gender', ['Male', 'Female']);
             $table->timestamps();

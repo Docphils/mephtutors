@@ -21,6 +21,7 @@ return new class extends Migration
         $table->foreignId('service_item_id')->constrained()->cascadeOnDelete();
 
         $table->integer('number_of_tutors_required')->default(1);
+        $table->integer('sessions_per_week')->default(1);
 
         $table->enum('delivery_mode', ['onsite', 'online', 'hybrid'])->default('onsite');
 

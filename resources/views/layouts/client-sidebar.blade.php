@@ -53,11 +53,32 @@
             <span>Manage Lessons</span>
         </a>
 
-    </nav>
+        <!-- ===== Footer ===== -->
+        <div class="border-t border-cyan-600 my-4 text-sm">
+            @livewire('newsletter-subscription')
+            <!-- Settings Dropdown -->
+            <div class="items-center w-full bg-slate-200 rounded-lg p-3 mt-4 text-gray-700">
 
-    <!-- ===== Footer ===== -->
-    <div class="px-6 py-4 border-t border-cyan-600">
-        @livewire('newsletter-subscription')
-    </div>
+                <a wire:navigate href="{{ route('profile.edit') }}"
+                    class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 hover:text-cyan-100 transition {{ request()->routeIs('profile.edit') ? 'bg-cyan-600' : '' }}">
+                    <i class="fas fa-cog w-5 text-cyan-300"></i>
+                    <span>Account Settings</span>
+
+
+                </a>
+                <!-- Authentication -->
+                <form method="POST" action="{{ route('logout') }}"
+                    class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 hover:text-cyan-100 transition">
+                    @csrf
+                    <i class="fa-solid fa-right-from-bracket w-5 text-cyan-300"></i>
+                    <a href="{{ route('logout') }}"
+                        onclick="event.preventDefault();
+                                                this.closest('form').submit();">
+                        {{ __('Log Out') }}
+                    </a>
+                </form>
+            </div>
+        </div>
+    </nav>
 
 </aside>

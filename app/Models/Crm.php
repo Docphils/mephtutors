@@ -16,6 +16,7 @@ class Crm extends Model
         'delivery_mode',
         'engagement_type',
         'requirements',
+        'sessions_per_week',
         'status',
         'contacted_at',
         'closed_at',

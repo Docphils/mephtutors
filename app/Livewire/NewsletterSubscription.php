@@ -28,7 +28,7 @@ class NewsletterSubscription extends Component
         $user = User::find(Auth::id());;
         $user->update(['is_subscribed' => $this->isSubscribed]);
 
-        session()->flash('success', $this->isSubscribed ? 'Successful!' : 'Unsubscribed!');
+        session()->flash('n_success', $this->isSubscribed ? 'Successful!' : 'Unsubscribed!');
     }
 
 

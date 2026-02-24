@@ -18,38 +18,28 @@ class WelcomeServices extends Component
                 ->orderBy('display_position')
                 ->get();
 
-            // fallback if DB is empty
             if ($dbItems->isEmpty()) {
                 return collect([
-                    (object)[
-                        'name' => 'Home Tutoring',
-                        'slug' => 'home-tutoring',
-                        'image_path' => '/images/b-home-tutoring.jpg',
-                        'description' => 'Unlock personalized academic support from the comfort of your home.',
-                    ],
-                    (object)[
-                        'name' => 'Coding Classes',
-                        'slug' => 'coding',
-                        'image_path' => '/images/coding-banner2.jpeg',
-                        'description' => 'Master modern stacks with expert guidance.',
-                    ],
-                    (object)[
-                        'name' => 'Exam Prep',
-                        'slug' => 'exam-prep',
-                        'image_path' => '/images/b-waec.jpeg',
-                        'description' => 'Structured exam prep that works for WAEC, JAMB, and more.',
-                    ],
+                    (object)['name' => 'Home Tutoring', 'slug' => 'home-tutoring', 'image_path' => '/images/b-home-tutoring.jpg', 'description' => 'Unlock personalized academic support from the comfort of your home.', 'target' => 'tutor_requests'],
+                    (object)['name' => 'Coding Classes', 'slug' => 'coding', 'image_path' => '/images/coding-banner2.jpeg', 'description' => 'Master modern stacks with expert guidance.', 'target' => 'tutor_requests'],
+                    (object)['name' => 'School Clubs', 'slug' => 'clubs', 'image_path' => '/images/robotics.jpg', 'description' => 'Expert club instructors for coding, music, chess, etc.', 'target' => 'institutions'],
                 ]);
             }
 
-            return $dbItems;
+            return $dbItems->map(function ($item) {
+                return (object)[
+                    'name' => $item->name,
+                    'slug' => $item->slug,
+                    'image_path' => $item->image_path,
+                    'description' => $item->description,
+                    'target' => $item->target ?? 'tutor_requests',
+                ];
+            });
         });
     }
 
     public function render()
     {
-        return view('livewire.welcome-services', [
-            'items' => $this->items,
-        ]);
+        return view('livewire.welcome-services', ['items' => $this->items]);
     }
 }

@@ -17,12 +17,13 @@ return new class extends Migration
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('tutor_id');
             $table->unsignedBigInteger('tutor_request_id');
+            $table->foreignId('service_item_id')->constrained()->cascadeOnDelete();
             $table->date('start_date');
             $table->date('end_date');
             $table->string('location');
-            $table->string('days_times');
-            $table->string('subjects');
-            $table->string('learners');
+            $table->json('days_times');
+            $table->json('subjects')->nullable();
+            $table->json('learners');
             $table->integer('sessions');
             $table->string('duration');
             $table->enum('tutorGender', ['Male', 'Female', 'Any']);
@@ -32,6 +33,8 @@ return new class extends Migration
             $table->integer('amount');
             $table->enum('paymentStatus', ['Pending', 'Confirmed', 'Paid'])->default('Pending');
             $table->string('paymentEvidence')->nullable();
+            $table->string('payment_reference')->nullable()->unique();
+            $table->enum('client_payment_status', ['Pending','Paid','Failed'])->default('Pending');
             $table->string('tutorRemarks')->nullable(); 
             $table->string('clientAcceptanceRemarks')->nullable();
             $table->string('clientApprovalRemarks')->nullable();

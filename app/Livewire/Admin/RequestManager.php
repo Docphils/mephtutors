@@ -36,7 +36,16 @@ class RequestManager extends Component
 
     public function showRequest($id)
     {
-        $this->selectedRequest = TutorRequest::with(['user', 'serviceItem', 'level', 'examType'])->findOrFail($id);
+        $this->selectedRequest = TutorRequest::with([
+            'user',
+            'serviceItem',
+            'level',
+            'examType',
+            'tutorMatches',
+            'acceptedMatch',
+            'bookings'
+        ])->findOrFail($id);
+
         $this->showModal = true;
     }
 
@@ -50,7 +59,11 @@ class RequestManager extends Component
 
     public function openDeleteModal($id)
     {
-        $this->selectedRequest = TutorRequest::findOrFail($id);
+        $this->selectedRequest = TutorRequest::with([
+            'user',
+            'serviceItem'
+        ])->findOrFail($id);
+
         $this->deleteModal = true;
     }
 
@@ -74,15 +87,26 @@ class RequestManager extends Component
 
     public function updateRequest()
     {
-        $validStatuses = ['pending', 'reviewing', 'matched', 'in_progress', 'completed', 'cancelled'];
+        $validStatuses = [
+            'pending',
+            'reviewing',
+            'matched',
+            'in_progress',
+            'completed',
+            'cancelled'
+        ];
         
         $this->validate([
             'newStatus' => 'required|in:' . implode(',', $validStatuses),
         ]);
 
         $tutorRequest = TutorRequest::findOrFail($this->selectedRequest->id);
+
         $tutorRequest->update([
             'status' => $this->newStatus,
+            'matched_at' => $this->newStatus === 'matched' ? now() : $tutorRequest->matched_at,
+            'started_at' => $this->newStatus === 'in_progress' ? now() : $tutorRequest->started_at,
+            'completed_at' => $this->newStatus === 'completed' ? now() : $tutorRequest->completed_at,
         ]);
 
         session()->flash('success', 'Status updated successfully.');
@@ -92,17 +116,34 @@ class RequestManager extends Component
 
     public function render()
     {
-        $query = TutorRequest::with(['user', 'serviceItem']);
+        $query = TutorRequest::with([
+            'user',
+            'serviceItem',
+            'level',
+            'examType',
+            'acceptedMatch'
+        ]);
 
-        // Search Logic
+        // Search Logic (aligned with new schema fields)
         if ($this->search) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('lesson_address', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('user', function($u) {
-                      $u->where('name', 'like', '%' . $this->search . '%');
+                  ->orWhere('state', 'like', '%' . $this->search . '%')
+                  ->orWhere('city', 'like', '%' . $this->search . '%')
+                  ->orWhere('curriculum', 'like', '%' . $this->search . '%')
+                  ->orWhereJsonContains('subjects', $this->search)
+                  ->orWhereHas('user', function ($u) {
+                      $u->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%');
                   })
-                  ->orWhereHas('serviceItem', function($s) {
+                  ->orWhereHas('serviceItem', function ($s) {
                       $s->where('name', 'like', '%' . $this->search . '%');
+                  })
+                  ->orWhereHas('level', function ($l) {
+                      $l->where('name', 'like', '%' . $this->search . '%');
+                  })
+                  ->orWhereHas('examType', function ($e) {
+                      $e->where('name', 'like', '%' . $this->search . '%');
                   });
             });
         }

@@ -31,9 +31,7 @@ return new class extends Migration
         $table->enum('session_type', ['individual', 'group']);
 
         // Scheduling
-        $table->string('preferred_days')->nullable(); // JSON later
-        $table->string('preferred_time')->nullable();
-        $table->integer('sessions_per_week')->nullable();
+        $table->json('preferred_days')->nullable(); // JSON later
         $table->integer('duration_per_session')->nullable(); // in minutes
 
         // Budget

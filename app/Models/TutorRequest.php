@@ -16,14 +16,12 @@ class TutorRequest extends Model
         'delivery_mode',
         'session_type',
         'preferred_days',
-        'preferred_time',
-        'sessions_per_week',
         'duration_per_session',
         'budget_min',
         'budget_max',
         'state',
         'city',
-        'address',
+        'lesson_address',
         'preferred_tutor_gender',
         'additional_notes',
         'status',
@@ -43,6 +41,7 @@ class TutorRequest extends Model
         'learners' => 'array',
         'is_for_self' => 'boolean',
         'subjects' => 'array',
+        'preferred_days' => 'array',
     ];
 
     public function getLearnerNamesAttribute()

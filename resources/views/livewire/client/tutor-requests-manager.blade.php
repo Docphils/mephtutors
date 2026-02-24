@@ -1,4 +1,4 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6 text-gray-900">
+<div class="px-6 max-w-7xl mx-auto space-y-6 text-gray-900">
     <x-slot name="header">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
@@ -16,7 +16,7 @@
         </div>
     </x-slot>
     @if (session()->has('success'))
-        <div class="flex items-center p-4 mb-4 text-cyan-800 rounded-2xl bg-cyan-50 border border-cyan-100 animate-fade-in-down"
+        <div class="flex items-center p-2 mb-1 text-cyan-800 rounded-2xl bg-cyan-50 border border-cyan-100 animate-fade-in-down"
             role="alert">
             <svg class="flex-shrink-0 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd"
@@ -28,7 +28,7 @@
     @endif
 
     @if (session()->has('error'))
-        <div class="flex items-center p-4 mb-4 text-red-800 rounded-2xl bg-red-50 border border-red-100" role="alert">
+        <div class="flex items-center p-2 mb-1 text-red-800 rounded-2xl bg-red-50 border border-red-100" role="alert">
             <svg class="flex-shrink-0 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -38,8 +38,8 @@
         </div>
     @endif
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-6 border-t border-slate-50">
+    <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 border-t border-slate-50">
             <div class="md:col-span-5 relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,14 +126,13 @@
                             <span
                                 class="block text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Budget</span>
                             <span
-                                class="text-sm font-bold text-slate-700">${{ number_format($request->budget_min, 0) }}
-                                - ${{ number_format($request->budget_max, 0) }}</span>
+                                class="text-sm font-bold text-slate-700">₦{{ number_format($request->budget_min, 0) }}
+                                - ₦{{ number_format($request->budget_max, 0) }}</span>
                         </div>
                         <div>
-                            <span
-                                class="block text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Frequency</span>
-                            <span class="text-sm font-bold text-slate-700">{{ $request->sessions_per_week }}x Per
-                                Week</span>
+                            <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Session
+                                Type</span>
+                            <span class="text-sm font-bold text-slate-700">{{ $request->session_type }}</span>
                         </div>
                     </div>
 
@@ -155,198 +154,434 @@
         {{ $requests->links() }}
     </div>
 
-    @if ($showModal)
-        <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+    @if ($showDetails && $selectedRequest)
+        <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div
-                class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto flex flex-col">
-                <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
+                class="bg-white rounded-[2.5rem] w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+                <div class="p-8 bg-slate-800 text-white flex justify-between items-start">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800">
-                            {{ $isEditing ? 'Edit Request' : 'Post New Request' }}</h2>
-                        <p class="text-xs text-slate-500">Provide details for the best tutor matching.</p>
+                        <span
+                            class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-cyan-500 mb-2 inline-block">
+                            {{ $selectedRequest->status }}
+                        </span>
+                        <h2 class="text-3xl font-black">{{ $selectedRequest->serviceItem->name }}</h2>
+                        <p class="text-slate-400 text-sm">Requested on
+                            {{ $selectedRequest->created_at->format('M d, Y') }}</p>
                     </div>
-                    <button wire:click="$set('showModal', false)"
-                        class="p-2 hover:bg-slate-100 rounded-full transition-all">
-                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <button wire:click="$set('showDetails', false)"
+                        class="p-2 hover:bg-slate-700 rounded-full">✕</button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-8">
-                    <form wire:submit="save" class="space-y-6 text-gray-900">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label
-                                    class="text-xs font-black text-slate-500 uppercase tracking-widest">Subject</label>
-                                <select wire:model="service_item_id"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3 focus:bg-white focus:ring-2 focus:ring-cyan-500 transition-all">
-                                    <option value="">Select Subject</option>
-                                    @foreach ($serviceItems as $si)
-                                        <option value="{{ $si->id }}">{{ $si->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label
-                                    class="text-xs font-black text-slate-500 uppercase tracking-widest">Level</label>
-                                <select wire:model="level_id"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3 focus:bg-white focus:ring-2 focus:ring-cyan-500 transition-all">
-                                    <option value="">Select Level</option>
-                                    @foreach ($levels as $l)
-                                        <option value="{{ $l->id }}">{{ $l->name }}</option>
-                                    @endforeach
-                                </select>
+                <div class="p-8 space-y-8 overflow-y-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label
+                                class="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-2">Learner(s)</label>
+                            <p class="font-bold text-slate-800">{{ $selectedRequest->learner_names }}</p>
+                            <p class="text-xs text-slate-500">
+                                {{ $selectedRequest->is_for_self ? 'Self-application' : 'Managed Account' }}</p>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-2">Subjects/Focus</label>
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($selectedRequest->subjects ?? [] as $subject)
+                                    <span
+                                        class="px-2 py-0.5 bg-slate-100 rounded text-xs font-bold text-slate-600 border">{{ $subject }}</span>
+                                @endforeach
+                                @if (empty($selectedRequest->subjects))
+                                    <span class="text-slate-400 italic text-sm">General Study</span>
+                                @endif
                             </div>
                         </div>
+                    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Delivery
-                                    Mode</label>
-                                <select wire:model.live="delivery_mode"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3 focus:bg-white focus:ring-2 focus:ring-cyan-500">
-                                    <option value="online">Online</option>
-                                    <option value="offline">In-Person</option>
-                                    <option value="hybrid">Hybrid</option>
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Session
-                                    Type</label>
-                                <select wire:model="session_type"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3 focus:bg-white focus:ring-2 focus:ring-cyan-500">
-                                    <option value="individual">1-on-1</option>
-                                    <option value="group">Group</option>
-                                </select>
+                    <div class="grid grid-cols-3 gap-4 p-6 bg-slate-50 rounded-3xl">
+                        <div>
+                            <label
+                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Level</label>
+                            <p class="font-bold text-slate-700">{{ $selectedRequest->level->name ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Curriculum</label>
+                            <p class="font-bold text-slate-700">{{ $selectedRequest->curriculum }}</p>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Exam
+                                Type</label>
+                            <p class="font-bold text-slate-700">{{ $selectedRequest->examType->name ?? 'None' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div><label class="text-[10px] font-black text-slate-400 uppercase block">Mode</label>
+                            <p class="font-bold capitalize">{{ $selectedRequest->delivery_mode }}</p>
+                        </div>
+                        <div><label class="text-[10px] font-black text-slate-400 uppercase block">Sessions</label>
+                            <p class="font-bold">{{ $selectedRequest->sessions_per_week }}x / Week</p>
+                        </div>
+                        <div><label class="text-[10px] font-black text-slate-400 uppercase block">Duration</label>
+                            <p class="font-bold">{{ $selectedRequest->duration_per_session }} min</p>
+                        </div>
+                        <div><label class="text-[10px] font-black text-slate-400 uppercase block">Gender Pref</label>
+                            <p class="font-bold capitalize">{{ $selectedRequest->preferred_tutor_gender }}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 border border-slate-100 rounded-2xl">
+                            <div class="p-3 bg-green-50 text-green-600 rounded-xl font-bold">₦</div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block">Monthly Budget
+                                    Range</label>
+                                <p class="font-bold text-slate-700">₦{{ number_format($selectedRequest->budget_min) }}
+                                    - ₦{{ number_format($selectedRequest->budget_max) }}</p>
                             </div>
                         </div>
-
-                        @if (in_array($delivery_mode, ['offline', 'hybrid']))
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Lesson
-                                    Address</label>
-                                <input type="text" wire:model="lesson_address"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3 focus:bg-white focus:ring-2 focus:ring-cyan-500">
+                        @if ($selectedRequest->lesson_address)
+                            <div class="flex items-center gap-4 p-4 border border-slate-100 rounded-2xl">
+                                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">📍</div>
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase block">Location</label>
+                                    <p class="text-sm font-bold text-slate-700">
+                                        {{ $selectedRequest->lesson_address }}, {{ $selectedRequest->city }},
+                                        {{ $selectedRequest->state }}</p>
+                                </div>
                             </div>
                         @endif
+                    </div>
+                </div>
 
-                        <div class="space-y-3">
-                            <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Preferred
-                                Days</label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $day)
-                                    <label class="cursor-pointer group">
-                                        <input type="checkbox" wire:model="preferred_days"
-                                            value="{{ $day }}" class="hidden peer">
-                                        <span
-                                            class="px-4 py-2 rounded-xl bg-slate-100 text-slate-500 font-bold text-sm peer-checked:bg-cyan-600 peer-checked:text-white transition-all inline-block">
-                                            {{ $day }}
-                                        </span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Max
-                                    Budget
-                                    ($)</label>
-                                <input type="number" wire:model="budget_max"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Preferred
-                                    Time</label>
-                                <input type="text" wire:model="preferred_time" placeholder="e.g. 5pm onwards"
-                                    class="w-full bg-slate-100 border-transparent rounded-2xl py-3">
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end gap-4 pt-6 border-t border-slate-50">
-                            <button type="button" wire:click="$set('showModal', false)"
-                                class="px-6 py-3 font-bold text-slate-400 hover:bg-slate-100 rounded-xl">Cancel</button>
-                            <button type="submit"
-                                class="px-10 py-3 bg-cyan-600 text-white font-black rounded-xl hover:bg-cyan-700 shadow-xl shadow-cyan-100 transition-all">
-                                {{ $isEditing ? 'Save Changes' : 'Post Request' }}
-                            </button>
-                        </div>
-                    </form>
+                <div class="p-6 bg-slate-50 border-t flex justify-end gap-3">
+                    <button wire:click="$set('showDetails', false)"
+                        class="px-6 py-2 text-sm font-bold text-slate-500">Close</button>
+                    @if (in_array($selectedRequest->status, ['pending', 'reviewing']))
+                        <button wire:click="openEdit({{ $selectedRequest->id }})"
+                            class="px-6 py-2 bg-cyan-600 text-white rounded-xl text-sm font-bold shadow-lg">Edit
+                            Request</button>
+                    @endif
                 </div>
             </div>
         </div>
     @endif
 
-    @if ($showDetails && $selectedRequest)
+    {{-- REQUEST  MODAL --}}
+    @if ($showModal)
         <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div class="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col">
-                <div class="p-8 bg-cyan-600 text-white flex justify-between items-center">
+            <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-zoom-in">
+
+                {{-- Progress Header --}}
+                <div
+                    class="bg-cyan-600 p-6 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-2xl font-black">{{ $selectedRequest->serviceItem->name }}</h2>
-                        <p class="text-cyan-100 text-sm">Application #TR-{{ $selectedRequest->id }}</p>
-                    </div>
-                    <button wire:click="$set('showDetails', false)"
-                        class="p-2 hover:bg-cyan-500 rounded-full transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="p-8 space-y-6 overflow-y-auto max-h-[70vh] text-gray-900">
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="space-y-1">
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Level</label>
-                            <p class="font-bold text-slate-700">{{ $selectedRequest->level->name ?? 'N/A' }}</p>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exam
-                                Focus</label>
-                            <p class="font-bold text-slate-700">{{ $selectedRequest->examType->name ?? 'None' }}
-                            </p>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tutor
-                                Preference</label>
-                            <p class="font-bold text-slate-700 uppercase">
-                                {{ $selectedRequest->preferred_tutor_gender }} Tutor</p>
-                        </div>
-                        <div class="space-y-1">
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schedule</label>
-                            <p class="font-bold text-slate-700">{{ $selectedRequest->sessions_per_week }}x week
-                                ({{ $selectedRequest->duration_per_session }}m)</p>
-                        </div>
-                    </div>
-
-                    <div class="p-5 bg-slate-50 rounded-2xl space-y-3">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Additional
-                            Requirements</label>
-                        <p class="text-sm leading-relaxed text-slate-600 italic">
-                            {{ $selectedRequest->additional_notes ?: 'No specific notes provided.' }}
+                        <h2 class="text-2xl font-black">{{ $isEditing ? 'Edit' : 'New' }} Tutor Request</h2>
+                        <p class="text-cyan-100 text-[10px] font-bold uppercase tracking-widest mt-1">
+                            Step {{ $step }} of 3:
+                            {{ $step == 1 ? 'Learner' : ($step == 2 ? 'Academics' : 'Logistics') }}
                         </p>
                     </div>
+                    <div class="flex items-center gap-2">
+                        @for ($i = 1; $i <= 3; $i++)
+                            <div class="h-1.5 w-12 rounded-full {{ $step >= $i ? 'bg-white' : 'bg-cyan-800' }}"></div>
+                        @endfor
+                    </div>
+                </div>
 
-                    @if ($selectedRequest->lesson_address)
-                        <div class="flex items-start gap-3 p-4 border border-slate-100 rounded-2xl">
-                            <svg class="w-5 h-5 text-cyan-500 mt-1" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <div>
-                                <label
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Meeting
-                                    Location</label>
-                                <p class="text-sm font-bold text-slate-700">{{ $selectedRequest->lesson_address }}
-                                </p>
+                <div class="p-8 max-h-[70vh] overflow-y-auto">
+
+                    {{-- STEP 1: IDENTITY --}}
+                    @if ($step === 1)
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Learner Information</h3>
+                            <div class="bg-slate-50 p-6 rounded-3xl">
+                                <label class="block mb-4 text-sm font-bold text-slate-700">Who is this request
+                                    for?</label>
+                                <div class="flex gap-8 mb-6">
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="radio" wire:model.live="is_for_self" value="1"
+                                            class="w-5 h-5 text-cyan-600">
+                                        <span class="font-bold text-slate-700">Myself</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="radio" wire:model.live="is_for_self" value="0"
+                                            class="w-5 h-5 text-cyan-600">
+                                        <span class="font-bold text-slate-700">Someone Else</span>
+                                    </label>
+                                </div>
+
+                                @if (!$is_for_self)
+                                    <div class="space-y-4">
+                                        @foreach ($learners as $idx => $l)
+                                            <div class="flex gap-2">
+                                                <input type="text" wire:model="learners.{{ $idx }}.name"
+                                                    class="flex-1 rounded-xl border-slate-200 py-3"
+                                                    placeholder="Full Name">
+                                                @if (count($learners) > 1)
+                                                    <button wire:click="removeLearner({{ $idx }})"
+                                                        class="text-red-400 p-2">✕</button>
+                                                @endif
+                                            </div>
+                                            @error("learners.$idx.name")
+                                                <span class="text-xs text-red-500">{{ $message }}</span>
+                                            @enderror
+                                        @endforeach
+                                        <button wire:click="addLearner"
+                                            class="text-xs font-black text-cyan-600 uppercase">+ Add Learner</button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endif
+
+                    {{-- STEP 2: ACADEMICS --}}
+                    @if ($step === 2)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Service Details</h3>
+                            </div>
+
+                            <div class="md:col-span-2 grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Category</label>
+                                    <select wire:model.live="service_id"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="">Select Category</option>
+                                        @foreach ($services as $s)
+                                            <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Specific
+                                        Item</label>
+                                    <select wire:model.live="service_item_id"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="">Select Item</option>
+                                        @foreach ($serviceItems as $si)
+                                            <option value="{{ $si->id }}">{{ $si->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if ($requires_level)
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Level</label>
+                                    <select wire:model="level_id" class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="">Select Level</option>
+                                        @foreach ($levels as $l)
+                                            <option value="{{ $l->id }}">{{ $l->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            @if ($requires_exam_type)
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Exam
+                                        Type</label>
+                                    <select wire:model="exam_type_id" class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="">Select Exam</option>
+                                        @foreach ($examTypes as $e)
+                                            <option value="{{ $e->id }}">{{ $e->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            @if ($requires_curriculum)
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Curriculum</label>
+                                    <select wire:model="curriculum" class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="N/A">N/A</option>
+                                        <option value="British">British</option>
+                                        <option value="Nigerian">Nigerian</option>
+                                        <option value="Blended">Blended</option>
+                                    </select>
+                                </div>
+                            @endif
+
+                            @if ($has_subjects)
+                                <div class="md:col-span-2 bg-slate-50 p-6 rounded-3xl space-y-4">
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase block">Subjects/Courses</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        @foreach ($courses as $idx => $c)
+                                            <div class="flex gap-2">
+                                                <input type="text" wire:model="courses.{{ $idx }}.name"
+                                                    class="flex-1 rounded-xl border-slate-200"
+                                                    placeholder="e.g. Mathematics">
+                                                @if (count($courses) > 1)
+                                                    <button wire:click="removeCourse({{ $idx }})"
+                                                        class="text-red-400">✕</button>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <button wire:click="addCourse"
+                                        class="text-xs font-black text-cyan-600 uppercase">+ Add Subject</button>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- STEP 3: LOGISTICS --}}
+                    @if ($step === 3)
+                        <div class="space-y-8">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 border-b pb-2 mb-4">Scheduling & Logistics
+                                </h3>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-3">Preferred
+                                    Days & Times</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    @foreach ($dayOptions as $day)
+                                        @php
+                                            $selectedItem = collect($preferred_days)->firstWhere('day', $day);
+                                            $isSelected = (bool) $selectedItem;
+                                            $dayIdx = collect($preferred_days)->search(fn($i) => $i['day'] === $day);
+                                        @endphp
+                                        <div
+                                            class="p-3 border rounded-2xl transition-all {{ $isSelected ? 'bg-cyan-50 border-cyan-200' : 'bg-white' }}">
+                                            <label class="flex items-center justify-between cursor-pointer">
+                                                <span
+                                                    class="text-sm font-bold {{ $isSelected ? 'text-cyan-700' : 'text-slate-600' }}">{{ $day }}</span>
+                                                <input type="checkbox" wire:click="toggleDay('{{ $day }}')"
+                                                    {{ $isSelected ? 'checked' : '' }}
+                                                    class="w-5 h-5 text-cyan-600 rounded">
+                                            </label>
+                                            @if ($isSelected)
+                                                <input type="time"
+                                                    wire:model="preferred_days.{{ $dayIdx }}.time"
+                                                    class="mt-2 w-full text-xs border-none bg-transparent p-0 focus:ring-0 text-cyan-600 font-bold">
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Session
+                                        Mode</label>
+                                    <select wire:model.live="delivery_mode"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="online">Online</option>
+                                        <option value="offline">Physical</option>
+                                        <option value="hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Session
+                                        Type</label>
+                                    <select wire:model="session_type" class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="individual">Individual</option>
+                                        <option value="group">Group</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Duration
+                                        (Mins)</label>
+                                    <input type="number" wire:model="duration_per_session"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Preferred
+                                        Gender</label>
+                                    <select wire:model="preferred_tutor_gender"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                        <option value="any">Any</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Min
+                                        Budget (₦)</label>
+                                    <input type="number" wire:model="budget_min"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Max
+                                        Budget (₦)</label>
+                                    <input type="number" wire:model="budget_max"
+                                        class="w-full rounded-xl border-slate-200 py-3">
+                                </div>
+                            </div>
+
+                            @if ($delivery_mode !== 'online')
+                                <div class="p-6 bg-amber-50 rounded-3xl border border-amber-100 space-y-4">
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" wire:model.live="use_profile_address"
+                                            class="w-5 h-5 text-cyan-600 rounded">
+                                        <span class="text-sm font-bold text-slate-700">Use my profile address</span>
+                                    </label>
+
+                                    @if ($use_profile_address)
+                                        @php $prof = Auth::user()->profile; @endphp
+                                        @if ($prof && $prof->address)
+                                            <div
+                                                class="p-4 bg-white rounded-2xl text-xs text-slate-500 border border-amber-200 italic">
+                                                {{ $prof->address }}, {{ $prof->city }}, {{ $prof->state }}
+                                            </div>
+                                        @else
+                                            <div
+                                                class="p-4 bg-white rounded-2xl text-xs text-red-600 font-bold border border-red-200">
+                                                No address found in profile. Please enter manually or <a
+                                                    href="/profile" class="underline text-cyan-600">set up profile
+                                                    address</a>.
+                                            </div>
+                                        @endif
+                                        @error('use_profile_address')
+                                            <p class="text-xs text-red-500 font-bold mt-1">{{ $message }}</p>
+                                        @enderror
+                                    @else
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <select wire:model="state" class="rounded-xl border-slate-200">
+                                                <option value="">State</option>
+                                                @foreach ($states as $s)
+                                                    <option value="{{ $s }}">{{ $s }}</option>
+                                                @endforeach
+                                            </select>
+                                            <input type="text" wire:model="city"
+                                                class="rounded-xl border-slate-200" placeholder="City">
+                                            <textarea wire:model="street_address" class="md:col-span-2 rounded-xl border-slate-200"
+                                                placeholder="Street Address / House No"></textarea>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <textarea wire:model="additional_notes" rows="2" class="w-full rounded-xl border-slate-200"
+                                placeholder="Additional requirements..."></textarea>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Footer --}}
+                <div class="p-6 bg-slate-50 border-t flex justify-between rounded-b-[2.5rem]">
+                    <button wire:click="$set('showModal', false)" class="font-bold text-slate-400">Cancel</button>
+                    <div class="flex gap-3">
+                        @if ($step > 1)
+                            <button wire:click="back" class="px-8 py-2 border-2 rounded-xl font-black">Back</button>
+                        @endif
+                        @if ($step < 3)
+                            <button wire:click="next"
+                                class="px-10 py-2 bg-cyan-600 text-white rounded-xl font-black">Continue</button>
+                        @else
+                            <button wire:click="save"
+                                class="px-10 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
+                                {{ $isEditing ? 'Save Changes' : 'Submit Request' }}
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

@@ -15,9 +15,9 @@
         </label>
     </div>
 
-    @if (session()->has('success'))
+    @if (session()->has('n_success'))
         <div class="mt-2 p-3 bg-green-100 text-green-700 rounded">
-            {{ session('success') }}
+            {{ session('n_success') }}
         </div>
     @endif
 </div>

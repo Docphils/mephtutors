@@ -7,7 +7,7 @@ use App\Http\Controllers\PaymentController;
 // Admin Livewire Components
 use App\Livewire\Admin\AdminDashboardController;
 use App\Livewire\Admin\AdminIndexTestimonials;
-use App\Livewire\Admin\Lesson\BookingManager;
+use App\Livewire\Admin\BookingManager;
 use App\Livewire\Admin\Newsletter;
 use App\Livewire\Admin\TutorprofileManager;
 use App\Livewire\TermsOfService;
@@ -33,7 +33,9 @@ use App\Livewire\Client\CrmManager;
 use App\Livewire\Client\DashboardController as ClientDashboard;
 use App\Livewire\Client\TutorRequestsManager;
 use App\Livewire\Client\Lessons;
-use App\Livewire\Requests\RequestWizard;
+use App\Livewire\Requests\CrmRequestWizard;
+use App\Livewire\Requests\TutorRequestWizard;
+use App\Http\Controllers\PaystackController;
 use App\Models\ServiceItem;
 
 
@@ -73,7 +75,8 @@ Route::get('/privacy-policy', function () {
 });
 
 // Guest-accessible request forms (multi-step UI)
-Route::get('/apply/{serviceItem:slug}', RequestWizard::class)->name('apply.service');
+Route::get('/apply/tutor/{serviceItem:slug}', TutorRequestWizard::class)->name('apply.tutor');
+Route::get('/apply/crm/{serviceItem:slug}', CrmRequestWizard::class)->name('apply.crm');
 
 
 Route::get('/terms-of-service', TermsOfService::class)->name('terms.service');
@@ -95,7 +98,9 @@ Route::middleware(['auth', 'can:Client'])->group(function () {
     // Livewire manager pages
     Route::get('client/crm-manager', CrmManager::class)->name('client.crm.manager');
     Route::get('client/tutor-requests-manager', TutorRequestsManager::class)->name('client.tutorRequests.manager');
-
+    Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
+    Route::post('/paystack/webhook', [PaystackController::class, 'webhook']);
+    
 });
 
 Route::middleware(['auth', 'can:Tutor', 'verified'])->group(function () {

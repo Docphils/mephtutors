@@ -24,6 +24,12 @@
         </div>
     </x-slot>
 
+    @if (session()->has('success'))
+        <div class="mb-4 p-4 bg-cyan-100 text-cyan-800 rounded-md">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div class="py-8 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
 

@@ -2,14 +2,13 @@
 
 namespace App\Livewire\Client;
 
-use App\Mail\DeclinedLessonEmail;
-use App\Mail\EarnedPaymentEmail;
 use App\Mail\LessonReviewedEmail;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\PaystackService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -24,74 +23,79 @@ class Lessons extends Component
     use WithPagination;
     use WithFileUploads;
 
-    public $activeTab = '';
+    public $activeTab = 'Active Lessons';
     public $showModal = false; 
     public $selectedLesson;
     public $clientAcceptanceRemarks, $clientApprovalRemarks, $status, $paymentEvidence;
 
     public $showAcceptanceModal = false;
     public $showApprovalModal = false;
+
+    public $tabs = [
+        ['name' => 'Pending Lessons', 'icon' => 'fa-clock-rotate-left'],
+        ['name' => 'In Review', 'icon' => 'fa-magnifying-glass-chart'],
+        ['name' => 'Accepted Lessons', 'icon' => 'fa-circle-check'],
+        ['name' => 'Active Lessons', 'icon' => 'fa-play-circle'],
+        ['name' => 'Completed Lessons', 'icon' => 'fa-flag-checkered'],
+        ['name' => 'Closed Lessons', 'icon' => 'fa-box-archive'],
+    ];
    
-    public function mount(){
+    public function mount()
+    {
         Gate::authorize('Client');
-        $this->activeTab = 'Active Lessons';
     }
-    // Set the active tab
+
     public function setTab($tab)
     {
         $this->activeTab = $tab;
+        $this->resetPage();
     }
 
-    // Show the selected lesson in the modal
+    public function getStatusClasses($status)
+    {
+        return match($status) {
+            'Pending'   => 'bg-amber-100 text-amber-700',
+            'Accepted'  => 'bg-blue-100 text-blue-700',
+            'Active'    => 'bg-emerald-100 text-emerald-700',
+            'Completed' => 'bg-cyan-100 text-cyan-700',
+            'Closed'    => 'bg-slate-100 text-slate-700',
+            default     => 'bg-slate-100 text-slate-600',
+        };
+    }
+
     public function showLesson($id)
     {
-        $this->selectedLesson = Booking::with('tutor')->find($id); 
-        $this->showModal = true;
+        $booking = Booking::with(['tutor', 'serviceItem', 'client'])->find($id);
+        if ($booking) {
+            $this->selectedLesson = $booking;
+            $this->showModal = true;
+        }
     } 
 
-    // Open Acceptance Modal
     public function editAcceptance($id)
     {
         $this->selectedLesson = Booking::findOrFail($id);
-        Gate::authorize('Client');
-
-        // Ensure the booking status is 'Pending' before showing the acceptance modal
         if ($this->selectedLesson->status !== 'Pending') {
-            session()->flash('error', 'You can only edit acceptance remarks for pending lessons.');
+            session()->flash('error', 'Only pending lessons can be updated.');
             return;
         }
-
         $this->resetFields();
         $this->showAcceptanceModal = true;
     }
 
-    // Open Approval Modal
     public function editApproval($id)
     {
         $this->selectedLesson = Booking::findOrFail($id);
-        
-
-        // Ensure the booking status is 'Completed' before showing the approval modal
         if ($this->selectedLesson->status !== 'Completed') {
-            session()->flash('error', 'You can only edit approval remarks for completed lessons.');
+            session()->flash('error', 'Only completed lessons can be approved.');
             return;
         }
-
         $this->resetFields();
         $this->showApprovalModal = true;
     }
 
-    // Client Acceptance Remarks
-    public function submitAcceptance()
+    public function submitAcceptance(PaystackService $paystack)
     {
-        Gate::authorize('Client');
-
-        // Ensure the status of the booking is still 'Pending' before updating
-        if ($this->selectedLesson->status !== 'Pending') {
-            session()->flash('error', 'You cannot submit acceptance remarks for lessons that are not pending.');
-            return;
-        }
-        
         $this->validate([
             'clientAcceptanceRemarks' => 'required|string',
             'status' => 'required|in:Adjust,Accepted',
@@ -104,37 +108,56 @@ class Lessons extends Component
         ];
 
         if ($this->paymentEvidence) {
-            $filePath = $this->paymentEvidence->store('payment_evidences', 'public');
-            $lessonData['paymentEvidence'] = $filePath;
+            $lessonData['paymentEvidence'] = $this->paymentEvidence
+                ->store('payment_evidences', 'public');
         }
 
         $this->selectedLesson->update($lessonData);
-        $reviewedLesson = $this->selectedLesson->refresh()->load('client.userProfile');
 
+        // 🔔 Notify admin (unchanged)
         try {
-            Mail::to('admin@mephed.ng')->send(new LessonReviewedEmail($reviewedLesson));
-            session()->flash('success', 'Status updated successfully');
+            Mail::to('admin@mephed.ng')
+                ->send(new LessonReviewedEmail($this->selectedLesson->refresh()));
         } catch (\Exception $e) {
-            Log::error('Mail sending failed: ' . $e->getMessage());
-
-            session()->flash('success', 'Status updated successfully (but email was not sent).');
+            Log::error('Mail failed: ' . $e->getMessage());
         }
-        $this->resetFields();
+
         $this->showAcceptanceModal = false;
-        
-       
+        $this->showModal = false;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 🔥 ONLY TRIGGER PAYMENT IF ACCEPTED
+        |--------------------------------------------------------------------------
+        */
+        if ($this->status === 'Accepted') {
+
+            // Safety check
+            if ($this->selectedLesson->client_payment_status === 'Paid') {
+                session()->flash('success', 'Lesson already paid.');
+                return;
+            }
+
+            try {
+
+                $authorizationUrl = $paystack
+                    ->initializePayment($this->selectedLesson->refresh());
+
+                return redirect()->away($authorizationUrl);
+
+            } catch (\Exception $e) {
+                Log::error('Paystack init failed: ' . $e->getMessage());
+                session()->flash('error', 'Unable to initialize payment.');
+                return;
+            }
+        }
+
+        // If Adjust was selected
+        session()->flash('success', 'Adjustment request submitted.');
     }
 
-    // Client Approval Remarks
     public function submitApproval()
     {
-
-        // Ensure the status of the booking is still 'Completed' before updating
-        if ($this->selectedLesson->status !== 'Completed') {
-            session()->flash('error', 'You cannot submit approval remarks for lessons that are not completed.');
-            return;
-        }
-
         $this->validate([
             'clientApprovalRemarks' => 'required|string',
             'status' => 'required|in:Declined,Closed',
@@ -145,46 +168,68 @@ class Lessons extends Component
             'status' => $this->status
         ]);
 
-       
-        $declinedLesson = $this->selectedLesson->refresh()->load('client.userProfile');
-
-        if($declinedLesson->status == 'Closed'){
-            $payment = Payment::where('booking_id', $this->selectedLesson->id);
-            $payment->update([
-                'status' => 'Earned'
-            ]);
+        if($this->status == 'Closed'){
+            Payment::where('booking_id', $this->selectedLesson->id)->update(['status' => 'Earned']);
         }
 
-        if($declinedLesson->status == 'Declined'){
-            try {
-                Mail::to($declinedLesson->tutor->email)->cc('admin@mephed.ng')->send(new DeclinedLessonEmail($declinedLesson));
-                session()->flash('success', 'Status updated successfully');
-            } catch (\Exception $e) {
-                Log::error('Mail sending failed: ' . $e->getMessage());
-    
-                session()->flash('success', 'Status updated successfully (email not sent). Please contact support');
-            }
-        }
-
-        if($declinedLesson->status == 'Closed'){
-            try {
-                Mail::to('admin@mephed.ng')->send(new EarnedPaymentEmail($declinedLesson));
-                session()->flash('success', 'Status updated successfully');
-            } catch (\Exception $e) {
-                Log::error('Mail sending failed: ' . $e->getMessage());
-    
-                session()->flash('success', 'Status updated successfully (email not sent). Please contact support');
-            }
-        }
-      
-
-        $this->resetFields();
         $this->showApprovalModal = false;
-
-        session()->flash('success', 'Remarks added successfully');
+        session()->flash('success', 'Lesson status finalized.');
     }
 
-    // Reset fields
+    public function pay($bookingId, PaystackService $paystack)
+    {
+        $booking = Booking::where('id', $bookingId)
+            ->where('client_id', auth()->id())
+            ->firstOrFail();
+
+        if ($booking->client_payment_status === 'Paid') {
+            session()->flash('error', 'This booking has already been paid.');
+            return;
+        }
+
+        if ($booking->status !== 'Pending') {
+            session()->flash('error', 'Only pending bookings can be paid for.');
+            return;
+        }
+
+        try {
+            $authorizationUrl = $paystack->initializePayment($booking);
+
+            return redirect()->away($authorizationUrl);
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Unable to initialize payment.');
+        }
+    }
+
+    public function retryPayment($bookingId, PaystackService $paystack)
+    {
+        $booking = Booking::where('id', $bookingId)
+            ->where('client_id', auth()->id())
+            ->firstOrFail();
+
+        if ($booking->client_payment_status === 'Paid') {
+            session()->flash('success', 'Lesson already paid.');
+            return;
+        }
+
+        if ($booking->status !== 'Accepted') {
+            session()->flash('error', 'Lesson must be accepted before payment.');
+            return;
+        }
+
+        try {
+            $authorizationUrl = $paystack
+                ->initializePayment($booking);
+
+            return redirect()->away($authorizationUrl);
+
+        } catch (\Exception $e) {
+            Log::error('Retry payment failed: ' . $e->getMessage());
+            session()->flash('error', 'Unable to initialize payment.');
+        }
+    }
+
     public function resetFields()
     {
         $this->clientAcceptanceRemarks = '';
@@ -193,31 +238,26 @@ class Lessons extends Component
         $this->paymentEvidence = null;
     }
 
-    
-    public function getLessons()
-    {
-        $user = Auth::user();
-
-        // Retrieve bookings for the authenticated user based on the active tab
-        switch ($this->activeTab) {
-            case 'Closed Lessons':
-                return Booking::where('client_id', $user->id)->where('status', 'Closed')->with('tutor')->paginate(10);
-            case 'Completed Lessons':
-                return Booking::where('client_id', $user->id)->where('status', 'Completed')->with('tutor')->paginate(10);
-            case 'Active Lessons':
-                return Booking::where('client_id', $user->id)->where('status', 'Active')->with('tutor')->paginate(10);
-            case 'Accepted Lessons':
-                return Booking::where('client_id', $user->id)->where('status', 'Accepted')->with('tutor')->paginate(10);
-            case 'Pending Lessons':
-                return Booking::where('client_id', $user->id)->where('status', 'Pending')->with('tutor')->paginate(10);
-            default:
-                return Booking::where('client_id', $user->id)->paginate(10); 
-        }
-    }
-
     public function render()
     {
+        $user = Auth::user();
+        $statusMap = [
+            'Closed Lessons'    => 'Closed',
+            'Completed Lessons' => 'Completed',
+            'Active Lessons'    => 'Active',
+            'Accepted Lessons'  => 'Accepted',
+            'In Review'         => 'Adjust',
+            'Pending Lessons'   => 'Pending',
+        ];
+
+        $query = Booking::where('client_id', $user->id)->with(['tutor', 'serviceItem']);
+        
+        if (isset($statusMap[$this->activeTab])) {
+            $query->where('status', $statusMap[$this->activeTab]);
+        }
+
         return view('livewire.client.lessons', [
-            'lessons' => $this->getLessons(),
+            'lessons' => $query->latest()->paginate(9),
         ]);
-    }}
+    }
+}

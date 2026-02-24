@@ -108,7 +108,7 @@ class UserManager extends Component
         // Reset and provide feedback
         $this->showEditModal = false;
         $this->selectedUser = null;
-        session()->flash('message', 'User updated successfully.');
+        session()->flash('success', 'User updated successfully.');
     }
 
     public function create()

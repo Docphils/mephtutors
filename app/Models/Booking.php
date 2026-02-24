@@ -24,6 +24,7 @@ class Booking extends Model
         'days_times',
         'tutorGender',
         'classes',
+        'service_item_id',
         'amount',
         'curriculum',
         'subjects',
@@ -34,6 +35,16 @@ class Booking extends Model
         'completed_at',
         'paymentStatus',
         'paymentEvidence',
+        'payment_reference',
+        'client_payment_status',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'completed_at' => 'datetime',
+        'days_times' => 'array',
+        'learners' => 'array',
     ];
 
     public function user(){
@@ -60,6 +71,11 @@ class Booking extends Model
         return $this->belongsTo(TutorRequest::class, 'tutor_request_id');
     }
 
+    public function serviceItem()
+    {
+        return $this->belongsTo(ServiceItem::class, 'service_item_id');
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -73,6 +89,40 @@ class Booking extends Model
                 $tutorRequest->save();
             }
         });
+    }
+
+    public function getFormattedLearnersAttribute()
+    {
+        return is_array($this->learners)
+            ? $this->learners
+            : (json_decode($this->learners, true) ?: []);
+    }
+
+    public function getFormattedSubjectsAttribute()
+    {
+        return is_array($this->subjects)
+            ? $this->subjects
+            : (json_decode($this->subjects, true) ?: []);
+    }
+
+    public function getFormattedDaysTimesAttribute()
+    {
+        return is_array($this->days_times)
+            ? $this->days_times
+            : (json_decode($this->days_times, true) ?: []);
+    }
+
+    public function getLearnersStringAttribute()
+    {
+        return collect($this->formatted_learners)
+            ->pluck('name')
+            ->filter()
+            ->implode(', ') ?: 'N/A';
+    }
+
+    public function getSubjectsStringAttribute()
+    {
+        return implode(', ', array_filter($this->formatted_subjects)) ?: 'No Subjects';
     }
 
 }
