@@ -70,13 +70,13 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b border-slate-100">
+                <thead class="bg-cyan-700 border-b border-slate-100">
                     <tr>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Learners & Service</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Client / Tutor</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Schedule</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Status</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Actions</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-100 uppercase">Learners & Service</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-100 uppercase">Client / Tutor</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-100 uppercase">Schedule</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-100 uppercase">Status</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-100 uppercase text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -557,8 +557,8 @@
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span
-                                        class="text-[10px] font-bold px-2 py-0.5 rounded-lg {{ $selectedBooking->paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400' }}">
-                                        {{ $selectedBooking->paymentStatus }}
+                                        class="text-[10px] font-bold px-2 py-0.5 rounded-lg {{ $selectedBooking->client_payment_status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400' }}">
+                                        {{ $selectedBooking->client_payment_status }}
                                     </span>
                                     <span class="text-xs text-slate-400">{{ $selectedBooking->sessions }}
                                         sess/wk</span>
@@ -597,7 +597,7 @@
                             <h5 class="text-[10px] font-black text-blue-600 uppercase mb-2">Client Feedback / Approvals
                             </h5>
                             <p class="text-sm text-blue-800 italic">
-                                "{{ $selectedBooking->clientApprovalRemarks ?? 'No special instructions from client.' }}"
+                                "{{ in_array($selectedBooking->status, ['Pending', 'Adjust', 'Accepted', 'Active', 'Completed']) ? $selectedBooking->clientAcceptanceRemarks : $selectedBooking->clientApprovalRemarks ?? 'No special instructions from client.' }}"
                             </p>
                         </div>
                     </div>

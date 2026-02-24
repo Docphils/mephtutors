@@ -13,6 +13,11 @@
         flex flex-col
     ">
 
+    <!--Logo-->
+    <div class="flex items-center justify-center h-16 border-b border-cyan-600">
+        <img src="{{ asset('images/MephEd.png') }}" alt="Logo Image" class="object-cover h-6 sm:h-8 w-24 sm:w-32">
+    </div>
+
     <!-- ===== Mobile Header ===== -->
     <div class="flex items-center justify-between px-6 py-4 border-b border-cyan-600 sm:hidden">
         <h2 class="font-semibold text-lg">Menu</h2>
@@ -41,16 +46,16 @@
             <span>Tutor Requests</span>
         </a>
 
-        <a wire:navigate href="{{ route('client.crm.manager') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.crm.manager') ? 'bg-cyan-600' : '' }}">
-            <i class="fas fa-school w-5 text-cyan-300"></i>
-            <span>Institution Bookings</span>
-        </a>
-
         <a wire:navigate href="{{ route('client.lessons') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.lessons') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-chalkboard-teacher w-5 text-cyan-300"></i>
             <span>Manage Lessons</span>
+        </a>
+
+        <a wire:navigate href="{{ route('client.crm.manager') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.crm.manager') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-school w-5 text-cyan-300"></i>
+            <span>Institution Bookings</span>
         </a>
 
         <!-- ===== Footer ===== -->

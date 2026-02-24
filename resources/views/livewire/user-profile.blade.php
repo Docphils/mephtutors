@@ -19,7 +19,7 @@
 
             </div>
         @else
-            Click the button to update your profile
+            <p class="text-sm">Click the button to update your profile</p>
 
             <button wire:click="openProfileModal"
                 class="bg-cyan-600 hover:bg-cyan-800 text-white px-1 sm:px-2 sm:py-1 rounded-md text-xs sm:text-sm">Update

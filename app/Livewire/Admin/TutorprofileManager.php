@@ -103,9 +103,9 @@ class TutorprofileManager extends Component
             // Filter by qualification or discipline if activeTab is set and not 'All'
            $query->where(function ($q) {
                 if ($this->activeTab === 'Approved') {
-                    $q->where('Approved', true); // Fetch only approved records
+                    $q->where('status', 'Approved'); // Fetch only approved records
                 } elseif ($this->activeTab === 'Pending') {
-                    $q->where('Approved', false); // Fetch only pending records
+                    $q->where('status', 'Pending'); // Fetch only pending records
                 } else {
                     $q->where('qualification', $this->activeTab)
                     ->orWhere('discipline', $this->activeTab);
