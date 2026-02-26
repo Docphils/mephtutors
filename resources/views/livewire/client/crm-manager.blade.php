@@ -118,12 +118,13 @@
     @if ($showModal)
         <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-5/6 overflow-y-auto">
-                <div class="px-8 py-6 border-b border-cyan-800 flex justify-between items-center">
-                    <h2 class="text-2xl font-black text-cyan-800">{{ $isEditing ? 'Update' : 'Create' }} Institution
+                <div
+                    class="px-8 py-6 border-b bg-cyan-700 text-white border-cyan-800 flex justify-between items-center">
+                    <h2 class="text-2xl font-black text-cyan-100">{{ $isEditing ? 'Update' : 'Create' }} Institution
                         Request</h2>
                     <button wire:click="$set('showModal', false)"
                         class="p-2 hover:bg-red-200 hover:text-white rounded-full transition-all">
-                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -142,14 +143,32 @@
 
                     <div class="space-y-1">
                         <label class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Service
-                            Required</label>
-                        <select wire:model="service_item_id"
+                            Category</label>
+                        <select wire:model.live="service_id"
                             class="w-full bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500 text-gray-900">
+                            <option value="">Select Category</option>
+                            @foreach ($services as $s)
+                                <option value="{{ $s->id }}">{{ $s->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('service_id')
+                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Specific
+                            Service</label>
+                        <select wire:model.live="service_item_id" {{ empty($service_id) ? 'disabled' : '' }}
+                            class="w-full bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500 text-gray-900 {{ empty($service_id) ? 'opacity-50' : '' }}">
                             <option value="">Select Service</option>
                             @foreach ($serviceItems as $si)
                                 <option value="{{ $si->id }}">{{ $si->name }}</option>
                             @endforeach
                         </select>
+                        @error('service_item_id')
+                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div class="space-y-1">
@@ -157,6 +176,55 @@
                             Needed</label>
                         <input wire:model="number_of_tutors_required" type="number"
                             class="w-full bg-slate-50 border-transparent rounded-2xl py-3 text-gray-900">
+                    </div>
+
+                    {{-- Conditional Level Field --}}
+                    @if ($needsLevel)
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Academic
+                                Level</label>
+                            <input wire:model="level" type="text" placeholder="e.g. Primary, Secondary"
+                                class="w-full bg-slate-50 border-transparent rounded-2xl py-3 text-gray-900">
+                            @error('level')
+                                <span class="text-red-500 text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    @endif
+
+                    {{-- Conditional Curriculum Field --}}
+                    @if ($needsCurriculum)
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Curriculum</label>
+                            <input wire:model="curriculum" type="text" placeholder="e.g. British, Montessori"
+                                class="w-full bg-slate-50 border-transparent rounded-2xl py-3 text-gray-900">
+                            @error('curriculum')
+                                <span class="text-red-500 text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    @endif
+
+                    {{-- Conditional Exam Type Field --}}
+                    @if ($needsExamType)
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Exam
+                                Type</label>
+                            <input wire:model="exam_type" type="text" placeholder="e.g. IGCSE, SAT"
+                                class="w-full bg-slate-50 border-transparent rounded-2xl py-3 text-gray-900">
+                            @error('exam_type')
+                                <span class="text-red-500 text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    @endif
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Sessions Per
+                            Week</label>
+                        <input wire:model="sessions_per_week" type="number" min="1"
+                            class="w-full bg-slate-50 border-transparent rounded-2xl py-3 text-gray-900">
+                        @error('sessions_per_week')
+                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div class="space-y-1">
@@ -181,6 +249,9 @@
                             <option value="contract">Contract</option>
                             <option value="club_management">Club Management</option>
                         </select>
+                        @error('engagement_type')
+                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div class="md:col-span-2 space-y-1">
@@ -188,6 +259,9 @@
                             Address</label>
                         <input wire:model="institution_address" type="text"
                             class="w-full bg-slate-50 border-transparent rounded-2xl py-3 text-gray-900">
+                        @error('institution_address')
+                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div class="md:col-span-2 space-y-1">
@@ -248,6 +322,32 @@
                                     <p class="font-black text-slate-800 text-lg uppercase">
                                         {{ $activeRequest->delivery_mode }}</p>
                                 </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl">
+                                    <p class="text-[10px] text-slate-600 font-bold uppercase">Sessions/Week</p>
+                                    <p class="font-black text-slate-800 text-lg uppercase">
+                                        {{ $activeRequest->sessions_per_week }}</p>
+                                </div>
+                                @if ($activeRequest->curriculum)
+                                    <div class="p-4 bg-slate-50 rounded-2xl">
+                                        <p class="text-[10px] text-slate-600 font-bold uppercase">Curriculum</p>
+                                        <p class="font-black text-slate-800 text-lg uppercase">
+                                            {{ $activeRequest->curriculum }}</p>
+                                    </div>
+                                @endif
+                                @if ($activeRequest->level)
+                                    <div class="p-4 bg-slate-50 rounded-2xl">
+                                        <p class="text-[10px] text-slate-600 font-bold uppercase">Level</p>
+                                        <p class="font-black text-slate-800 text-lg uppercase">
+                                            {{ $activeRequest->level }}</p>
+                                    </div>
+                                @endif
+                                @if ($activeRequest->exam_type)
+                                    <div class="p-4 bg-slate-50 rounded-2xl">
+                                        <p class="text-[10px] text-slate-600 font-bold uppercase">Exam</p>
+                                        <p class="font-black text-slate-800 text-lg uppercase">
+                                            {{ $activeRequest->exam_type }}</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 

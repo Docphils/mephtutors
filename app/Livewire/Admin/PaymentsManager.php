@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Admin\Payment;
+namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Models\Payment;
@@ -9,8 +9,12 @@ use App\Models\Booking;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
-class Index extends Component
+#[Layout('layouts.app')]
+#[Title('Tutor Payments Management - MephEd Admin')]
+class PaymentsManager extends Component
 {
     use WithPagination;
     use WithFileUploads;
@@ -28,6 +32,7 @@ class Index extends Component
     protected $listeners = [
         "confirmDelete" => "confirmDelete",
         "deletePayment" => "deletePayment",
+        "createPayment" => "create",
     ];
 
     public function showPayment($id)
@@ -54,7 +59,7 @@ class Index extends Component
         $tutors = User::where('role','tutor')->get();
         $bookings = Booking::all();
 
-        return view('livewire.admin.payment.index', compact('payments', 'tutors', 'bookings'));
+        return view('livewire.admin.payments-manager', compact('payments', 'tutors', 'bookings'));
     }
 
     public function create()
@@ -155,9 +160,16 @@ class Index extends Component
         $this->evidence = null;
         $this->status = '';
         $this->newEvidence = null;
-        $this->showModal = null;
         $this->tutor_id = '';
         $this->booking_id = '';
         $this->selectedPayment = null;
+    }
+    public function closeModals()
+    {
+        $this->editModal = false;
+        $this->deleteModal = false;
+        $this->showModal = false;
+        $this->createModal = false;
+        $this->resetFields();
     }
 }

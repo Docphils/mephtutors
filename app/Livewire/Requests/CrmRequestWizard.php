@@ -39,6 +39,16 @@ class CrmRequestWizard extends Component
     public $service_id;
     public $service_item_id;
     public $serviceItems = [];
+    
+    // Missing fields from migrations
+    public $curriculum;
+    public $level;
+    public $exam_type;
+    
+    // UI Helpers for conditional fields
+    public $needsCurriculum = false;
+    public $needsLevel = false;
+    public $needsExamType = false;
 
     public $delivery_mode = 'online';
     public $sessions_per_week = 1;
@@ -52,7 +62,6 @@ class CrmRequestWizard extends Component
 
     public function mount()
     {
-        // Initialize default service items if service_id exists
         if ($this->service_id) $this->updatedServiceId();
     }
 
@@ -65,7 +74,27 @@ class CrmRequestWizard extends Component
 
         if ($this->service_item_id && !$this->serviceItems->contains('id', $this->service_item_id)) {
             $this->service_item_id = null;
+            $this->resetRequirementFlags();
         }
+    }
+
+    public function updatedServiceItemId($value)
+    {
+        $item = ServiceItem::find($value);
+        if ($item) {
+            $this->needsCurriculum = $item->requires_curriculum;
+            $this->needsLevel = $item->requires_level;
+            $this->needsExamType = $item->requires_exam_type;
+        } else {
+            $this->resetRequirementFlags();
+        }
+    }
+
+    protected function resetRequirementFlags()
+    {
+        $this->needsCurriculum = false;
+        $this->needsLevel = false;
+        $this->needsExamType = false;
     }
 
     public function updatedEmail()
@@ -82,16 +111,13 @@ class CrmRequestWizard extends Component
 
     public function next()
     {
-        $rules = [];
-
         if ($this->step === 1) {
-            $rules = [
+            $this->validate([
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
                 'phone' => 'required|string|max:30',
                 'gender' => 'required|in:Male,Female',
-            ];
-            $this->validate($rules);
+            ]);
 
             if ($this->existingUser) {
                 $this->addError('email', 'An account already exists for this email. Please sign in.');
@@ -108,6 +134,11 @@ class CrmRequestWizard extends Component
                 'service_id' => 'required|exists:services,id',
                 'service_item_id' => 'required|exists:service_items,id',
             ];
+
+            if ($this->needsCurriculum) $rules['curriculum'] = 'required|string';
+            if ($this->needsLevel) $rules['level'] = 'required|string';
+            if ($this->needsExamType) $rules['exam_type'] = 'required|string';
+
             $this->validate($rules);
         }
 
@@ -135,9 +166,12 @@ class CrmRequestWizard extends Component
             'sessions_per_week' => 'required|integer|min:1',
         ];
 
+        if ($this->needsCurriculum) $rules['curriculum'] = 'required';
+        if ($this->needsLevel) $rules['level'] = 'required';
+        if ($this->needsExamType) $rules['exam_type'] = 'required';
+
         $this->validate($rules);
 
-        // Create or update user
         $user = User::firstOrCreate(
             ['email' => $this->email],
             [
@@ -147,7 +181,6 @@ class CrmRequestWizard extends Component
             ]
         );
 
-        // Update or create profile
         UserProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -168,10 +201,12 @@ class CrmRequestWizard extends Component
             'requirements' => $this->requirements,
             'engagement_type' => $this->engagement_type,
             'sessions_per_week' => $this->sessions_per_week,
+            'curriculum' => $this->curriculum, // Added
+            'level' => $this->level,           // Added
+            'exam_type' => $this->exam_type,   // Added
             'status' => 'new',
         ]);
 
-        // Send acknowledgement email
         try {
             $token = Password::broker()->createToken($user);
             Mail::to($user->email)->send(new GuestRequestAcknowledgement($user, $token, $crm));

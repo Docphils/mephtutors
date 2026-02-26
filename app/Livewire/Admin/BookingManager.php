@@ -18,7 +18,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('Lesson Management - Admin Panel')]
+#[Title('Lesson Management - MephEd Admin')]
 class BookingManager extends Component
 {
     use WithPagination, WithFileUploads;

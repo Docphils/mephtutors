@@ -3,84 +3,154 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use App\Models\User;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\NewsletterMail;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
+use App\Models\Newsletter as NewsletterModel;
+use App\Jobs\SendNewsletterJob;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
 
+#[Layout('layouts.app')]
+#[Title('Newsletter Campaign Manager')]
 class Newsletter extends Component
 {
+    use WithFileUploads, WithPagination;
+
+    protected $paginationTheme = 'tailwind';
+
+    public $subject;
     public $title;
     public $body = '';
     public $body2;
-    public $subject;
-    public $recipients;
+    public $recipients = 'All';
+    public $attachment;
 
+    public $showForm = false;
+    public $editingId = null;
+    public $selectedCampaign = null;
+    public $status;
 
-    public function sendNewsletter()
+    protected $listeners = ['createNewsletter' => 'create'];
+
+    protected function rules()
     {
-         
-
-        $content = $this->validate([
+        return [
             'subject' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'body' => 'required|string',
             'body2' => 'nullable|string',
             'recipients' => 'required|in:All,Admins,Clients,Tutors,TestTutor,TutorsWithProfile,TutorsWithoutProfile',
-        ]);
-
-        $query = User::query();
-
-        if ($this->recipients == 'All') {
-            $query->where('is_subscribed', true);
-        } else {
-            switch ($this->recipients) {
-                case 'Clients':
-                    $query->where('role', 'client');
-                    break;
-                case 'Admins':
-                    $query->where('role', 'admin');
-                    break;
-                case 'Tutors':
-                    $query->where('role', 'tutor');
-                    break;
-                case 'TutorsWithProfile':
-                    $query->where('role', 'tutor')->whereHas('tutorProfile');
-                    break;
-                case 'TestTutor':
-                    $query->where('role', 'tutor')->where('id', '56');
-                    break;
-                case 'TutorsWithoutProfile':
-                    $query->where('role', 'tutor')->whereDoesntHave('tutorProfile');
-                    break;
-                default:
-                    session()->flash('error', 'Invalid recipient selection.');
-                    return;
-            }
-        }
-
-        // Fetch emails
-        $subscribedUsers = $query->pluck('email');
-
-
-        if ($subscribedUsers->isEmpty()) {
-            session()->flash('error', 'No subscribed users to send the newsletter to.');
-            return;
-        }else{
-            // Send the newsletter to each subscribed user
-            foreach ($subscribedUsers as $email) {
-                Mail::to($email)->send(new NewsletterMail($content));
-            }
-        }
-        // Clear fields and show success message
-        $this->reset(['title', 'body', 'subject', 'body2', 'recipients']);
-        session()->flash('success', 'Newsletter sent successfully!');
+            'attachment' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,svg,mp4',
+        ];
     }
 
-    #[Layout('layouts.app')]
+    public function create()
+    {
+        $this->resetForm();
+        $this->showForm = true;
+    }
+
+    // Update viewDetails method
+public function viewDetails($id)
+{
+    $campaign = NewsletterModel::findOrFail($id);
+    
+    if ($campaign->status === 'Draft') {
+        $this->editingId = $campaign->id;
+        $this->subject = $campaign->subject;
+        $this->title = $campaign->title;
+        $this->body = $campaign->body;
+        $this->body2 = $campaign->body2;
+        $this->recipients = $campaign->recipients;
+        $this->status = $campaign->status;
+        $this->showForm = true;
+        $this->selectedCampaign = null;
+    } else {
+        $this->selectedCampaign = $campaign;
+        $this->showForm = false;
+        $this->editingId = null;
+    }
+}
+
+    // Update saveDraft to handle both Create and Update
+    public function saveDraft()
+    {
+        $data = $this->validate();
+
+        NewsletterModel::updateOrCreate(
+            ['id' => $this->editingId],
+            [
+                'subject' => $this->subject,
+                'title' => $this->title,
+                'body' => $this->body,
+                'body2' => $this->body2,
+                'recipients' => $this->recipients,
+                'attachments' => $this->attachment ? $this->storeAttachment() : ($this->editingId ? NewsletterModel::find($this->editingId)->attachments : null),
+                'status' => 'Draft',
+                'created_by' => auth()->id(),
+            ]
+        );
+
+        $this->resetForm();
+        $this->showForm = false;
+        session()->flash('success', $this->editingId ? 'Draft updated.' : 'Draft saved.');
+    }
+
+    public function send()
+    {
+        $data = $this->validate();
+
+        DB::transaction(function () use ($data) {
+
+            $newsletter = NewsletterModel::create([
+                ...$data,
+                'attachments' => $this->storeAttachment(),
+                'status' => 'Draft',
+                'created_by' => auth()->id(),
+            ]);
+
+            SendNewsletterJob::dispatch($newsletter);
+        });
+
+        $this->resetForm();
+        $this->showForm = false;
+        session()->flash('success', 'Campaign queued for sending.');
+    }
+
+    public function resend($id)
+    {
+        $newsletter = NewsletterModel::findOrFail($id);
+
+        SendNewsletterJob::dispatch($newsletter);
+
+        session()->flash('success', 'Campaign re-queued.');
+    }
+
+    protected function storeAttachment()
+    {
+        return $this->attachment
+            ? $this->attachment->store('newsletter-attachments', 'public')
+            : null;
+    }
+
+    protected function resetForm()
+    {
+        $this->reset([
+            'subject',
+            'title',
+            'body',
+            'body2',
+            'recipients',
+            'attachment',
+            'editingId'
+        ]);
+    }
+
     public function render()
     {
-        return view('livewire.admin.newsletter');
+        return view('livewire.admin.newsletter', [
+            'campaigns' => NewsletterModel::latest()->paginate(10)
+        ]);
     }
 }

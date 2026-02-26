@@ -40,11 +40,14 @@
                             Welcome back, <span class="text-cyan-600">{{ explode(' ', $user->name)[0] }}</span>! 👋
                         </h3>
                         <p class="text-slate-500 mt-1">Everything looks great. You have <span
-                                class="text-cyan-600 font-bold">{{ $stats['new_crm'] }}</span> new requests to review.
+                                class="text-cyan-600 font-bold">{{ $stats['new_crm'] }}</span> institution request(s)
+                            and
+                            <span class="text-cyan-600 font-bold">{{ $stats['pending_requests'] }}</span> new
+                            tutor request(s) to review.
                         </p>
                     </div>
 
-                    @if (!$userProfile)
+                    @if (!$userProfile || !$userProfile->phone || !$userProfile->address || !$userProfile->state)
                         <div class="flex items-center gap-4 bg-red-50 border border-red-100 p-4 rounded-2xl">
                             <div class="bg-red-500 p-2 rounded-lg">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"

@@ -19,10 +19,11 @@ class AdminDashboardController extends Component
         $stats = [
             'total_users'        => User::count(),
             'tutor_requests'     => TutorRequest::count(),
+            'pending_requests'   => TutorRequest::where('status', 'Pending')->count(),
             'active_bookings'    => Booking::where('status', 'Active')->count(),
             'completed_bookings' => Booking::where('status', 'Completed')->count(),
             'earned_payments'    => Payment::where('status', 'Earned')->count(),
-            'new_crm'            => Crm::where('status', 'Pending')->count(),
+            'new_crm'            => Crm::where('status', 'new')->count(),
         ];
 
         return view('livewire.admin.admin-dashboard-controller', [

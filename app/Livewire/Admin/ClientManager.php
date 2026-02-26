@@ -12,7 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('MephEd - Client Manager')]
+#[Title('Client Manager - MephEd Admin')]
 class ClientManager extends Component
 {
 

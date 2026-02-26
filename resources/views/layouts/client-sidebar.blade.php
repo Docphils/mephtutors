@@ -60,7 +60,6 @@
 
         <!-- ===== Footer ===== -->
         <div class="border-t border-cyan-600 my-4 text-sm">
-            @livewire('newsletter-subscription')
             <!-- Settings Dropdown -->
             <div class="items-center w-full bg-slate-200 rounded-lg p-3 mt-4 text-gray-700">
 

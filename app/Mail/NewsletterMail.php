@@ -2,29 +2,33 @@
 
 namespace App\Mail;
 
+use App\Models\User;
+use App\Models\Newsletter;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class NewsletterMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    private $content;
-    /**
-     * Create a new message instance.
-     */
-    public function __construct($content)
-    {
-        $this->content = $content;
-    }
+    public $content;
+    public $user;
 
     /**
-     * Get the message envelope.
+     * @param $content Array containing subject, title, body, body2, and attachments path
      */
+    public function __construct($content, $user)
+    {
+        $this->content = $content;
+        $this->user = $user;
+    }
+
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -33,24 +37,27 @@ class NewsletterMail extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
             view: 'emails.newsletter',
-            with: ['content' => $this->content]
+            with: ['content' => $this->content, 'user' => $this->user, 'unsubscribeUrl' => URL::signedRoute('newsletter.unsubscribe', ['user' => $this->user->id])]
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+
+        // Attach the file if it exists in the content array
+        if (!empty($this->content['attachments'])) {
+            $path = storage_path('app/public/' . $this->content['attachments']);
+            
+            if (file_exists($path)) {
+                $attachments[] = Attachment::fromPath($path);
+            }
+        }
+
+        return $attachments;
     }
 }

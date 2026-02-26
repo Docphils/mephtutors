@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
+#[Layout('layouts.app')]
+#[Title('Tutor Profile Management - MephEd Admin')]
 class TutorprofileManager extends Component
 {
     use WithPagination;

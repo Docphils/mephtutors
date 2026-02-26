@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CrmController;
-use App\Http\Controllers\PaymentController;
 // Admin Livewire Components
 use App\Livewire\Admin\AdminDashboardController;
 use App\Livewire\Admin\AdminIndexTestimonials;
@@ -15,16 +13,18 @@ use App\Livewire\Admin\RequestManager;
 use App\Livewire\Admin\ClientManager;
 use App\Livewire\Admin\ContactMessages;
 use App\Livewire\Admin\UserManager;
+use App\Livewire\Admin\InstitutionRequestManager;
+use App\Livewire\Admin\PaymentsManager;
 
 use App\Livewire\Testimonials\Testimonials;
 use App\Livewire\Testimonials\IndexTestimonials;
 use App\Livewire\Tutor\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\User;
 use App\Models\GuestRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Mail;
@@ -37,7 +37,7 @@ use App\Livewire\Requests\CrmRequestWizard;
 use App\Livewire\Requests\TutorRequestWizard;
 use App\Http\Controllers\PaystackController;
 use App\Models\ServiceItem;
-
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +82,16 @@ Route::get('/apply/crm/{serviceItem:slug}', CrmRequestWizard::class)->name('appl
 Route::get('/terms-of-service', TermsOfService::class)->name('terms.service');
 Route::get('testimonials', IndexTestimonials::class)->name('testimonials.index');
 
+//Unsubscribe Route
+Route::get('/unsubscribe/{user}', function (Request $request, User $user) {
+    if (! $request->hasValidSignature()) {
+        abort(401, 'Invalid or expired link.');
+    }
+
+    $user->update(['is_subscribed' => false]);
+
+    return "You have been successfully unsubscribed from MephEd newsletters.";
+})->name('newsletter.unsubscribe');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -128,15 +138,10 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     Route::get('admin/lessons', BookingManager::class)->name('admin.lessons');
 
     //Crm Routes
-    Route::get('admin/crm', [CrmController::class, 'index'])->name('admin.crm.index');
-    Route::get('admin/crm/{id}', [CrmController::class, 'show'])->name('admin.crm.show');
-    Route::get('admin/crm/{id}/edit', [CrmController::class, 'edit'])->name('admin.crm.edit');
-    Route::delete('admin/crm/{id}', [CrmController::class, 'destroy'])->name('admin.crm.destroy');
-    Route::patch('admin/crm/{id}/status', [CrmController::class, 'updateStauts'])->name('admin.crm.updateStatus');
+    Route::get('admin/intitution-requests', InstitutionRequestManager::class)->name('admin.crm.index');
 
     //Payments Routes
-    Route::get('admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
-
+    Route::get('admin/payments', PaymentsManager::class)->name('admin.payments.index');
 
     //Users Management Routes
     Route::get('admin/user-manager', UserManager::class)->name('admin.users');

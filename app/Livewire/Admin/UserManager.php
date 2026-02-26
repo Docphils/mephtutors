@@ -15,7 +15,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('MephEd - User Management')]
+#[Title('User Management - MephEd Admin')]
 class UserManager extends Component
 {
     use WithPagination;

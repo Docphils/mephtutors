@@ -1,4 +1,4 @@
-<div class="max-w-7xl m-10 mx-auto p-8 bg-cyan-100 min-h-screen">
+<div class="max-w-7xl  p-4 sm:p-6 bg-cyan-100 min-h-screen">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3 sm:gap-4">
@@ -37,7 +37,7 @@
         <div class="sm:flex gap-2 space-y-2 sm:space-y-0 w-full sm:w-1/3 justify-end">
             <!-- Qualification Select -->
             <select wire:change="setTab($event.target.value)"
-                class="px-4 py-2 rounded-lg text-white bg-cyan-700 hover:bg-cyan-800">
+                class="px-4 py-2 rounded-lg text-white bg-cyan-500 hover:bg-cyan-600">
                 <option value="All" {{ $activeTab == 'All' ? 'selected' : '' }}>All</option>
                 <option value="SSCE" {{ $activeTab == 'SSCE' ? 'selected' : '' }}>SSCE</option>
                 <option value="Diploma" {{ $activeTab == 'Diploma' ? 'selected' : '' }}>Diploma</option>
@@ -50,7 +50,7 @@
 
             <!-- Discipline Select -->
             <select wire:change="setTab($event.target.value)"
-                class="px-4 py-2 rounded-lg text-white bg-emerald-700 hover:bg-emerald-800">
+                class="px-4 py-2 rounded-lg text-white bg-slate-600 hover:bg-slate-700">
                 <option value="Science" {{ $activeTab == 'Science' ? 'selected' : '' }}>Science</option>
                 <option value="Arts" {{ $activeTab == 'Arts' ? 'selected' : '' }}>Arts</option>
                 <option value="Commerce" {{ $activeTab == 'Commerce' ? 'selected' : '' }}>Commerce</option>
@@ -63,19 +63,19 @@
     <!-- Display Tutor Profiles -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <div class="min-w-full divide-y divide-gray-200">
-            <div class="bg-cyan-50">
+            <div class="bg-cyan-700 text-slate-100 uppercase text-xs font-medium tracking-wider">
                 <div class="grid grid-cols-3 sm:grid-cols-5 pr-4 gap-2">
-                    <div class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase divacking-wider">Full
+                    <div class="px-4 py-3 text-left">Full
                         Name</div>
-                    <div class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Qual.
+                    <div class="px-4 py-3 text-left ">Qual.
                     </div>
                     <div
-                        class="hidden sm:block px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        class="hidden sm:block px-4 py-3 text-left ">
                         Exp.</div>
                     <div
-                        class="hidden sm:block px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        class="hidden sm:block px-4 py-3 text-left ">
                         Status</div>
-                    <div class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions
+                    <div class="px-4 py-3 text-left ">Actions
                     </div>
                 </div>
             </div>

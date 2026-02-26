@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('MephEd - Contact Messages')]
+#[Title('Contact Messages - MephEd Admin')]
 class ContactMessages extends Component
 {
     use WithPagination;

@@ -3,6 +3,7 @@
 namespace App\Livewire\Client;
 
 use App\Models\Crm;
+use App\Models\Service;
 use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -34,19 +35,54 @@ class CrmManager extends Component
     // Form Fields
     public $institution_name;
     public $institution_address;
+    public $service_id; // Added Service Category
     public $service_item_id;
     public $number_of_tutors_required = 1;
     public $delivery_mode = 'onsite';
     public $requirements;
     public $engagement_type;
+    public $curriculum;
+    public $level;
+    public $exam_type;
+    public $sessions_per_week = 1;
+
+    // UI Helpers for conditional logic
+    public $needsCurriculum = false;
+    public $needsLevel = false;
+    public $needsExamType = false;
     
     public $activeRequest;
 
     protected $listeners = ['openCrmCreate' => 'openCreate'];
 
-    // Reset pagination when search or filter changes
     public function updatingSearch() { $this->resetPage(); }
     public function updatingStatusFilter() { $this->resetPage(); }
+
+    /**
+     * Logic to load specific service items when a broad service category is selected.
+     * Matches logic found in CrmRequestWizard.
+     */
+    public function updatedServiceId()
+    {
+        $this->service_item_id = null;
+        $this->needsCurriculum = $this->needsLevel = $this->needsExamType = false;
+    }
+
+    /**
+     * Logic to handle conditional fields (Curriculum, Level, etc) 
+     * based on the specific Service Item selected.
+     */
+    public function updatedServiceItemId($value)
+    {
+        $item = ServiceItem::find($value);
+        if ($item) {
+            $this->needsCurriculum = $item->requires_curriculum;
+            $this->needsLevel = $item->requires_level;
+            $this->needsExamType = $item->requires_exam_type;
+        } else {
+            $this->needsCurriculum = $this->needsLevel = $this->needsExamType = false;
+        }
+    }
 
     public function openCreate()
     {
@@ -65,19 +101,22 @@ class CrmManager extends Component
         
         $this->institution_name = $record->institution_name;
         $this->institution_address = $record->institution_address;
+        
+        // Load the Service ID based on the Service Item relationship
         $this->service_item_id = $record->service_item_id;
+        $this->service_id = $record->serviceItem?->service_id;
+
         $this->number_of_tutors_required = $record->number_of_tutors_required;
         $this->delivery_mode = $record->delivery_mode;
         $this->requirements = $record->requirements;
         $this->engagement_type = $record->engagement_type;
+        $this->curriculum = $record->curriculum;
+        $this->level = $record->level;
+        $this->exam_type = $record->exam_type;
+        $this->sessions_per_week = $record->sessions_per_week;
 
+        $this->updatedServiceItemId($this->service_item_id);
         $this->showModal = true;
-    }
-
-    public function openView($id)
-    {
-        $this->activeRequest = Crm::with('serviceItem')->findOrFail($id);
-        $this->showDetails = true;
     }
 
     public function save()
@@ -85,14 +124,20 @@ class CrmManager extends Component
         $rules = [
             'institution_name' => 'required|string|min:3',
             'institution_address' => 'required|string',
+            'service_id' => 'required|exists:services,id',
             'service_item_id' => 'required|exists:service_items,id',
             'number_of_tutors_required' => 'required|integer|min:1',
+            'sessions_per_week' => 'required|integer|min:1',
             'delivery_mode' => 'required|in:onsite,online,hybrid',
             'engagement_type' => 'required|in:short_term,long_term,contract,club_management',
             'requirements' => 'nullable|string',
+            'curriculum' => $this->needsCurriculum ? 'required|string' : 'nullable',
+            'level' => $this->needsLevel ? 'required|string' : 'nullable',
+            'exam_type' => $this->needsExamType ? 'required|string' : 'nullable',
         ];
 
         $validated = $this->validate($rules);
+        unset($validated['service_id']); // service_id is for UI categorization, not in Crm table
 
         if ($this->isEditing) {
             Crm::find($this->selectedId)->update($validated);
@@ -115,32 +160,35 @@ class CrmManager extends Component
 
     private function resetForm()
     {
-        $this->reset(['institution_name', 'institution_address', 'service_item_id', 'requirements', 'engagement_type']);
+        $this->reset([
+            'institution_name', 'institution_address', 'service_id', 'service_item_id', 
+            'requirements', 'engagement_type', 'curriculum', 'level', 'exam_type'
+        ]);
         $this->number_of_tutors_required = 1;
+        $this->sessions_per_week = 1;
         $this->delivery_mode = 'onsite';
+        $this->needsCurriculum = $this->needsLevel = $this->needsExamType = false;
     }
 
     public function render()
     {
-        $query = Crm::with('serviceItem')
+        // Fetch Service Items for the selected category
+        $availableServiceItems = $this->service_id 
+            ? ServiceItem::where('service_id', $this->service_id)
+                ->where('is_active', true)
+                ->whereIn('target', ['institutions', 'both'])
+                ->get()
+            : collect();
+
+        $query = Crm::with('serviceItem.service')
             ->where('user_id', Auth::id())
-            // Search logic
-            ->when($this->search, function($q) {
-                $q->where(function($sub) {
-                    $sub->where('institution_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('requirements', 'like', '%' . $this->search . '%');
-                });
-            })
-            // Filter logic
-            ->when($this->statusFilter, function($q) {
-                $q->where('status', $this->statusFilter);
-            })
-            // Sort logic
+            ->when($this->search, fn($q) => $q->where('institution_name', 'like', '%' . $this->search . '%'))
             ->orderBy($this->sortBy, $this->sortDir);
 
         return view('livewire.client.crm-manager', [
             'items' => $query->paginate(9),
-            'serviceItems' => ServiceItem::whereIn('target', ['institutions', 'both'])->get()
+            'services' => Service::where('target', 'institutions')->get(),
+            'serviceItems' => $availableServiceItems
         ]);
     }
 }

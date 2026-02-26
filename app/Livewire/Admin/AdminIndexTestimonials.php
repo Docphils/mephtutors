@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('Manage testimonials - MephEd')]
+#[Title('Manage testimonials - MephEd Admin')]
 class AdminIndexTestimonials extends Component
 {
     use WithPagination;

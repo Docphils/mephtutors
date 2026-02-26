@@ -58,6 +58,12 @@
             <span>Manage Lessons</span>
         </a>
 
+        <a wire:navigate href="{{ route('admin.crm.index') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.crm.index') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-school w-5 text-cyan-300"></i>
+            <span>Manage Org. Requests</span>
+        </a>
+
         <a wire:navigate href="{{ route('admin.payments.index') }}"
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.payments.index') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-bank w-5 text-cyan-300"></i>
@@ -74,12 +80,6 @@
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.newsletter') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-file w-5 text-cyan-300"></i>
             <span>Manage Newsletters</span>
-        </a>
-
-        <a wire:navigate href="{{ route('admin.crm.index') }}"
-            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.crm.index') ? 'bg-cyan-600' : '' }}">
-            <i class="fas fa-school w-5 text-cyan-300"></i>
-            <span>CRM & Clubs</span>
         </a>
 
         <a wire:navigate href="{{ route('admin.testimonials') }}"
@@ -99,7 +99,6 @@
         </a>
         <!-- ===== Footer ===== -->
         <div class="border-t border-cyan-600 my-4 text-sm">
-            @livewire('newsletter-subscription')
             <!-- Settings Dropdown -->
             <div class="items-center w-full bg-slate-200 rounded-lg p-3 mt-4 text-gray-700">
 

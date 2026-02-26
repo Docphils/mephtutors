@@ -1,75 +1,141 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
-        <title>MephEd Newsletter</title>
+<head>
+    <meta charset="utf-8">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+    <title>{{ $content['subject'] }}</title>
+    <style>
+        .body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            word-break: break-word;
+            -webkit-font-smoothing: antialiased;
+            background-color: #f8fafc;
+        }
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style>
-            .body{
-                color: black;
-            }
-            .container{
-                max-width: 80%;
-                margin: auto;
-                margin-top: 3rem;
-                border-radius: 25px;
-            }
-            .header{
-                background-color: darkslategray;
-                color: white;
-                padding: 2rem;
-                text-align: center;
-            }
-            .mail-body{
-                color: darkslategray;
-            }
-            .footer{
-                background-color: darkslategray;
-                color: white;
-                text-align: center;
-                font-size: 0.75em;
-                padding: 2em;
-            }
-        </style>
+        .content-table {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
 
-        
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @livewireStyles
-    </head>
-    <body class=" body bg-gray-100 text-gray-800">
-        <div class="container max-w-2xl mx-auto mt-10 bg-white shadow-lg rounded-lg overflow-hidden">
-            <!-- Header Section -->
-            <div class="header bg-gray-800 p-6 text-white">
-                <div class="flex items-center justify-center bg-cyan-800">
-                    <img src="{{ asset('images/MephEd.png') }}" alt="MephEd Logo" class="w-12 h-6 mr-4">
-                    <h1 class="text-lg font-bold">{{ $content['title'] }}</h1>
-                </div>
-            </div>
+        .header {
+            background-color: #0891b2;
+            padding: 40px 20px;
+            text-align: center;
+        }
 
-            <!-- Body Section -->
-            <div class="mail-body p-6">
-                <p class="text-lg font-medium mb-4">Greetings,</p>
-                <p></p>
-                
+        .inner-body {
+            padding: 40px 30px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #334155;
+            line-height: 1.6;
+        }
 
-                <p class="mt-6 text-gray-600">{!! $content['body'] !!}</p>
-                <p class="mt-4 text-gray-600">{{ $content['body2'] }}</p>
-                <p class="mt-4 text-gray-600">Best regards,<br><strong>MephEd Support Team</strong></p>
-            </div>
+        .footer {
+            background-color: #f1f5f9;
+            padding: 24px;
+            text-align: center;
+            font-family: sans-serif;
+            font-size: 12px;
+            color: #64748b;
+        }
 
-            <!-- Footer Section -->
-            <div class="footer bg-cyan-800 p-4 text-center text-white text-sm">
-                &copy; {{ date('Y') }} MephEd. All rights reserved.
-            </div>
-        </div>
-        @livewireScripts
-    </body>
-    </html>
+        h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .button {
+            background-color: #0891b2;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body class="body">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td align="center">
+                <table class="content-table" role="presentation" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                        <td class="header">
+                            <img src="{{ asset('images/MephEd.png') }}" alt="MephEd Logo" width="120"
+                                style="margin-bottom: 20px; display: inline-block; border: 0;">
+                            <h1>{{ $content['title'] }}</h1>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="inner-body">
+                            {{-- <p style="font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 16px;">
+                                Hello there,
+                            </p> --}}
+
+                            <div style="font-size: 15px; color: #475569;">
+                                {!! str_replace(
+                                    ['<ul>', '<ol>'],
+                                    ['<ul style="padding-left:20px; margin:10px 0;">', '<ol style="padding-left:20px; margin:10px 0;">'],
+                                    $content['body'],
+                                ) !!}
+                            </div>
+
+                            @if (!empty($content['body2']))
+                                <div
+                                    style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #f1f5f9; font-size: 14px; color: #64748b; font-style: italic;">
+                                    {{ $content['body2'] }}
+                                </div>
+                            @endif
+
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                                style="margin-top: 40px;">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0; font-size: 14px; color: #1e293b;">Best regards,</p>
+                                        <p style="margin: 0; font-size: 15px; font-weight: 800; color: #0891b2;">MephEd
+                                            Support Team</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="footer">
+                            <p style="margin: 0 0 10px 0;">&copy; {{ date('Y') }} MephEd. All rights reserved.</p>
+                            <p style="margin: 0;">
+                                Changed your mind?
+                                <a href="{{ $unsubscribeUrl }}"
+                                    style="color: #0891b2; text-decoration: underline; font-weight: bold;">
+                                    Click here to Unsubscribe
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('Tutor Requests | MephEd')] 
+#[Title('Tutor Requests | MephEd Admin')] 
 class RequestManager extends Component
 {
     use WithPagination;

@@ -137,7 +137,7 @@
                     @if ($serviceItems)
                         <div>
                             <label class="block mb-2 font-semibold">Specific Option</label>
-                            <select wire:model="service_item_id" class="w-full border rounded-xl px-4 py-3">
+                            <select wire:model.live="service_item_id" class="w-full border rounded-xl px-4 py-3">
                                 <option value="">Select Option</option>
                                 @foreach ($serviceItems as $item)
                                     <option value="{{ $item->id }}">{{ $item->name }}</option>
@@ -148,16 +148,53 @@
                             @enderror
                         </div>
                     @endif
+
+                    {{-- Conditional Missing Fields --}}
+                    @if ($needsLevel)
+                        <div>
+                            <label class="block mb-2 font-semibold">Academic Level</label>
+                            <input type="text" wire:model="level" class="w-full border rounded-xl px-4 py-3"
+                                placeholder="e.g. Primary, Secondary">
+                            @error('level')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
+
+                    @if ($needsCurriculum)
+                        <div>
+                            <label class="block mb-2 font-semibold">Curriculum</label>
+                            <input type="text" wire:model="curriculum" class="w-full border rounded-xl px-4 py-3"
+                                placeholder="e.g. British, Nigerian">
+                            @error('curriculum')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
+
+                    @if ($needsExamType)
+                        <div>
+                            <label class="block mb-2 font-semibold">Exam Type</label>
+                            <input type="text" wire:model="exam_type" class="w-full border rounded-xl px-4 py-3"
+                                placeholder="e.g. WAEC, IGCSE">
+                            @error('exam_type')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
+
                     <div class="md:col-span-2">
                         <label class="block mb-2 font-semibold">Additional Notes</label>
-                        <textarea wire:model="requirements" class="w-full border rounded-xl px-4 py-3" placeholder="Any specific requirements?"></textarea>
+                        <textarea wire:model="requirements" class="w-full border rounded-xl px-4 py-3"
+                            placeholder="Any specific requirements?"></textarea>
                     </div>
                 </div>
 
                 <div class="mt-8 flex justify-between">
                     <button wire:click="back" class="bg-gray-200 hover:bg-gray-100 px-6 py-3 rounded-xl border">←
                         Back</button>
-                    <button wire:click="next" class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold">Continue
+                    <button wire:click="next"
+                        class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold">Continue
                         →</button>
                 </div>
             @endif
@@ -170,7 +207,7 @@
                         <label class="block mb-2 font-semibold">Delivery Mode</label>
                         <select wire:model="delivery_mode" class="w-full border rounded-xl px-4 py-3">
                             <option value="online">Online</option>
-                            <option value="offline">Offline</option>
+                            <option value="offline">Offline (Onsite)</option>
                             <option value="hybrid">Hybrid</option>
                         </select>
                     </div>
