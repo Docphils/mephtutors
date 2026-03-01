@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
 // Admin Livewire Components
 use App\Livewire\Admin\AdminDashboardController;
 use App\Livewire\Admin\AdminIndexTestimonials;
@@ -15,29 +16,29 @@ use App\Livewire\Admin\ContactMessages;
 use App\Livewire\Admin\UserManager;
 use App\Livewire\Admin\InstitutionRequestManager;
 use App\Livewire\Admin\PaymentsManager;
+use App\Livewire\Admin\TutorProfileView;
 
-use App\Livewire\Testimonials\Testimonials;
-use App\Livewire\Testimonials\IndexTestimonials;
+// Tutor Routes
 use App\Livewire\Tutor\DashboardController;
+use App\Livewire\Tutor\TutorLessons;
+use App\Livewire\Tutor\Payments;
+use App\Livewire\Tutor\TutorProfiles;
+
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use App\Models\GuestRequest;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Mail;
-//Client Livewire Components
+use App\Models\User;
+
+// Client Livewire Components
 use App\Livewire\Client\CrmManager;
 use App\Livewire\Client\DashboardController as ClientDashboard;
 use App\Livewire\Client\TutorRequestsManager;
 use App\Livewire\Client\Lessons;
 use App\Livewire\Requests\CrmRequestWizard;
 use App\Livewire\Requests\TutorRequestWizard;
+use App\Livewire\Testimonials\Testimonials;
+use App\Livewire\Testimonials\IndexTestimonials;
 use App\Http\Controllers\PaystackController;
-use App\Models\ServiceItem;
-use App\Models\User;
+
+use App\Livewire\Partials\UserProfileEditor;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,6 +101,9 @@ Route::middleware('auth')->group(function () {
     Route::get('add-testimonial', Testimonials::class)->name('testimonial');
 });
 
+Route::middleware(['auth', 'can:AdminOrClient'])->group(function () {
+    Route::get('user-profile-editor', UserProfileEditor::class)->name('userProfile');
+});
 
 Route::middleware(['auth', 'can:Client'])->group(function () {
     // Client Dashboard
@@ -116,15 +120,10 @@ Route::middleware(['auth', 'can:Client'])->group(function () {
 Route::middleware(['auth', 'can:Tutor', 'verified'])->group(function () {
     // Tutor Dashboard
     Route::get('/tutor/dashboard', DashboardController::class)->name('tutor.dashboard');
+    Route::get('/tutor/lessons', TutorLessons::class)->name('tutor.lessons');
+    Route::get('/tutor/tutor-profile', TutorProfiles::class)->name('tutor.tutor-profile');
+    Route::get('/tutor/payments', Payments::class)->name('tutor.payments');
    
-    //Bookings
-    Route::post('bookings/{booking}/tutorRemarks', [BookingController::class, 'addTutorRemarks'])->name('bookings.addTutorRemarks');
-
-    //Payment Routes
-    Route::get('tutor/payments', [PaymentController::class, 'tutorIndex'])->name('tutor.payments.index');
-    Route::get('tutor/payments/{id}', [PaymentController::class, 'toturShow'])->name('tutor.payments.show');
-
-
 });
 
 Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
@@ -146,6 +145,7 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     //Users Management Routes
     Route::get('admin/user-manager', UserManager::class)->name('admin.users');
     Route::get('admin/tutor-profile-management', TutorprofileManager::class)->name('admin.tutorProfile');
+    Route::get('/admin/tutors/{profile}', TutorProfileView::class)->name('admin.tutors.view');
     Route::get('admin/client-management', ClientManager::class)->name('admin.clientManager');
 
     Route::get('admin/contact-messages', ContactMessages::class)->name('admin.contactMessages');

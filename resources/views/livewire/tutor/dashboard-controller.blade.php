@@ -1,156 +1,142 @@
-<div class="grid sm:grid-cols-5 min-h-full">
+<div class="p-6 max-w-7xl mx-auto space-y-8">
+    {{-- Header Section --}}
     <x-slot name="header">
-        <div class="flex justify-between align-center">
-            <div class="text-cyan-200 align-center text-xl font-semibold">Tutor Dashboard</div>
-            <div class="block sm:hidden ">
-                <!-- Profile Display -->
-                @if ($tutorProfile)
-                    <div class="">
-                        <img src="{{ asset('storage/' . $tutorProfile->image) }}" alt="Profile image" class="h-8 w-8 rounded-full object-cover border-2 border-white shadow-sm shadow-white">
-                    </div>
-                @endif
+        <div class="flex items-center gap-4">
+            <div
+                class="w-12 h-12 bg-cyan-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-cyan-200">
+                <i class="fa-solid fa-house-laptop text-xl"></i>
+            </div>
+            <div>
+                <h2 class="font-black text-2xl text-slate-800 tracking-tight">Tutor <span
+                        class="text-cyan-600">Dashboard</span></h2>
+                <p class="text-slate-500 text-sm font-medium">Track your earnings, lessons, and profile details at a
+                    glance.</p>
             </div>
         </div>
-        
     </x-slot>
-    <!-- Sidebar-->
-    <section class="justify-between sm:block bg-gradient-to-t from-cyan-500 to-cyan-900 shadow-lg shadow-cyan-600 sm:px-10 p-6 sm:py-10 border-l-4 min-h-full">
-        <div class="hidden sm:block mb-6">
-            <!-- Profile Display -->
-            @if ($tutorProfile)
-                <div class="sm:text-center mb-3">
-                    <div class="flex justify-center">
-                        <img src="{{ asset('storage/' . $tutorProfile->image) }}" alt="Profile image" class="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm shadow-white">
+
+    {{-- Offline Alert --}}
+    <div wire:offline
+        class="bg-rose-50 border border-rose-100 text-rose-700 px-4 py-3 rounded-xl text-sm font-bold animate-pulse">
+        <i class="fa-solid fa- wifi-slash mr-2"></i> This device is currently offline.
+    </div>
+
+    {{-- Welcome & Profile Status Section --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm relative overflow-hidden">
+            <div class="relative z-10">
+                <h3 class="text-3xl font-black text-slate-800 mb-2">Hello, {{ explode(' ', $user->name)[0] }}! 👋</h3>
+                <p class="text-slate-500 font-medium mb-6">Welcome back to your teaching portal. Here is what's
+                    happening today.</p>
+
+                @if (!$tutorProfile || $incompleteTutorProfile)
+                    <div class="flex items-center gap-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <div class="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
+                            <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-rose-800 font-bold text-sm">Profile Incomplete</p>
+                            <p class="text-rose-600 text-xs font-medium">Complete your profile to unlock all features.
+                            </p>
+                        </div>
+                        <a href="{{ route('tutor.tutor-profile') }}" wire:navigate
+                            class="px-4 py-2 bg-white text-rose-600 border border-rose-200 rounded-xl text-xs font-black hover:bg-rose-50 transition-all">
+                            Complete Now
+                        </a>
                     </div>
-                    <div class="hidden sm:block mb-2">
-                        <p class="font-semibold">{{ $tutorProfile->fullName }}</p>
-                        <p class="text-xs text-green-400">{{ strToUpper($tutorProfile->user->role) }}</p>
-                    </div>
-                </div>
-            @endif
-        </div>
-        <hr class="hidden sm:block w-full mb-6">
-        <!--Menu Buttons-->
-        <div class="text-xs md:text-base grid grid-cols-5 sm:grid-cols-1 ">
-            <div class="sm:mb-4 p-1 border">
-                <button type="button" wire:click.prevent="$set('mainPage', 'lessons')" class="flex gap-2 items-center">
-                    <i class="fas fa-book text-cyan-100 w-6 hidden md:block"></i><span>Lessons</span>
-                </button>
-            </div>
-            <div class="sm:mb-4 p-1 border">
-                <button type="button" wire:click.prevent="$set('mainPage', 'coding')" class="flex gap-2 items-center">
-                    <i class="fas fa-code text-cyan-100 w-6 hidden md:block"></i><span>Coding</span>
-                </button>
-            </div>
-            <div class="sm:mb-4 p-1 border">
-                <button type="button" wire:click.prevent="$set('mainPage', 'clubs')" class="flex gap-2 items-center">
-                    <i class="fas fa-users text-cyan-100 w-6 hidden md:block"></i><span>Clubs</span>
-                </button>
-            </div>
-            <div class="sm:mb-4 p-1 border">
-                <button type="button" wire:click.prevent="$set('mainPage', 'payments')" class="flex gap-2 items-center">
-                    <i class="fas fa-money-bill-wave text-cyan-100 w-6 hidden md:block"></i><span>Payments</span>
-                </button>
-            </div>
-            
-           
-        </div>
-
-        <div class="text-xs md:text-base flex sm:block mt-4">
-            <div class="sm:mb-4 p-1 border">
-                <button type="button" wire:click.prevent="$set('createProfile', true)" class="flex gap-2 items-center">
-                    <i class="fas fa-user text-cyan-100 w-6 hidden md:block"></i><span>Profile</span>
-                </button>
-            </div>
-
-            @if ($tutorProfile)
-            <div class="sm:mb-4 p-1 border">
-                <button type="button" wire:click.prevent="$set('tutorVideo', true)" class="flex gap-2 items-center">
-                    <i class="fas fa-video text-cyan-100 w-6 hidden md:block"></i><span class="">Upload Video</span>
-                </button>
-            </div> 
-            @endif
-            <div class="sm:mb-4 p-1 border">
-                <a href="https://chat.whatsapp.com/Gum1YqOp0G31WlyyokKxE0" target="_blank" class="flex items-center ml-2">
-                    <i class="fab fa-whatsapp text-green-300 w-6 hidden md:block"></i><span class="">Tutor community</span>
-                </a>
-            </div>
-            <div class=" hidden md:block self-end p-1 border col-span-6">
-                @livewire('newsletter-subscription')
-            </div>
-        </div>
-        <div class=" sm:hidden block self-end border mt-3">
-            @livewire('newsletter-subscription')
-        </div>
-        
-    </section>
-    
-    <div class="sm:col-span-4 ">
-        @if ($uploadVideo)
-            <livewire:tutor.professional-video />
-        @endif
-
-        @if ($createProfile)
-            <livewire:tutor.tutor-profiles @saved="close" />
-        @endif
-        
-        <!-- Main-->
-        <div class="relative w-full">
-            <div wire:offline class="text-center text-red-600 bg-red-100 px-5 py-1 rounded">
-                This device is currently offline.
-            </div>
-            <img src="/images/banner2.jpg" alt="Banner image" class="object-cover w-full max-h-24">
-            <div class="absolute inset-0 items-center text-center py-6 text-lg sm:text-xl md:text-3xl font-semibold"><span class="bg-cyan-500 p-1 rounded-sm">Teach for Excellence with MephEd</span> </div>
-        </div>
-
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cyan-200 dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h3 class="text-2xl mb-4">Hello, {{ $user->name }}!</h3>    
-                        @if (!$tutorProfile)
-                            <div class="mb-4 p-4 bg-red-100 text-red-800 rounded">
-                                <strong>Profile Incomplete!</strong> Please complete your profile to enjoy seemless services <button class="text-cyan-600" type="button" wire:click="$set('createProfile', true)">here</button>
+                @else
+                    @if (in_array($tutorProfile->status, ['Review', 'Pending']))
+                        <div class="flex items-center gap-4 p-4 bg-emerald-50 border border-amber-100 rounded-2xl">
+                            <div
+                                class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                                <i class="fa-solid fa-warning text-lg"></i>
                             </div>
-                        @endif
-    
-                        @if ($tutorVideo)
-                            <livewire:tutor.video />
-                        @endif
-                        @if ($mainPage === 'lessons')
-                            <livewire:tutor.lessons />
-                        @elseif ($mainPage === 'payments') 
-                            <livewire:tutor.payments />                                   
-                        @else
-                        
-    
-                        <div class="mt-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                                <div class="bg-white dark:bg-gray-900 p-6 rounded shadow">
-                                    <h4 class="text-lg font-semibold">Pending Payments</h4>
-                                    <h4 class="text-sm">Payment will be due once lesson is completed</h4>
-                                    <p class="text-3xl mt-2 text-right">{{ $pendingPayments }}</p>
-                                </div>
-                                <div class="bg-white dark:bg-gray-900 p-6 rounded shadow">
-                                    <h4 class="text-lg font-semibold">Earned Payments </h4>
-                                    <h4 class="text-sm">Earned payments will be disbursed within 24hrs on business days</h4>
-                                    <p class="text-3xl mt-2 text-right">{{ $earnedPayments }}</p>
-                                </div>
-                                <div class="bg-white dark:bg-gray-900 p-6 rounded shadow">
-                                    <h4 class="text-lg font-semibold">Completed Payments </h4>
-                                    <p class="text-3xl mt-2 text-right">{{ $completedPayments }}</p>
-                                </div>
-                                
+                            <div>
+                                <p class="text-amber-800 font-bold text-sm">Profile Status: {{ $tutorProfile->status }}
+                                </p>
+                                <p class="text-amber-600 text-xs font-medium tracking-wide uppercase">
+                                    {{ $tutorProfile->status === 'Pending' ? 'Your profile is awaiting review by MephEd admin.' : 'Your profile has been marked for review. Kindly effect recommendations for approval' }}
+                                </p>
                             </div>
                         </div>
-     
-                        @endif
+                    @else
+                        <div class="flex items-center gap-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                            <div
+                                class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                                <i class="fa-solid fa-circle-check text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-emerald-800 font-bold text-sm">Profile Status:
+                                    {{ $tutorProfile->status }}
+                                </p>
+                                <p class="text-emerald-600 text-xs font-medium tracking-wide uppercase">Your profile has
+                                    been approved and you can now be matched with clients.</p>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+            </div>
+            {{-- Decorative Element --}}
+            <div class="absolute top-[-20px] right-[-20px] w-40 h-40 bg-cyan-50 rounded-full opacity-50"></div>
+        </div>
 
-                    </div>
-                </div>
+        {{-- Quick Stats / Mini Calendar or Actions --}}
+        <div class="bg-cyan-600 rounded-3xl p-8 text-white shadow-lg shadow-cyan-200 flex flex-col justify-center">
+            <h4 class="font-bold mb-4 opacity-80 uppercase text-xs tracking-widest">Quick Actions</h4>
+            <div class="space-y-3">
+                <a href="{{ route('tutor.lessons') }}" wire:navigate
+                    class="flex items-center justify-between p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all group">
+                    <span class="font-bold text-sm">View My Lessons</span>
+                    <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                </a>
+                <a href="{{ route('tutor.payments') }}" wire:navigate
+                    class="flex items-center justify-between p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all group">
+                    <span class="font-bold text-sm">Financial History</span>
+                    <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                </a>
             </div>
         </div>
     </div>
-    
+
+    {{-- Financial Statistics Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {{-- Pending Payments --}}
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mb-4">
+                <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+            </div>
+            <h4 class="text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">Pending Payments</h4>
+            <div class="flex items-end justify-between">
+                <p class="text-3xl font-black text-slate-800">{{ $pendingPayments }}</p>
+                <span class="text-[10px] text-slate-400 font-medium mb-1 italic text-right">Due after lesson
+                    completion</span>
+            </div>
+        </div>
+
+        {{-- Earned Payments --}}
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 mb-4">
+                <i class="fa-solid fa-hand-holding-dollar text-xl"></i>
+            </div>
+            <h4 class="text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">Earned Payments</h4>
+            <div class="flex items-end justify-between">
+                <p class="text-3xl font-black text-slate-800">{{ $earnedPayments }}</p>
+                <span class="text-[10px] text-slate-400 font-medium mb-1 italic text-right">Disbursed within
+                    24hrs</span>
+            </div>
+        </div>
+
+        {{-- Completed Payments --}}
+        <div
+            class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all border-b-4 border-b-cyan-500">
+            <div class="w-12 h-12 bg-cyan-50 rounded-2xl flex items-center justify-center text-cyan-600 mb-4">
+                <i class="fa-solid fa-circle-check text-xl"></i>
+            </div>
+            <h4 class="text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">Total Paid Out</h4>
+            <div class="flex items-end justify-between">
+                <p class="text-3xl font-black text-slate-800">{{ $completedPayments }}</p>
+                <span class="text-[10px] text-slate-400 font-medium mb-1 italic">Successful transfers</span>
+            </div>
+        </div>
+    </div>
 </div>

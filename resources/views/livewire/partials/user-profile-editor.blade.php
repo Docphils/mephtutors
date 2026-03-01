@@ -1,5 +1,40 @@
     <!-- Edit Form -->
-    <div class="fixed w-full inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto">
+    <div class="h-screen">
+        <x-slot name="header">
+            <div
+                class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-black text-slate-800 tracking-tight">Manage <span
+                            class="text-cyan-600">Profile Data</span></h1>
+                    <p class="text-slate-500 text-sm">Manage your profile details here.</p>
+                </div>
+                @can('Admin')
+                    <a wire:navigate href="{{ route('admin.dashboard') }}"
+                        class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl font-bold transition-all shadow-lg shadow-cyan-100 flex items-center gap-2 text-sm ">
+                        <i class="fas fa-house-laptop"></i>
+                        Dashboard
+                    </a>
+                @endcan
+                @can('Client')
+                    <a wire:navigate href="{{ route('client.dashboard') }}"
+                        class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl font-bold transition-all shadow-lg shadow-cyan-100 flex items-center gap-2 text-sm ">
+                        <i class="fas fa-house-laptop"></i>
+                        Dashboard
+                    </a>
+                @endcan
+            </div>
+        </x-slot>
+        <div wire:offline class="fixed top-6 right-6 z-50">
+            <div class="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full shadow-2xl animate-pulse">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a5 5 0 010-7.072M4.929 19.071a9 9 0 010-12.728m0 0l2.829 2.829m-2.829-2.829L3 3">
+                    </path>
+                </svg>
+                <span class="text-xs font-bold uppercase tracking-wider">System Offline</span>
+            </div>
+        </div>
+
         <!-- Modal Container -->
         <form wire:submit.prevent="save" enctype="multipart/form-data"
             class="relative w-4xl max-w-4/5 bg-white text-gray-900 rounded-lg shadow-lg p-6 z-30 h-auto max-h-[90vh] overflow-y-auto">
@@ -121,10 +156,16 @@
                     class="inline-flex items-center px-4 py-2 bg-pink-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-pink-800 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:shadow-outline-blue disabled:opacity-25 transition ease-in-out duration-150">
                     Save
                 </button>
-                <button wire:click="closeProfileModal" type="button"
-                    class="px-4 py-2 bg-gray-500 text-white rounded-md">
-                    Cancel
-                </button>
+                @can('Client')
+                    <button wire:navigate href="{{ route('client.dashboard') }}"
+                        class="px-4 py-2 bg-gray-500 text-white rounded-md flex items-center gap-2"> <i
+                            class="fas fa-house-shield"></i> Dashboard </button>
+                @endcan
+                @can('Admin')
+                    <button wire:navigate href="{{ route('admin.dashboard') }}"
+                        class="px-4 py-2 bg-gray-500 text-white rounded-md flex items-center gap-2"> <i
+                            class="fas fa-house-shield"></i> Dashboard </button>
+                @endcan
             </div>
         </form>
     </div>

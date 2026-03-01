@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
     <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -35,15 +36,15 @@
         @can('Admin')
             @include('layouts.admin-sidebar')
         @endcan
+        @can('Tutor')
+            @include('layouts.tutor-sidebar', ['tutorProfile' => $tutorProfile])
+        @endcan
 
         <!-- ===== MAIN CONTENT ===== -->
         <div class="relative w-full flex-1 flex flex-col min-h-screen">
 
             <!-- Top Bar -->
             <header class="bg-white shadow-sm border-b">
-                @canany(['Tutor', 'Client'])
-                    @include('layouts.header')
-                @endcanany
                 <div class="relative flex items-center justify-between px-4 sm:px-6 py-4 gap-2">
 
                     <!-- Mobile Toggle -->
@@ -59,15 +60,11 @@
                 </div>
             </header>
 
-            <div x-show="showEditor">
-                <livewire:partials.user-profile-editor />
-            </div>
-
             <!-- Page Content -->
             <main class="relative w-full flex-1 p-4 sm:p-6 lg:p-8">
                 {{ $slot }}
             </main>
-
+            @include('layouts.footer')
         </div>
 
     </div>

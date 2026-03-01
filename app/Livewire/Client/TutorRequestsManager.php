@@ -219,11 +219,14 @@ class TutorRequestsManager extends Component
                     'street_address' => 'required'
                 ]);
                 $finalAddress = "{$this->street_address}, {$this->city}, {$this->state}";
-                $profile->update([
-                    'address' => $this->street_address,
-                    'city' => $this->city,
-                    'state' => $this->state
-                ]);
+                Auth::user()->userProfile()->updateOrCreate(
+                    ['user_id' => Auth::id()], // Search criteria
+                    [
+                        'address' => $this->street_address,
+                        'city' => $this->city,
+                        'state' => $this->state
+                    ]
+                );
             }
         }
 

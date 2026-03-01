@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('amount');
             $table->string('evidence')->nullable();
             $table->enum('status', ['Pending','Earned', 'Paid']);
+            $table->json('dispute')->nullable();
             $table->unsignedBigInteger('tutor_id');
             $table->timestamps();
 

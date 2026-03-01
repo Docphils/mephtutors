@@ -18,6 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('tutor_id');
             $table->unsignedBigInteger('tutor_request_id');
             $table->foreignId('service_item_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('level_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('exam_type_id')->nullable()->constrained()->nullOnDelete();
             $table->date('start_date');
             $table->date('end_date');
             $table->string('location');

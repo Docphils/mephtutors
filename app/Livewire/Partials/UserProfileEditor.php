@@ -7,7 +7,11 @@ use App\Models\UserProfile as Profile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
+#[Layout('layouts.app')]
+#[Title('User Profile Editor - MephEd')]
 class UserProfileEditor extends Component
 {
 
@@ -78,6 +82,11 @@ class UserProfileEditor extends Component
             $u->name = $this->fullname;
             $u->save();
             session()->flash('success', 'Profile update successful.');
+            if (Gate::allows('Admin')) {
+                return $this->redirectRoute('admin.dashboard', navigate: true);
+            } else {
+                return $this->redirectRoute('client.dashboard', navigate: true);
+            }
         } else {
             // Create profile
             $data['user_id'] = Auth::id();
@@ -87,13 +96,13 @@ class UserProfileEditor extends Component
             $u->name = $this->fullname;
             $u->save();
             session()->flash('success', 'Profile created successfully.');
+            if (Gate::allows('Admin')) {
+                return $this->redirectRoute('admin.dashboard', navigate: true);
+            } else {
+                return $this->redirectRoute('client.dashboard', navigate: true);
+            }
+            
         }
-        $this->dispatch('close-profile-editor');
-    }
-
-    public function closeProfileModal()
-    {
-        $this->dispatch('close-profile-editor');
     }
 
 

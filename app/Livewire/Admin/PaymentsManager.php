@@ -26,6 +26,12 @@ class PaymentsManager extends Component
     public $editModal = false;
     public $showModal = false;
     public $createModal = false;
+
+    // Dispute Resolution Fields
+    public $showDisputeModal = false;
+    public $adminResponse = '';
+    public $disputeStatus = '';
+
     public $amount, $evidence, $tutor_id, $booking_id;
     public $newEvidence;
 
@@ -37,35 +43,71 @@ class PaymentsManager extends Component
 
     public function showPayment($id)
     {
-        $this->selectedPayment = Payment::findOrFail($id);
+        $this->selectedPayment = Payment::with([
+        'tutor.tutorProfile', 
+        'booking.client'
+    ])->findOrFail($id);
         $this->showModal = true;
+    }
+
+    /**
+     * Open the dispute resolution modal
+     */
+    public function resolveDispute($id)
+    {
+        $this->selectedPayment = Payment::findOrFail($id);
+        $this->adminResponse = $this->selectedPayment->dispute['admin_response'] ?? '';
+        $this->disputeStatus = $this->selectedPayment->dispute['status'] ?? 'Resolved';
+        $this->showDisputeModal = true;
+    }
+
+    /**
+     * Save the admin's resolution to the dispute JSON field
+     */
+    public function submitResolution()
+    {
+        $this->validate([
+            'adminResponse' => 'required|string|min:5',
+            'disputeStatus' => 'required|in:Resolved,Rejected,Pending',
+        ]);
+
+        $dispute = $this->selectedPayment->dispute;
+        $dispute['admin_response'] = $this->adminResponse;
+        $dispute['status'] = $this->disputeStatus;
+        $dispute['resolved_at'] = now()->toDateTimeString();
+
+        $this->selectedPayment->update([
+            'dispute' => $dispute
+        ]);
+
+        session()->flash('message', 'Dispute resolution saved successfully.');
+        $this->showDisputeModal = false;
+        $this->selectedPayment = null;
     }
 
     public function render()
     {
         $payments = Payment::when($this->status, function ($query) {
+            // Support filtering by 'Disputed' specifically
+            if($this->status === 'Disputed') {
+                return $query->whereNotNull('dispute');
+            }
             return $query->where('status', $this->status);
         })->where(function ($query) {
             return $query->where('amount', 'like', '%'.$this->search.'%')
-                         ->orWhereHas('tutor', function ($q) {
+                         ->orWhereHas('tutor', function($q) {
                              $q->where('name', 'like', '%'.$this->search.'%');
-                         })
-                         ->orWhereHas('booking', function ($q) {
-                             $q->where('location', 'like', '%'.$this->search.'%');
                          });
-        })->paginate(10);
+        })->latest()->paginate(15);
 
+        $tutors = User::where('role', 'tutor')->get();
+        $bookings = Booking::with('client')->get();
 
-        $tutors = User::where('role','tutor')->get();
-        $bookings = Booking::all();
-
-        return view('livewire.admin.payments-manager', compact('payments', 'tutors', 'bookings'));
-    }
-
-    public function create()
-    {
-        $this->resetFields();
-        $this->createModal = true;
+        return view('livewire.admin.payments-manager', [
+            'payments' => $payments,
+            'tutors' => $tutors,
+            'bookings' => $bookings,
+        ]);
     }
 
     public function store()
@@ -154,6 +196,22 @@ class PaymentsManager extends Component
         session()->flash('message', 'Payment deleted successfully.');
     }
 
+    public function closeModals()
+    {
+        $this->editModal = false;
+        $this->deleteModal = false;
+        $this->showModal = false;
+        $this->createModal = false;
+        $this->showDisputeModal = false;
+        $this->selectedPayment = null;
+    }
+
+    public function create()
+    {
+        $this->resetFields();
+        $this->createModal = true;
+    }
+
     private function resetFields()
     {
         $this->amount = '';
@@ -163,13 +221,7 @@ class PaymentsManager extends Component
         $this->tutor_id = '';
         $this->booking_id = '';
         $this->selectedPayment = null;
-    }
-    public function closeModals()
-    {
-        $this->editModal = false;
-        $this->deleteModal = false;
-        $this->showModal = false;
-        $this->createModal = false;
-        $this->resetFields();
+        $this->adminResponse = '';
+        $this->disputeStatus = '';
     }
 }

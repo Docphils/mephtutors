@@ -3,9 +3,10 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use App\Models\{Booking, Crm, Payment, TutorRequest, User};
+use App\Models\{Booking, Crm, Payment, TutorRequest, User, TutorProfile, Bootcamp, Contact, Newsletter};
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\{Layout, Title};
+use Carbon\Carbon;
 
 #[Layout('layouts.app')]
 #[Title('MephEd - Admin Dashboard')]
@@ -15,21 +16,49 @@ class AdminDashboardController extends Component
     {
         $user = Auth::user();
         
-        // Using counts directly from the DB for better performance
+        // Comprehensive Statistics
         $stats = [
             'total_users'        => User::count(),
             'tutor_requests'     => TutorRequest::count(),
             'pending_requests'   => TutorRequest::where('status', 'Pending')->count(),
             'active_bookings'    => Booking::where('status', 'Active')->count(),
             'completed_bookings' => Booking::where('status', 'Completed')->count(),
-            'earned_payments'    => Payment::where('status', 'Earned')->count(),
+            'earned_payments'    => Payment::where('status', 'Earned')->sum('amount'),
             'new_crm'            => Crm::where('status', 'new')->count(),
+            'pending_tutors'     => TutorProfile::where('status', 'Pending')->count(),
+            'bootcamp_count'     => Bootcamp::count(), // Added from Bootcamp model
+            'unread_messages'    => Contact::where('is_read', false)->count(), // Added from Contact model
+            'campaigns_sent'     => Newsletter::where('status', 'Sent')->count(), // Added from Newsletter model
         ];
 
+        // Advanced Chart Data: 7-Day Multi-Metric Growth
+        $chartData = [
+            'labels'   => [],
+            'users'    => [],
+            'bookings' => [],
+            'revenue'  => [],
+        ];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $chartData['labels'][] = $date->format('D');
+            
+            // Daily User Growth
+            $chartData['users'][] = User::whereDate('created_at', $date->toDateString())->count();
+            
+            // Daily Booking Activity
+            $chartData['bookings'][] = Booking::whereDate('created_at', $date->toDateString())->count();
+            
+            // Daily Revenue (Converted to thousands for chart scaling)
+            $chartData['revenue'][] = Payment::where('status', 'Earned')
+                ->whereDate('created_at', $date->toDateString())
+                ->sum('amount') / 1000;
+        }
+
         return view('livewire.admin.admin-dashboard-controller', [
-            'user'         => $user,
-            'userProfile'  => $user->userProfile,
-            'stats'        => $stats
+            'user'          => $user,
+            'stats'         => $stats,
+            'chartData'     => $chartData,
         ]);
     }
 }

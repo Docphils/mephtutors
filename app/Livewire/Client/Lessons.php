@@ -37,6 +37,7 @@ class Lessons extends Component
         ['name' => 'Accepted Lessons', 'icon' => 'fa-circle-check'],
         ['name' => 'Active Lessons', 'icon' => 'fa-play-circle'],
         ['name' => 'Completed Lessons', 'icon' => 'fa-flag-checkered'],
+        ['name' => 'Declined Lessons', 'icon' => 'fa-circle-xmark'],
         ['name' => 'Closed Lessons', 'icon' => 'fa-box-archive'],
     ];
    
@@ -58,6 +59,7 @@ class Lessons extends Component
             'Accepted'  => 'bg-blue-100 text-blue-700',
             'Active'    => 'bg-emerald-100 text-emerald-700',
             'Completed' => 'bg-cyan-100 text-cyan-700',
+            'Declined'  => 'bg-red-100 text-red-700',
             'Closed'    => 'bg-slate-100 text-slate-700',
             default     => 'bg-slate-100 text-slate-600',
         };
@@ -243,6 +245,7 @@ class Lessons extends Component
         $user = Auth::user();
         $statusMap = [
             'Closed Lessons'    => 'Closed',
+            'Declined Lessons'  => 'Declined',
             'Completed Lessons' => 'Completed',
             'Active Lessons'    => 'Active',
             'Accepted Lessons'  => 'Accepted',

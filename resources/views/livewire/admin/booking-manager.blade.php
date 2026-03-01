@@ -245,83 +245,93 @@
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-slate-500 uppercase mb-1">Classes/Level</label>
-                                    <input type="text" wire:model="classes" placeholder="e.g. Year 7"
-                                        class="w-full rounded-xl border-slate-200 text-sm" />
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-slate-500 uppercase mb-1">Curriculum</label>
-                                    <select wire:model="curriculum"
-                                        class="w-full rounded-xl border-slate-200 text-sm">
-                                        <option value="British">British</option>
-                                        <option value="Nigerian">Nigerian</option>
-                                        <option value="Blended">Blended</option>
-                                        <option value="N/A">N/A</option>
-                                    </select>
-                                </div>
+                                @if ($this->serviceUses('level'))
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-slate-500 uppercase mb-1">Classes/Level</label>
+                                        <input type="text" wire:model="classes" placeholder="e.g. Year 7"
+                                            class="w-full rounded-xl border-slate-200 text-sm" />
+                                    </div>
+                                @endif
+                                @if ($this->serviceUses('curriculum'))
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-slate-500 uppercase mb-1">Curriculum</label>
+                                        <select wire:model="curriculum"
+                                            class="w-full rounded-xl border-slate-200 text-sm">
+                                            <option value="British">British</option>
+                                            <option value="Nigerian">Nigerian</option>
+                                            <option value="Blended">Blended</option>
+                                            <option value="N/A">N/A</option>
+                                        </select>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
                         {{-- Subjects & Learners --}}
                         <div class="space-y-6">
                             {{-- Subjects --}}
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-sm font-bold text-cyan-600 uppercase tracking-wider">Subjects</h4>
-                                    <button type="button" wire:click="addSubject"
-                                        class="text-xs font-bold text-cyan-600 hover:text-cyan-700">
-                                        <i class="fa-solid fa-plus-circle"></i> Add Subject
-                                    </button>
+                            @if ($this->serviceUses('subjects'))
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-sm font-bold text-cyan-600 uppercase tracking-wider">Subjects
+                                        </h4>
+                                        <button type="button" wire:click="addSubject"
+                                            class="text-xs font-bold text-cyan-600 hover:text-cyan-700">
+                                            <i class="fa-solid fa-plus-circle"></i> Add Subject
+                                        </button>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach ($subjects as $index => $subject)
+                                            <div class="flex gap-2">
+                                                <input type="text" wire:model="subjects.{{ $index }}.name"
+                                                    placeholder="Subject Name"
+                                                    class="flex-1 rounded-xl border-slate-200 text-sm" />
+                                                @if (count($subjects) > 1)
+                                                    <button type="button"
+                                                        wire:click="removeSubject({{ $index }})"
+                                                        class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
-                                <div class="space-y-2">
-                                    @foreach ($subjects as $index => $subject)
-                                        <div class="flex gap-2">
-                                            <input type="text" wire:model="subjects.{{ $index }}.name"
-                                                placeholder="Subject Name"
-                                                class="flex-1 rounded-xl border-slate-200 text-sm" />
-                                            @if (count($subjects) > 1)
-                                                <button type="button"
-                                                    wire:click="removeSubject({{ $index }})"
-                                                    class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-
+                            @endif
                             {{-- Learners --}}
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-sm font-bold text-cyan-600 uppercase tracking-wider">Learners</h4>
-                                    <button type="button" wire:click="addLearner"
-                                        class="text-xs font-bold text-cyan-600 hover:text-cyan-700">
-                                        <i class="fa-solid fa-plus-circle"></i> Add Learner
-                                    </button>
+                            @if ($this->serviceUses('learners'))
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-sm font-bold text-cyan-600 uppercase tracking-wider">Learners
+                                        </h4>
+                                        <button type="button" wire:click="addLearner"
+                                            class="text-xs font-bold text-cyan-600 hover:text-cyan-700">
+                                            <i class="fa-solid fa-plus-circle"></i> Add Learner
+                                        </button>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach ($learners as $index => $learner)
+                                            <div class="flex gap-2">
+                                                <input type="text" wire:model="learners.{{ $index }}.name"
+                                                    placeholder="Name"
+                                                    class="flex-1 rounded-xl border-slate-200 text-sm" />
+                                                <input type="text" wire:model="learners.{{ $index }}.age"
+                                                    placeholder="Age"
+                                                    class="w-20 rounded-xl border-slate-200 text-sm" />
+                                                @if (count($learners) > 1)
+                                                    <button type="button"
+                                                        wire:click="removeLearner({{ $index }})"
+                                                        class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
-                                <div class="space-y-2">
-                                    @foreach ($learners as $index => $learner)
-                                        <div class="flex gap-2">
-                                            <input type="text" wire:model="learners.{{ $index }}.name"
-                                                placeholder="Name"
-                                                class="flex-1 rounded-xl border-slate-200 text-sm" />
-                                            <input type="text" wire:model="learners.{{ $index }}.age"
-                                                placeholder="Age" class="w-20 rounded-xl border-slate-200 text-sm" />
-                                            @if (count($learners) > 1)
-                                                <button type="button"
-                                                    wire:click="removeLearner({{ $index }})"
-                                                    class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
+                            @endif
                         </div>
 
                         {{-- Schedule Section --}}
@@ -409,11 +419,16 @@
                         <div class="md:col-span-2 flex justify-end gap-3 pt-4 border-t border-slate-100">
                             <button type="button" wire:click="$set('showForm', false)"
                                 class="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-all">Cancel</button>
-                            <button type="submit"
+                            <button wire:loading.class='hidden' type="submit"
                                 class="bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-cyan-200 transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-floppy-disk"></i>
                                 <span>{{ $editingId ? 'Update' : 'Create' }} Booking</span>
                             </button>
+                            <p wire:loading wire:target="saveBooking"
+                                class="bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-cyan-200 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-spinner animate-spin"></i>
+                                <span>{{ $editingId ? 'Updating' : 'Creating' }} Booking ...</span>
+                            </p>
                         </div>
                     </form>
                 </div>

@@ -154,7 +154,7 @@
                     &times;
                 </button>
                 <div class="flex justify-between mb-4 items-center w-full">
-                    <h3 class="col-span-3 relative w-full text-2xl font-semibold text-cyan-700 text-center">Tutor
+                    <h3 class="col-span-3 relative w-full text-2xl font-semibold text-cyan-700 text-center">Client
                         Profile Details</h3>
                     <p
                         class="relative h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-[10px] sm:text-xs shrink-0  border-2 border-cyan-700 overflow-hidden">

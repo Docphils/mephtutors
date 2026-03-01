@@ -15,6 +15,11 @@ class Payment extends Model
         'amount',
         'evidence',
         'status',
+        'dispute',
+    ];
+
+    protected $casts = [
+        'dispute' => 'array',
     ];
 
 

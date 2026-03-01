@@ -26,8 +26,8 @@
         </button>
     </div>
 
-    <!-- ===== Desktop Profile Section ===== -->
-    <div class="hidden sm:block p-3 border-b border-cyan-600">
+    <!-- ===== Profile Section ===== -->
+    <div class="block p-3 border-b border-cyan-600">
         <livewire:user-profile lazy="on-load" />
     </div>
 

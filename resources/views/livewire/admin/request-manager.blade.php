@@ -260,15 +260,19 @@
                                             Days & Times</label>
                                         <div class="space-y-2">
                                             @if (is_array($selectedRequest->preferred_days))
-                                                @foreach ($selectedRequest->preferred_days as $day => $time)
+                                                @foreach ($selectedRequest->preferred_days as $slot)
                                                     <div
                                                         class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
-                                                        <span
-                                                            class="text-xs font-bold text-slate-700">{{ $day }}</span>
+
+                                                        <span class="text-xs font-bold text-slate-700">
+                                                            {{ $slot['day'] }}
+                                                        </span>
+
                                                         <span
                                                             class="text-[10px] font-black text-cyan-600 uppercase bg-white px-2 py-0.5 rounded shadow-sm border border-cyan-100">
-                                                            {{ $time ? \Carbon\Carbon::parse($time)->format('h:i A') : 'Anytime' }}
+                                                            {{ !empty($slot['time']) ? \Carbon\Carbon::parse($slot['time'])->format('h:i A') : 'Anytime' }}
                                                         </span>
+
                                                     </div>
                                                 @endforeach
                                             @else

@@ -15,6 +15,16 @@
             </button>
         </div>
     </x-slot>
+    <div wire:offline class="fixed top-6 right-6 z-50">
+        <div class="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full shadow-2xl animate-pulse">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a5 5 0 010-7.072M4.929 19.071a9 9 0 010-12.728m0 0l2.829 2.829m-2.829-2.829L3 3">
+                </path>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wider">System Offline</span>
+        </div>
+    </div>
     @if (session()->has('success'))
         <div class="flex items-center p-2 mb-1 text-cyan-800 rounded-2xl bg-cyan-50 border border-cyan-100 animate-fade-in-down"
             role="alert">
@@ -576,10 +586,15 @@
                             <button wire:click="next"
                                 class="px-10 py-2 bg-cyan-600 text-white rounded-xl font-black">Continue</button>
                         @else
-                            <button wire:click="save"
+                            <button wire:loading.class='hidden' wire:click="save"
                                 class="px-10 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
                                 {{ $isEditing ? 'Save Changes' : 'Submit Request' }}
                             </button>
+                            <p wire:loading wire:target="save"
+                                class="flex items-center gap-2 px-10 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
+                                <i class="fas fa-spinner animate-spin mr-1"></i>
+                                <span>{{ $isEditing ? 'Saving Changes...' : 'Submitting Request...' }}</span>
+                            </p>
                         @endif
                     </div>
                 </div>

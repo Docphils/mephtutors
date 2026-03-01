@@ -10,6 +10,16 @@
             </div>
         </div>
     </x-slot>
+    <div wire:offline class="fixed top-6 right-6 z-50">
+        <div class="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full shadow-2xl animate-pulse">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a5 5 0 010-7.072M4.929 19.071a9 9 0 010-12.728m0 0l2.829 2.829m-2.829-2.829L3 3">
+                </path>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wider">System Offline</span>
+        </div>
+    </div>
 
     {{-- Navigation Tabs --}}
     <div class="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-2 overflow-x-auto">
@@ -89,7 +99,7 @@
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                 @endif
-                @if ($booking->status === 'Completed')
+                @if (in_array($booking->status, ['Completed', 'Declined']))
                     <button wire:click="editApproval({{ $booking->id }})"
                         class="w-full py-3.5 rounded-2xl bg-emerald-900 text-white font-bold text-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
                         <span>Review Lesson Approval</span>
@@ -130,33 +140,78 @@
                             <span class="px-2 py-0.5 rounded bg-white/20 text-[10px] font-bold uppercase">ID:
                                 #{{ $selectedLesson->id }}</span>
                         </div>
-                        <p class="text-cyan-100 text-xs font-bold uppercase tracking-widest">
-                            {{ $selectedLesson->subjects_string }}</p>
+                        @if ($selectedLesson->serviceItem->has_subjects)
+                            <p class="text-cyan-100 text-xs font-bold uppercase tracking-widest">
+                                {{ $selectedLesson->subjects_string }}</p>
+                        @endif
                     </div>
 
                     {{-- Drawer Body --}}
                     <div class="p-8 flex-1 overflow-y-auto space-y-8">
-                        {{-- Assignment & Logistics --}}
+                        {{-- Tutor Details --}}
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Tutor
+                            Particulars</label>
                         <div class="grid grid-cols-2 gap-6">
                             <div>
                                 <label
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tutor</label>
-                                <p class="text-sm font-bold text-slate-800">{{ $selectedLesson->tutor->name }}</p>
+                                <p class="text-sm font-bold text-slate-800">
+                                    {{ $selectedLesson?->tutor?->tutorProfile?->fullName }}</p>
                             </div>
                             <div>
                                 <label
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Service</label>
-                                <p class="text-sm font-bold text-cyan-600">
-                                    {{ $selectedLesson->serviceItem->name ?? 'Tuition' }}</p>
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tutor's
+                                    Contact</label>
+                                <p class="text-sm font-bold text-cyan-600 flex items-center justify-between">
+                                    <span>{{ $selectedLesson->tutor?->tutorProfile?->phone ?? 'N/A' }}</span> <img
+                                        src="{{ asset('storage/' . $selectedLesson->tutor?->tutorProfile?->image) }}"
+                                        alt="{{ $selectedLesson->tutor?->tutorProfile?->fullName }}"
+                                        class="object-cover h-10 w-10 rounded-full text-end">
+                                </p>
                             </div>
                             <div class="col-span-2">
                                 <label
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Location</label>
-                                <p class="text-sm text-slate-600 flex items-start gap-2">
-                                    <i class="fa-solid fa-location-dot text-cyan-500 mt-1"></i>
-                                    {{ $selectedLesson->location }}
-                                </p>
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tutor's
+                                    Bio</label>
+                                <p class="text-xs font-bold text-cyan-600">
+                                    {{ $selectedLesson->tutor?->tutorProfile?->careerProfile ?? 'N/A' }}</p>
                             </div>
+
+                        </div>
+
+                        {{-- Service Details --}}
+                        <div class="pt-6 border-t border-slate-100 ">
+                            <label
+                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Service
+                                Details</label>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Service
+                                        Type</label>
+                                    <p class="text-sm font-bold text-cyan-600">
+                                        {{ $selectedLesson->serviceItem->name ?? 'Tuition' }}</p>
+                                </div>
+                                @if ($selectedLesson->serviceItem->requires_exam_type)
+                                    <div>
+                                        <label
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Exam
+                                            Type</label>
+                                        <p class="text-sm font-bold text-cyan-600">
+                                            {{ $selectedLesson->examType->name ?? 'N/A' }}</p>
+                                    </div>
+                                @endif
+                                <div class="col-span-2">
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Location</label>
+                                    <p class="text-sm text-slate-600 flex items-start gap-2">
+                                        <i class="fa-solid fa-location-dot text-cyan-500 mt-1"></i>
+                                        {{ $selectedLesson->location }}
+                                    </p>
+                                </div>
+
+                            </div>
+
                         </div>
 
                         {{-- Academic Profile --}}
@@ -165,14 +220,21 @@
                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Academic
                                 Profile</label>
                             <div class="grid grid-cols-3 gap-4">
-                                <div class="p-3 bg-slate-50 rounded-xl">
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Class</p>
-                                    <p class="text-xs font-bold text-slate-700">{{ $selectedLesson->classes }}</p>
-                                </div>
-                                <div class="p-3 bg-slate-50 rounded-xl">
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Curriculum</p>
-                                    <p class="text-xs font-bold text-slate-700">{{ $selectedLesson->curriculum }}</p>
-                                </div>
+                                @if ($selectedLesson->serviceItem->requires_level)
+                                    <div class="p-3 bg-slate-50 rounded-xl">
+                                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Class/Level</p>
+                                        <p class="text-xs font-bold text-slate-700">
+                                            {{ $selectedItem?->level?->name ?? ($selectedLesson->classes ?? 'N/A') }}
+                                        </p>
+                                    </div>
+                                @endif
+                                @if ($selectedLesson->serviceItem->requires_curriculum)
+                                    <div class="p-3 bg-slate-50 rounded-xl">
+                                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Curriculum</p>
+                                        <p class="text-xs font-bold text-slate-700">{{ $selectedLesson->curriculum }}
+                                        </p>
+                                    </div>
+                                @endif
                                 <div class="p-3 bg-slate-50 rounded-xl">
                                     <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Tutor Pref.</p>
                                     <p class="text-xs font-bold text-slate-700">{{ $selectedLesson->tutorGender }}</p>
@@ -327,7 +389,7 @@
                         @enderror
                     </div>
 
-                    <button wire:click="submitAcceptance" @disabled(!$status)
+                    <button wire:loading.class='hidden' wire:click="submitAcceptance" @disabled(!$status)
                         class="w-full py-4 rounded-2xl font-black shadow-lg {{ $status === 'Adjust' ? 'bg-amber-600 shadow-amber-100' : 'bg-cyan-600 shadow-cyan-100' }} disabled:bg-slate-300 text-white transition">
                         @if ($status === 'Adjust')
                             Submit Adjustment Request
@@ -336,6 +398,10 @@
                         @else
                             Choose Action First
                         @endif
+                    </button>
+                    <button wire:loading wire:target="submitAcceptance"
+                        class="w-full py-4 rounded-2xl font-black shadow-lg {{ $status === 'Adjust' ? 'bg-amber-600 shadow-amber-100' : 'bg-cyan-600 shadow-cyan-100' }} disabled:bg-slate-300 text-white transition">
+                        <i class="fas fa-spinner animate-spin mr-1"></i> Processing...
                     </button>
                     <button wire:click="$set('showAcceptanceModal', false)"
                         class="w-full py-2 font-bold text-slate-400">Cancel</button>
@@ -358,21 +424,36 @@
                 </div>
 
                 <div class="p-8 space-y-4">
-                    <textarea wire:model="clientApprovalRemarks"
-                        class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-500"
-                        placeholder="Feedback for the tutor..."></textarea>
+                    <div class="">
+                        <textarea wire:model="clientApprovalRemarks"
+                            class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-500"
+                            placeholder="Feedback for the tutor..."></textarea>
+                        @error('clientApprovalRemarks')
+                            <p class="text-xs mt-1 text-red-600">{{ 'Remark is required!' }}</p>
+                        @enderror
 
-                    <select wire:model="status"
-                        class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold">
-                        <option value="">Select Status</option>
-                        <option value="Declined">Decline Approval</option>
-                        <option value="Closed">Approve & Close</option>
-                    </select>
+                    </div>
+                    <div class="">
+                        <select wire:model.live="status"
+                            class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold">
+                            <option value="">Select Status</option>
+                            <option value="Declined">Decline Approval</option>
+                            <option value="Closed">Approve & Close</option>
+                        </select>
+                        @error('status')
+                            <p class="text-xs mt-1 text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                    <button wire:click="submitApproval"
-                        class="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-lg shadow-emerald-100">
-                        Finish Lesson
+
+                    <button wire:click="submitApproval" @disabled(!$status)
+                        class="w-full py-4  text-white font-black rounded-2xl shadow-lg  {{ $status === 'Declined' ? 'bg-cyan-600 shadow-cyan-100' : 'bg-emerald-600 shadow-emerald-100' }} disabled:bg-slate-300">
+                        {{ $status === 'Declined' ? 'Submit' : 'Finish Lesson' }}
                     </button>
+                    <p wire:loading wire:target="submitApproval"
+                        class="flex items-center w-full py-4  text-white font-black rounded-2xl shadow-lg  {{ $status === 'Declined' ? 'bg-cyan-600 shadow-cyan-100' : 'bg-emerald-600 shadow-emerald-100' }} disabled:bg-slate-300">
+                        <i class="fas fa-spinner animate-spin mr-1"></i> Submitting...
+                    </p>
                     <button wire:click="$set('showApprovalModal', false)"
                         class="w-full py-2 font-bold text-slate-400 text-sm">Back to List</button>
                 </div>

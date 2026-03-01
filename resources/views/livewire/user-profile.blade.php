@@ -3,27 +3,21 @@
     <div>
         <!-- Profile Display -->
         @if ($userProfile)
-            <div class="sm:text-center mb-2">
+            <div class="text-center mb-2">
                 <div class="flex justify-center text-sm">
                     <img src="{{ asset('storage/' . $userProfile->image) }}" alt="Profile image"
                         class="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm shadow-white">
                 </div>
-                <div class="hidden sm:block ">
+                <div class="block ">
                     <p class="font-semibold">{{ $userProfile->user->name }}</p>
                 </div>
-                <div class="sm:flex justify-center items-center gap-4 hidden">
+                <div class="flex justify-center items-center gap-4">
                     <p class="text-xs text-green-400">{{ strToUpper($userProfile->user->role) }}</p>
-                    <button wire:click="openProfileModal"
-                        class="fas fa-edit bg-cyan-600 hover:bg-cyan-800 text-white px-2 py-1 rounded-md text-xs"></button>
+                    <a class="bg-cyan-600 hover:bg-cyan-800 text-white px-2 py-1 rounded-md text-xs"
+                        href="{{ route('userProfile') }}" wire:navigate><i class="fas fa-edit "></i></a>
                 </div>
 
             </div>
-        @else
-            <p class="text-sm">Click the button to update your profile</p>
-
-            <button wire:click="openProfileModal"
-                class="bg-cyan-600 hover:bg-cyan-800 text-white px-1 sm:px-2 sm:py-1 rounded-md text-xs sm:text-sm">Update
-                profile</button>
         @endif
 
         @if (session()->has('success'))

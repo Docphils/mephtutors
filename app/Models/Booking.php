@@ -15,6 +15,8 @@ class Booking extends Model
         'client_id',
         'tutor_id',
         'payment_id',
+        'level_id',
+        'exam_type_id',
         'start_date',
         'end_date',
         'location',
@@ -74,6 +76,16 @@ class Booking extends Model
     public function serviceItem()
     {
         return $this->belongsTo(ServiceItem::class, 'service_item_id');
+    }
+
+    public function level()
+    {
+        return $this->hasOne(Level::class, 'level_id');
+    }
+
+    public function examType()
+    {
+        return $this->belongsTo(ExamType::class, 'exam_type_id');
     }
 
     protected static function boot()

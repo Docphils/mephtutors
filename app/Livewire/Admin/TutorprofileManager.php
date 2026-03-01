@@ -20,12 +20,7 @@ class TutorprofileManager extends Component
     use WithPagination;
 
     public $activeTab = 'All'; 
-    public $showModal = false;
-    public $tutorProfileId;
-    public $status, $approvalRemark;
     public $search = '';
-    public $showDetailModal = false;
-    public $selectedProfile;
 
     public function mount(){
         $this->getTutorProfiles();
@@ -35,13 +30,6 @@ class TutorprofileManager extends Component
     public function setTab($tab)
     {
         $this->activeTab = $tab;
-    }
-
-    // Show the selected profile in the detail modal
-    public function showTutorProfile($id)
-    {
-        $this->selectedProfile = TutorProfile::findOrFail($id);
-        $this->showDetailModal = true;
     }
 
     // Show modal to edit status and approvalRemark only
@@ -55,42 +43,6 @@ class TutorprofileManager extends Component
         $this->approvalRemark = $profile->approvalRemark;
 
         $this->showModal = true;
-    }
-
-    // Save changes for approval status and remark
-    public function saveTutorProfile()
-    {
-        Gate::authorize('Admin');
-
-        $this->validate([
-            'status' => 'required|in:Approved,Review',
-            'approvalRemark' => 'nullable|string|max:255',
-        ]);
-
-        $profile = TutorProfile::findOrFail($this->tutorProfileId);
-        if($this->status == 'Approved'){
-            $approvalStatus = true;
-        }else{
-            $approvalStatus = false;
-        }
-        $profile->update([
-            'Approved' => $approvalStatus,
-            'approvalRemark' => $this->approvalRemark,
-        ]);
-
-        $tutorProfile = $profile->refresh()->load('user');
-
-        try{
-            Mail::to($tutorProfile->user->email)->send(new TutorProfileApprovalEmail($tutorProfile));
-            session()->flash('success', 'Tutor profile updated successfully');
-        } catch (\Exception $e) {;
-            Log::error('Mail sending failed: ' . $e->getMessage());
-
-            session()->flash('success', 'Tutor profile updated successfully (but notification was not sent). Please contact support team');
-        }
-
-        $this->showModal = false;
-        session()->flash('success', 'Tutor profile updated successfully');
     }
 
     // Retrieve tutor profiles based on active tab (qualification or discipline)

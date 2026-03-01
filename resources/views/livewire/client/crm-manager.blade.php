@@ -16,6 +16,16 @@
             </button>
         </div>
     </x-slot>
+    <div wire:offline class="fixed top-6 right-6 z-50">
+        <div class="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full shadow-2xl animate-pulse">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a5 5 0 010-7.072M4.929 19.071a9 9 0 010-12.728m0 0l2.829 2.829m-2.829-2.829L3 3">
+                </path>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wider">System Offline</span>
+        </div>
+    </div>
 
     <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col lg:flex-row gap-4 items-center">
         <div class="relative w-full lg:flex-1">

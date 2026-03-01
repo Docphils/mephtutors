@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\TutorRequest;
 use App\Models\User;
+use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -38,6 +39,8 @@ class BookingManager extends Component
     public $editingId = null;
     public $tutor_request_id, $start_date, $end_date, $location;
     public $sessions, $duration, $classes, $amount, $client_id, $tutor_id, $paymentEvidence, $service_item_id;
+    public $level_id;
+    public $exam_type_id;
     
     // Arrays for dynamic form inputs
     public $days_times = [];
@@ -62,47 +65,131 @@ class BookingManager extends Component
     public function loadUsers()
     {
         $this->clients = User::where('role', 'client')->orderBy('name')->get();
-        $this->tutors = User::where('role', 'tutor')->orderBy('name')->get();
+        $this->tutors = User::where('role', 'tutor')->whereHas('tutorProfile')->orderBy('name')->get();
+
+    }
+
+    public function getServiceItemProperty()
+    {
+        if (!$this->service_item_id) {
+            return null;
+        }
+
+        return ServiceItem::find($this->service_item_id);
+    }
+
+    private function serviceUses(string $feature): bool
+    {
+        if (!$this->serviceItem) {
+            return false;
+        }
+
+        return match ($feature) {
+            'subjects'      => (bool) $this->serviceItem->has_subjects,
+            'curriculum'    => (bool) $this->serviceItem->requires_curriculum,
+            'level'         => (bool) $this->serviceItem->requires_level,
+            'exam_type'     => (bool) $this->serviceItem->requires_exam_type,
+
+            // always required in bookings table
+            'learners'      => true,
+            'schedule'      => true,
+
+            default => false,
+        };
+    }
+
+    public function updatedServiceItemId()
+    {
+        if (!$this->serviceUses('subjects')) {
+            $this->subjects = [['name' => '']];
+        }
+
+        if (!$this->serviceUses('learners')) {
+            $this->learners = [['name' => '', 'age' => '']];
+        }
+
+        if (!$this->serviceUses('schedule')) {
+            $this->days_times = [['day' => '', 'time' => '']];
+        }
+
+        if (!$this->serviceUses('level')) {
+            $this->level_id = null;
+        }
+
+        if (!$this->serviceUses('exam_type')) {
+            $this->exam_type_id = null;
+        }
     }
 
     public function rules()
     {
-        return [
+        $rules = [
             'tutor_request_id' => 'nullable|exists:tutor_requests,id',
             'service_item_id' => 'nullable|exists:service_items,id',
+
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'location' => 'required|string',
-            
-            // Dynamic JSON Array Rules
-            'days_times' => 'required|array|min:1',
-            'days_times.*.day' => 'required|string',
-            'days_times.*.time' => 'required|string',
-            
-            'subjects' => 'required|array|min:1',
-            'subjects.*.name' => 'required|string',
-            
-            'learners' => 'required|array|min:1',
-            'learners.*.name' => 'required|string',
-            'learners.*.age' => 'nullable|string',
 
             'sessions' => 'required|numeric',
             'duration' => 'required|string',
+
             'tutorGender' => 'required|in:Male,Female,Any',
             'curriculum' => 'required|in:British,French,Nigerian,Blended,N/A',
+
             'status_field' => 'required|string',
             'paymentStatus' => 'required|in:Pending,Paid,Failed',
+
             'classes' => 'required|string',
             'amount' => 'required|numeric',
+
             'client_id' => 'required|exists:users,id',
             'tutor_id' => 'nullable|exists:users,id',
+
             'paymentEvidence' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | CONDITIONAL SERVICE FIELDS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($this->serviceUses('schedule')) {
+            $rules['days_times'] = 'required|array|min:1';
+            $rules['days_times.*.day'] = 'required|string';
+            $rules['days_times.*.time'] = 'required|string';
+        }
+
+        if ($this->serviceUses('subjects')) {
+            $rules['subjects'] = 'required|array|min:1';
+            $rules['subjects.*.name'] = 'required|string';
+        }
+
+        if ($this->serviceUses('learners')) {
+            $rules['learners'] = 'required|array|min:1';
+            $rules['learners.*.name'] = 'required|string';
+            $rules['learners.*.age'] = 'nullable|string';
+        }
+
+        if ($this->serviceUses('level')) {
+            $rules['level_id'] = 'required|exists:levels,id';
+        } else {
+            $rules['level_id'] = 'nullable';
+        }
+
+        if ($this->serviceUses('exam_type')) {
+            $rules['exam_type_id'] = 'required|exists:exam_types,id';
+        } else {
+            $rules['exam_type_id'] = 'nullable';
+        }
+
+        return $rules;
     }
 
     public function updated($field)
     {
-        $this->validateOnly($field);
+        $this->validateOnly($field, $this->rules());
     }
 
     // Dynamic Input Methods
@@ -167,6 +254,8 @@ class BookingManager extends Component
         $this->sessions = $tr->sessions_per_week ?? 1;
         $this->duration = $tr->duration_per_session ? $tr->duration_per_session . ' mins' : null;
         $this->classes = $tr->level_id ? $tr->level->name : 'Adult';
+        $this->level_id = $tr->level_id;
+        $this->exam_type_id = $tr->exam_type_id;
         $this->curriculum = $tr->curriculum ?? 'British';
 
         // Map subjects
@@ -244,6 +333,8 @@ class BookingManager extends Component
         $this->paymentStatus = $booking->client_payment_status;
         $this->classes = $booking->classes;
         $this->amount = $booking->amount;
+        $this->level_id = $booking->level_id;
+        $this->exam_type_id = $booking->exam_type_id;
         $this->client_id = $booking->client_id;
         $this->tutor_id = $booking->tutor_id;
         $this->paymentEvidence = null;
@@ -276,6 +367,8 @@ class BookingManager extends Component
         $data = [
             'tutor_request_id' => $this->tutor_request_id,
             'service_item_id' => $this->service_item_id,
+            'level_id' => $this->level_id,
+            'exam_type_id' => $this->exam_type_id,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'location' => $this->location,
@@ -433,6 +526,8 @@ class BookingManager extends Component
         $this->client_id = null;
         $this->tutor_id = null;
         $this->paymentEvidence = null;
+        $this->level_id = null;
+        $this->exam_type_id = null;
     }
 
     public function closeDetail()

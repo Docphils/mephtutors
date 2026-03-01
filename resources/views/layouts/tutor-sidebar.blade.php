@@ -15,7 +15,19 @@
 
     <!--Logo-->
     <div class="flex items-center justify-center h-16 border-b border-cyan-600">
-        <img src="{{ asset('images/MephEd.png') }}" alt="Logo Image" class="object-cover h-6 sm:h-8 w-24 sm:w-32">
+        <a wire:navigate href="{{ route('welcome') }}">
+            <img src="{{ asset('images/MephEd.png') }}" alt="Logo Image" class="object-cover h-6 sm:h-8 w-24 sm:w-32">
+        </a>
+    </div>
+
+    <div class="text-center my-4">
+        <div class="flex justify-center text-sm">
+            <img src="{{ asset('storage/' . $tutorProfile?->image) }}" alt="Profile image"
+                class="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm shadow-white">
+        </div>
+        <p class="font-semibold">{{ $tutorProfile?->fullName }}</p>
+        <p class="text-xs text-green-400">{{ strToUpper($tutorProfile?->user->role) }}</p>
+
     </div>
 
     <!-- ===== Mobile Header ===== -->
@@ -26,36 +38,33 @@
         </button>
     </div>
 
-    <!-- ===== Desktop Profile Section ===== -->
-    <div class="block px-6 py-6 border-b border-cyan-600">
-        <livewire:user-profile lazy="on-load" />
-    </div>
-
     <!-- ===== Navigation ===== -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
 
-        <a wire:navigate href="{{ route('client.dashboard') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.dashboard') ? 'bg-cyan-600' : '' }}">
+        <a wire:navigate href="{{ route('tutor.dashboard') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.dashboard') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-house w-5 text-cyan-300"></i>
             <span>Dashboard</span>
         </a>
 
-        <a wire:navigate href="{{ route('client.tutorRequests.manager') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.tutorRequests.manager') ? 'bg-cyan-600' : '' }}">
-            <i class="fas fa-paper-plane w-5 text-cyan-300"></i>
-            <span>Tutor Requests</span>
+        <a wire:navigate href="{{ route('tutor.lessons') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.lessons') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-book text-cyan-100 w-6 hidden md:block"></i><span>My Lessons</span>
         </a>
 
-        <a wire:navigate href="{{ route('client.lessons') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.lessons') ? 'bg-cyan-600' : '' }}">
-            <i class="fas fa-chalkboard-teacher w-5 text-cyan-300"></i>
-            <span>Manage Lessons</span>
+        <a @disabled(true) wire:navigate href="#"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('#') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-code text-cyan-100 w-6 hidden md:block"></i><span>Institution Assignments</span>
         </a>
 
-        <a wire:navigate href="{{ route('client.crm.manager') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.crm.manager') ? 'bg-cyan-600' : '' }}">
-            <i class="fas fa-school w-5 text-cyan-300"></i>
-            <span>Institution Bookings</span>
+        <a wire:navigate href="{{ route('tutor.payments') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.payments') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-money-bill-wave text-cyan-100 w-6 hidden md:block"></i><span>Manage Payments</span>
+        </a>
+
+        <a wire:navigate href="{{ route('tutor.tutor-profile') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.tutor-profile') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-user text-cyan-100 w-6 hidden md:block"></i><span>Manage Profile</span>
         </a>
         <a wire:navigate href="{{ route('welcome') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.crm.manager') ? 'bg-cyan-600' : '' }}">
@@ -63,17 +72,23 @@
             <span>Home Page</span>
         </a>
 
+        @if ($approvedTutorProfile)
+            <a href="https://chat.whatsapp.com/Gum1YqOp0G31WlyyokKxE0" target="_blank"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition">
+                <i class="fab fa-whatsapp text-green-300 w-6 hidden md:block"></i><span class="">Tutor
+                    community</span>
+            </a>
+        @endif
+
+
         <!-- ===== Footer ===== -->
         <div class="border-t border-cyan-600 my-4 text-sm">
             <!-- Settings Dropdown -->
             <div class="items-center w-full bg-slate-200 rounded-lg p-3 mt-4 text-gray-700">
-
                 <a wire:navigate href="{{ route('profile.edit') }}"
                     class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 hover:text-cyan-100 transition {{ request()->routeIs('profile.edit') ? 'bg-cyan-600' : '' }}">
                     <i class="fas fa-cog w-5 text-cyan-300"></i>
                     <span>Account Settings</span>
-
-
                 </a>
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}"

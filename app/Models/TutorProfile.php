@@ -13,6 +13,8 @@ class TutorProfile extends Model
         'phone',
         'fullName',
         'address',
+        'state',
+        'city',
         'DOB',
         'image',
         'gender',
@@ -24,7 +26,7 @@ class TutorProfile extends Model
         'bankName',
         'accountName',
         'accountNumber',
-        'Approved',
+        'status',
         'approvalRemark',
         'video',
     ];

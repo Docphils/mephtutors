@@ -4,28 +4,54 @@ namespace App\Livewire\Client;
 
 use Livewire\Component;
 use App\Models\Booking;
+use App\Models\TutorRequest;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.app')]
-#[Title('Client Dashboard')]
+#[Title('Client Insights Dashboard - MephEd')]
 class DashboardController extends Component
 {
-    public $mainPage = '';
     public function render()
     {
-        $userProfile = Auth::user()->userProfile;
-        $bookings = Auth::user()->bookings;
         $user = Auth::user();
+        $userProfile = $user->userProfile;
+        
+        // Tutor Request Metrics
         $tutorRequests = $user->tutorRequests;
-        $ongoingBookings = Booking::where('client_id', $user->id)->where('status', 'Active')->get();
-        $completedBookings = Booking::where('client_id', $user->id)->where('status', 'Completed')->get();
-        $closedBookings = Booking::where('client_id', $user->id)->where('status', 'Closed')->get();
-        $newCRM = $user->crms->where('status', 'Pending');
-        $ongoingCRM = $user->crms->where('status', 'Ongoing');
-        $closedCRM = $user->crms->where('status', 'Closed');
+        $pendingRequests = $tutorRequests->where('status', 'pending')->count();
+        $matchRate = $tutorRequests->count() > 0 
+            ? round(($tutorRequests->whereIn('status', ['matched', 'in_progress', 'completed'])->count() / $tutorRequests->count()) * 100) 
+            : 0;
 
-        return view('livewire.client.dashboard-controller', compact('newCRM', 'ongoingCRM', 'closedCRM','userProfile', 'user', 'tutorRequests', 'ongoingBookings', 'completedBookings', 'closedBookings'));
+        // Lesson & Financial Metrics
+        $bookings = Booking::where('client_id', $user->id)->get();
+        $activeBookings = $bookings->where('status', 'Active');
+        $completedBookings = $bookings->where('status', 'Completed');
+        $totalInvestment = $bookings->where('client_payment_status', 'Paid')->sum('amount');
+        
+        // CRM / Institution Metrics
+        $crms = $user->crms;
+        $activeInstitutions = $crms->whereIn('status', ['approved', 'deployed'])->count();
+
+        // Recent Activity
+        $recentBookings = $bookings->sortByDesc('created_at')->take(5);
+
+        return view('livewire.client.dashboard-controller', [
+            'user' => $user,
+            'userProfile' => $userProfile,
+            'stats' => [
+                'totalRequests' => $tutorRequests->count(),
+                'pendingRequests' => $pendingRequests,
+                'matchRate' => $matchRate,
+                'activeLessons' => $activeBookings->count(),
+                'completedLessons' => $completedBookings->count(),
+                'totalInvestment' => $totalInvestment,
+                'activeInstitutions' => $activeInstitutions,
+            ],
+            'recentBookings' => $recentBookings,
+            'incompleteProfile' => !$userProfile || empty($userProfile->phone) || empty($userProfile->address)
+        ]);
     }
 }
