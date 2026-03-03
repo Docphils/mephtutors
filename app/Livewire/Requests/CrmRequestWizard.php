@@ -205,6 +205,7 @@ class CrmRequestWizard extends Component
             'level' => $this->level,           // Added
             'exam_type' => $this->exam_type,   // Added
             'status' => 'new',
+            'payment_status' => 'pending',
         ]);
 
         try {

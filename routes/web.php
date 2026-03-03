@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\AdminDashboardController;
 use App\Livewire\Admin\AdminIndexTestimonials;
 use App\Livewire\Admin\BookingManager;
+use App\Livewire\Admin\BootcampManager;
+use App\Livewire\Admin\ServiceCatalogManager;
 use App\Livewire\Admin\Newsletter;
 use App\Livewire\Admin\TutorprofileManager;
 use App\Livewire\TermsOfService;
@@ -23,8 +25,17 @@ use App\Livewire\Tutor\DashboardController;
 use App\Livewire\Tutor\TutorLessons;
 use App\Livewire\Tutor\Payments;
 use App\Livewire\Tutor\TutorProfiles;
+use App\Livewire\Tutor\InstitutionAssignments;
+use App\Livewire\Seo\ServiceCatalogPage;
+use App\Livewire\Seo\ServiceItemLandingPage;
+use App\Livewire\Pages\WelcomePage;
+use App\Livewire\Pages\AboutPage;
+use App\Livewire\Pages\ContactPage;
+use App\Livewire\Pages\BootcampPage;
+use App\Livewire\Pages\PrivacyPolicyPage;
 
 use Illuminate\Http\Request;
+use App\Models\ServiceItem;
 use App\Models\User;
 
 // Client Livewire Components
@@ -51,33 +62,23 @@ use App\Livewire\Partials\UserProfileEditor;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+Route::get('/', WelcomePage::class)->name('welcome');
 
-Route::get('/services', function () {
-    return view('services');
-})->name('services');
+Route::get('/services', ServiceCatalogPage::class)->name('services');
+Route::get('/services/{serviceItem:slug}', ServiceItemLandingPage::class)->name('services.show');
 
-Route::get('/about', function () {
-    return view('about');
-})->name('about');
+Route::get('/about', AboutPage::class)->name('about');
 
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
+Route::get('/contact', ContactPage::class)->name('contact');
 
-Route::get('/bootcamp', function () {
-    return view('bootcamp');
-})->name('bootcamp');
+Route::get('/bootcamp', BootcampPage::class)->name('bootcamp');
 
-Route::get('/privacy-policy', function () {
-    return view('privacy-policy')->name('privacy-policy');
-});
+Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
 
 // Guest-accessible request forms (multi-step UI)
 Route::get('/apply/tutor/{serviceItem:slug}', TutorRequestWizard::class)->name('apply.tutor');
 Route::get('/apply/crm/{serviceItem:slug}', CrmRequestWizard::class)->name('apply.crm');
+Route::get('/apply/bootcamp/{serviceItem:slug}', BootcampPage::class)->name('apply.bootcamp');
 
 
 Route::get('/terms-of-service', TermsOfService::class)->name('terms.service');
@@ -86,12 +87,18 @@ Route::get('testimonials', IndexTestimonials::class)->name('testimonials.index')
 //Unsubscribe Route
 Route::get('/unsubscribe/{user}', function (Request $request, User $user) {
     if (! $request->hasValidSignature()) {
-        abort(401, 'Invalid or expired link.');
+        return response()->view('newsletter.unsubscribe', [
+            'success' => false,
+            'message' => 'This unsubscribe link is invalid or has expired.',
+        ], 401);
     }
 
     $user->update(['is_subscribed' => false]);
 
-    return "You have been successfully unsubscribed from MephEd newsletters.";
+    return view('newsletter.unsubscribe', [
+        'success' => true,
+        'message' => 'You have been successfully unsubscribed from MephEd newsletters.',
+    ]);
 })->name('newsletter.unsubscribe');
 
 Route::middleware('auth')->group(function () {
@@ -123,6 +130,7 @@ Route::middleware(['auth', 'can:Tutor', 'verified'])->group(function () {
     Route::get('/tutor/lessons', TutorLessons::class)->name('tutor.lessons');
     Route::get('/tutor/tutor-profile', TutorProfiles::class)->name('tutor.tutor-profile');
     Route::get('/tutor/payments', Payments::class)->name('tutor.payments');
+    Route::get('/tutor/institution-assignments', InstitutionAssignments::class)->name('tutor.institution-assignments');
    
 });
 
@@ -135,6 +143,8 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
 
     //Bookings (consolidated booking manager)
     Route::get('admin/lessons', BookingManager::class)->name('admin.lessons');
+    Route::get('admin/bootcamps', BootcampManager::class)->name('admin.bootcamps');
+    Route::get('admin/service-catalog', ServiceCatalogManager::class)->name('admin.serviceCatalog');
 
     //Crm Routes
     Route::get('admin/intitution-requests', InstitutionRequestManager::class)->name('admin.crm.index');

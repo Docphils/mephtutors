@@ -34,10 +34,27 @@
             <option value="new">New</option>
             <option value="contacted">Contacted</option>
             <option value="proposal_sent">Proposal Sent</option>
+            <option value="negotiating">Negotiating</option>
             <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="deployed">Deployed</option>
             <option value="closed">Closed</option>
         </select>
     </div>
+
+    @if (session('success'))
+        <div class="mb-4 flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-lg text-xs font-bold">
+            <i class="fa-solid fa-circle-check"></i>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 flex items-center gap-2 px-3 py-2 bg-rose-50 border border-rose-100 text-rose-700 rounded-lg text-xs font-bold">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ session('error') }}
+        </div>
+    @endif
 
     {{-- Data Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,6 +98,10 @@
                         <span class="text-slate-400 font-bold uppercase tracking-tighter">Tutors Required</span>
                         <span class="text-slate-700 font-bold">{{ $req->number_of_tutors_required }}</span>
                     </div>
+                    <div class="flex justify-between items-center text-xs border-t border-slate-200 pt-2">
+                        <span class="text-slate-400 font-bold uppercase tracking-tighter">Payment</span>
+                        <span class="text-slate-700 font-bold uppercase">{{ $req->payment_status }}</span>
+                    </div>
                 </div>
             </div>
         @empty
@@ -99,7 +120,7 @@
     {{-- Detail View Modal (Expanded Booking Manager Style) --}}
     @if ($showDetail && $selectedRequest)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" wire:click="$set('showDetail', false)"></div>
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
             <div class="relative bg-white rounded-[3rem] shadow-2xl max-w-3xl w-full overflow-hidden">
                 {{-- Modal Header --}}
                 <div class="bg-cyan-600 p-8 text-white relative">
@@ -184,7 +205,8 @@
                                         class="text-slate-800 font-bold">{{ $selectedRequest->serviceItem->service->name }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Specific Service</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Specific
+                                        Service</span>
                                     <span
                                         class="text-cyan-600 font-bold">{{ $selectedRequest->serviceItem->name }}</span>
                                 </div>
@@ -223,6 +245,41 @@
                             </div>
                         </div>
 
+                        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-slate-50 rounded-2xl p-4">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Quote Amount</p>
+                                <p class="text-lg font-black text-slate-800">
+                                    {{ $selectedRequest->quote_amount ? '₦' . number_format($selectedRequest->quote_amount, 2) : 'Not set' }}
+                                </p>
+                            </div>
+                            <div class="bg-slate-50 rounded-2xl p-4">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Payment Status</p>
+                                <p class="text-lg font-black text-slate-800 uppercase">
+                                    {{ $selectedRequest->payment_status }}</p>
+                            </div>
+                            <div class="bg-slate-50 rounded-2xl p-4">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Payment Ref</p>
+                                <p class="text-sm font-bold text-slate-800">
+                                    {{ $selectedRequest->payment_reference ?: 'N/A' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-span-1 md:col-span-2 space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quote
+                                Notes</label>
+                            <div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-700">
+                                {{ $selectedRequest->quote_notes ?: 'No quote note available.' }}
+                            </div>
+                        </div>
+
+                        <div class="col-span-1 md:col-span-2 space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contract
+                                Terms</label>
+                            <div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-700 whitespace-pre-line">
+                                {{ $selectedRequest->contract_terms ?: 'No contract term recorded yet.' }}
+                            </div>
+                        </div>
+
                         {{-- Section: Address & Requirements --}}
                         <div class="col-span-1 md:col-span-2 space-y-4">
                             <div class="space-y-1">
@@ -246,6 +303,28 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="col-span-1 md:col-span-2 space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assigned
+                                Team</label>
+                            <div class="bg-slate-50 rounded-2xl p-4">
+                                @forelse ($selectedRequest->assignments as $assignment)
+                                    <div
+                                        class="flex items-center justify-between py-2 border-b border-slate-200 last:border-b-0">
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-800">
+                                                {{ $assignment->assignee?->name }}</p>
+                                            <p class="text-[10px] uppercase font-black text-slate-400">
+                                                {{ $assignment->role }} | {{ $assignment->status }}
+                                            </p>
+                                        </div>
+                                        <p class="text-xs text-slate-500">{{ $assignment->assignee?->email }}</p>
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-slate-500">No assignments yet.</p>
+                                @endforelse
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -254,7 +333,7 @@
                     <p class="text-[10px] text-slate-400 font-medium">Last updated:
                         {{ $selectedRequest->updated_at->diffForHumans() }}</p>
                     <div class="flex gap-3">
-                        <button wire:click="$set('showDetail', false)"
+                        <button wire:click="closeModal"
                             class="px-6 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-all">
                             Close
                         </button>
@@ -270,28 +349,135 @@
     {{-- Edit Status Modal --}}
     @if ($showEditModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" wire:click="$set('showEditModal', false)">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm">
             </div>
-            <div class="relative bg-white rounded-[2rem] p-8 max-w-md w-full shadow-xl">
+            <div class="relative bg-white rounded-[2rem] p-8 max-w-3xl w-full shadow-xl max-h-[90vh] overflow-y-auto">
+                <button wire:click="closeModal" class="absolute top-4 right-4 text-slate-500 hover:text-slate-800">
+                    <i class="fa fa-times text-lg"></i>
+                </button>
                 <h3 class="text-xl font-black text-slate-800 mb-6">Update Request Status</h3>
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select New
                             Status</label>
-                        <select wire:model="newStatus"
+                        <select wire:model.defer="newStatus"
                             class="w-full mt-1 bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500">
                             <option value="new">New</option>
                             <option value="contacted">Contacted</option>
                             <option value="proposal_sent">Proposal Sent</option>
+                            <option value="negotiating">Negotiating</option>
                             <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>
+                            <option value="deployed">Deployed</option>
                             <option value="closed">Closed</option>
                         </select>
+                        @error('newStatus')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
-                    <button wire:click="updateStatus"
-                        class="w-full py-4 bg-cyan-600 text-white font-bold rounded-2xl shadow-lg shadow-cyan-200 hover:bg-cyan-700 transition-all">
-                        Save Changes
-                    </button>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quote
+                                Amount</label>
+                            <input type="number" min="0" step="0.01" wire:model.defer="quoteAmount"
+                                class="w-full mt-1 bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500">
+                            @error('quoteAmount')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment
+                                Status</label>
+                            <select wire:model.defer="paymentStatus"
+                                class="w-full mt-1 bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500">
+                                <option value="pending">Pending</option>
+                                <option value="part_paid">Part Paid</option>
+                                <option value="paid">Paid</option>
+                                <option value="waived">Waived</option>
+                            </select>
+                            @error('paymentStatus')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment
+                            Reference</label>
+                        <input type="text"
+                            value="{{ $selectedRequest?->payment_reference ?: 'Auto-generated on quote save' }}"
+                            disabled
+                            class="w-full mt-1 bg-slate-100 border-transparent rounded-2xl py-3 text-slate-500">
+                    </div>
+
+                    <div wire:ignore wire:key="quote-trix-{{ $selectedRequest?->id }}">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quote
+                            Notes</label>
+                        <input id="quote_notes_editor_{{ $selectedRequest?->id }}" type="hidden" value="{{ $quoteNotes }}">
+                        <trix-editor input="quote_notes_editor_{{ $selectedRequest?->id }}"
+                            class="trix-content w-full mt-1 bg-slate-50 border-transparent rounded-2xl text-sm p-3 min-h-[140px]"
+                            x-data
+                            x-on:trix-change.debounce.500ms="$wire.set('quoteNotes', $event.target.value)">
+                        </trix-editor>
+                    </div>
+
+                    <div wire:ignore wire:key="contract-trix-{{ $selectedRequest?->id }}">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contract
+                            Terms</label>
+                        <input id="contract_terms_editor_{{ $selectedRequest?->id }}" type="hidden" value="{{ $contractTerms }}">
+                        <trix-editor input="contract_terms_editor_{{ $selectedRequest?->id }}"
+                            class="trix-content w-full mt-1 bg-slate-50 border-transparent rounded-2xl text-sm p-3 min-h-[170px]"
+                            x-data
+                            x-on:trix-change.debounce.500ms="$wire.set('contractTerms', $event.target.value)">
+                        </trix-editor>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-slate-700 mb-3">Tutor Assignment
+                            (Standalone)</h4>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign
+                            Tutors</label>
+                        <select wire:model.defer="selectedTutors" multiple
+                            class="w-full mt-1 bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500 min-h-32">
+                            @foreach ($availableTutors as $tutor)
+                                <option value="{{ $tutor->id }}">{{ $tutor->name }} ({{ $tutor->email }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-1">Hold Ctrl/Cmd to select multiple tutors.</p>
+                        @error('selectedTutors')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                        @error('selectedTutors.*')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assignment
+                            Notes</label>
+                        <textarea wire:model.defer="assignmentNotes" rows="2"
+                            class="w-full mt-1 bg-slate-50 border-transparent rounded-2xl py-3 focus:ring-2 focus:ring-cyan-500"
+                            placeholder="Onboarding instruction or deployment context"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button wire:click="updateStatus" wire:loading.attr="disabled" wire:target="updateStatus"
+                            class="w-full py-4 bg-cyan-600 text-white font-bold rounded-2xl shadow-lg shadow-cyan-200 hover:bg-cyan-700 transition-all">
+                            Save Client Stage
+                        </button>
+                        <button wire:click="saveTutorAssignments" wire:loading.attr="disabled"
+                            wire:target="saveTutorAssignments"
+                            class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all">
+                            Save Tutor Assignment
+                        </button>
+                    </div>
+                    <div>
+                        <button wire:click="closeModal" wire:loading.attr="disabled"
+                            class="w-full py-4 bg-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-300 transition-all">
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

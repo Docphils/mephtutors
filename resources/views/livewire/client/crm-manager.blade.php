@@ -44,7 +44,11 @@
                     <option value="">All Statuses</option>
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
+                    <option value="proposal_sent">Proposal Sent</option>
+                    <option value="negotiating">Negotiating</option>
                     <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="deployed">Deployed</option>
                     <option value="closed">Closed</option>
                 </select>
             </div>
@@ -110,12 +114,27 @@
                         @endif
                     </div>
                     <p class="text-sm text-slate-500 line-clamp-2 italic">"{{ $i->requirements }}"</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="text-[10px] font-bold uppercase text-slate-500 bg-slate-50 rounded-lg p-2">
+                            Payment: <span class="text-slate-700">{{ $i->payment_status }}</span>
+                        </div>
+                        <div class="text-[10px] font-bold uppercase text-slate-500 bg-slate-50 rounded-lg p-2">
+                            Quote:
+                            <span class="text-slate-700">{{ $i->quote_amount ? '₦' . number_format($i->quote_amount, 0) : 'Pending' }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <button wire:click="openView({{ $i->id }})"
                     class="w-full py-3 rounded-xl bg-cyan-50 hover:bg-cyan-600 hover:text-white text-slate-600 font-bold text-sm transition-all">
                     View Proposal Details
                 </button>
+                @if ($i->quote_amount && $i->payment_status !== 'paid')
+                    <button wire:click="pay({{ $i->id }})"
+                        class="w-full mt-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all">
+                        Pay Quote Now
+                    </button>
+                @endif
             </div>
         @empty
             <div
@@ -385,6 +404,51 @@
                                     phase</p>
                             </div>
                         </div>
+
+                        <div class="pt-6 border-t border-slate-100 space-y-3">
+                            <p class="text-[10px] text-slate-600 font-bold uppercase">Commercial Summary</p>
+                            <div class="bg-slate-50 rounded-2xl p-4 space-y-2">
+                                <p class="text-xs font-bold text-slate-500 uppercase">Quote</p>
+                                <p class="text-lg font-black text-slate-800">
+                                    {{ $activeRequest->quote_amount ? '₦' . number_format($activeRequest->quote_amount, 2) : 'Pending quote' }}
+                                </p>
+                                <p class="text-xs text-slate-600">{{ $activeRequest->quote_notes ?: 'No quote notes yet.' }}</p>
+                            </div>
+                            <div class="bg-slate-50 rounded-2xl p-4 space-y-1">
+                                <p class="text-xs font-bold text-slate-500 uppercase">Payment</p>
+                                <p class="text-sm font-black text-slate-800 uppercase">{{ $activeRequest->payment_status }}</p>
+                                <p class="text-xs text-slate-500">Reference: {{ $activeRequest->payment_reference ?: 'N/A' }}</p>
+                            </div>
+                            <div class="bg-slate-50 rounded-2xl p-4 space-y-1">
+                                <p class="text-xs font-bold text-slate-500 uppercase">Contract Terms</p>
+                                <p class="text-xs text-slate-600 whitespace-pre-line">{{ $activeRequest->contract_terms ?: 'Not issued yet.' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-100">
+                            <p class="text-[10px] text-slate-600 font-bold uppercase mb-2">Assigned Team</p>
+                            <div class="space-y-2">
+                                @forelse ($activeRequest->assignments as $assignment)
+                                    <div class="bg-slate-50 rounded-xl px-3 py-2">
+                                        <p class="text-sm font-bold text-slate-800">{{ $assignment->assignee?->name }}</p>
+                                        <p class="text-[10px] uppercase text-slate-500 font-bold">
+                                            {{ $assignment->role }} | {{ $assignment->status }}
+                                        </p>
+                                    </div>
+                                @empty
+                                    <p class="text-xs text-slate-500">No team members assigned yet.</p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        @if ($activeRequest->quote_amount && $activeRequest->payment_status !== 'paid')
+                            <div class="pt-3">
+                                <button wire:click="pay({{ $activeRequest->id }})"
+                                    class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all">
+                                    Pay Quote Now
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

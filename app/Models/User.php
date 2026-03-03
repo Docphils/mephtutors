@@ -13,6 +13,7 @@ use App\Models\Booking;
 use App\Models\TutorRequest;
 use App\Models\Crm;
 use App\Models\Payment;
+use App\Models\CrmAssignment;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -93,6 +94,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(TutorMatch::class, 'tutor_id')
             ->where('status', 'accepted');
+    }
+
+    public function crmAssignments()
+    {
+        return $this->hasMany(CrmAssignment::class, 'user_id');
     }
 
 }

@@ -5,6 +5,7 @@ namespace App\Livewire\Client;
 use App\Models\Crm;
 use App\Models\Service;
 use App\Models\ServiceItem;
+use App\Services\PaystackService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -95,7 +96,11 @@ class CrmManager extends Component
     public function openEdit($id)
     {
         $this->resetValidation();
-        $record = Crm::findOrFail($id);
+        $record = Crm::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        if (!in_array($record->status, ['new', 'contacted', 'negotiating'], true)) {
+            session()->flash('success', 'This request can no longer be edited at the current stage.');
+            return;
+        }
         $this->selectedId = $id;
         $this->isEditing = true;
         
@@ -140,11 +145,14 @@ class CrmManager extends Component
         unset($validated['service_id']); // service_id is for UI categorization, not in Crm table
 
         if ($this->isEditing) {
-            Crm::find($this->selectedId)->update($validated);
+            Crm::where('id', $this->selectedId)
+                ->where('user_id', Auth::id())
+                ->update($validated);
             session()->flash('success', 'Request updated successfully.');
         } else {
             $validated['user_id'] = Auth::id();
             $validated['status'] = 'new';
+            $validated['payment_status'] = 'pending';
             Crm::create($validated);
             session()->flash('success', 'Institution request posted!');
         }
@@ -152,9 +160,53 @@ class CrmManager extends Component
         $this->showModal = false;
     }
 
+    public function openView($id)
+    {
+        $this->activeRequest = Crm::with(['serviceItem.service', 'assignments.assignee'])
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+        $this->showDetails = true;
+    }
+
+    public function pay($id, PaystackService $paystack)
+    {
+        $crm = Crm::with('user')
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if ((float) $crm->quote_amount <= 0) {
+            session()->flash('success', 'This request has no quote amount yet.');
+            return;
+        }
+
+        if ($crm->payment_status === 'paid') {
+            session()->flash('success', 'This request is already paid.');
+            return;
+        }
+
+        try {
+            $authorizationUrl = $paystack->initializeCrmPayment($crm);
+            return redirect()->away($authorizationUrl);
+        } catch (\Exception $e) {
+            session()->flash('success', 'Unable to initialize CRM payment right now.');
+        }
+    }
+
     public function delete($id)
     {
-        Crm::where('id', $id)->where('user_id', Auth::id())->delete();
+        $crm = Crm::where('id', $id)->where('user_id', Auth::id())->first();
+        if (!$crm) {
+            return;
+        }
+
+        if (!in_array($crm->status, ['new', 'contacted'], true)) {
+            session()->flash('success', 'Only new or contacted requests can be deleted.');
+            return;
+        }
+
+        $crm->delete();
         session()->flash('success', 'Request removed.');
     }
 
@@ -180,9 +232,10 @@ class CrmManager extends Component
                 ->get()
             : collect();
 
-        $query = Crm::with('serviceItem.service')
+        $query = Crm::with(['serviceItem.service', 'assignments.assignee'])
             ->where('user_id', Auth::id())
             ->when($this->search, fn($q) => $q->where('institution_name', 'like', '%' . $this->search . '%'))
+            ->when($this->statusFilter, fn($q) => $q->where('status', $this->statusFilter))
             ->orderBy($this->sortBy, $this->sortDir);
 
         return view('livewire.client.crm-manager', [

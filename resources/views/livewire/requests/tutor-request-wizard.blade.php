@@ -1,7 +1,7 @@
-<div class="w-full text-gray-700">
+<div class="w-full text-slate-800 p-10">
     <div class="mb-8">
-        <h1 class="text-white text-3xl font-bold mb-2">Find Your Perfect Tutor</h1>
-        <p class="text-cyan-100/80">Complete the form below and we'll match you with an expert.</p>
+        <h1 class=" text-3xl font-bold mb-2">Find Your Perfect Tutor</h1>
+        <p class="text-cyan-700/80">Complete the form below and we'll match you with an expert.</p>
     </div>
 
     <div class="shadow-xl rounded-2xl overflow-hidden bg-white">
@@ -379,7 +379,7 @@
 
                 <div class="mt-8 flex justify-between">
                     <button wire:click="back" class="text-gray-500 font-bold px-6 py-3">← Back</button>
-                    <button wire:click="submit"  wire:target='submit' wire:loading.class='hidden'
+                    <button wire:click="submit" wire:target='submit' wire:loading.class='hidden'
                         class="bg-cyan-600 hover:bg-cyan-700 text-white px-12 py-3 rounded-lg font-bold shadow-lg transition-all">
                         Submit Tutor Request
                     </button>

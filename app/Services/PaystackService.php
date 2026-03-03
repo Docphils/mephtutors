@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Crm;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -31,6 +32,39 @@ class PaystackService
         $booking->update([
             'payment_reference' => $reference,
             'client_payment_status' => 'Pending',
+        ]);
+
+        return $response['data']['authorization_url'];
+    }
+
+    public function initializeCrmPayment(Crm $crm)
+    {
+        if ((float) $crm->quote_amount <= 0) {
+            throw new \Exception('CRM quote amount must be greater than zero.');
+        }
+
+        $reference = $crm->payment_reference ?: (string) Str::uuid();
+
+        $response = Http::withToken(config('services.paystack.secret'))
+            ->post("{$this->baseUrl}/transaction/initialize", [
+                'email' => $crm->user->email,
+                'amount' => (int) round($crm->quote_amount * 100),
+                'reference' => $reference,
+                'callback_url' => route('paystack.callback'),
+                'metadata' => [
+                    'payment_for' => 'crm',
+                    'crm_id' => $crm->id,
+                ],
+            ])->json();
+
+        if (!($response['status'] ?? false)) {
+            throw new \Exception($response['message'] ?? 'CRM payment initialization failed.');
+        }
+
+        $crm->update([
+            'payment_reference' => $reference,
+            'payment_link' => $response['data']['authorization_url'],
+            'payment_status' => 'pending',
         ]);
 
         return $response['data']['authorization_url'];

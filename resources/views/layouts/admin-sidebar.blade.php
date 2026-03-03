@@ -58,6 +58,18 @@
             <span>Manage Lessons</span>
         </a>
 
+        <a wire:navigate href="{{ route('admin.bootcamps') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.bootcamps') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-user-graduate w-5 text-cyan-300"></i>
+            <span>Manage Bootcamps</span>
+        </a>
+
+        <a wire:navigate href="{{ route('admin.serviceCatalog') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.serviceCatalog') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-list-check w-5 text-cyan-300"></i>
+            <span>Service Catalog</span>
+        </a>
+
         <a wire:navigate href="{{ route('admin.crm.index') }}"
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.crm.index') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-school w-5 text-cyan-300"></i>

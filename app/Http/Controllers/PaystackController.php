@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Crm;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 
@@ -14,9 +15,24 @@ class PaystackController extends Controller
 
         $response = $paystack->verifyPayment($reference);
 
-        if ($response['data']['status'] === 'success') {
+        if (($response['data']['status'] ?? null) === 'success') {
+            $metadata = $response['data']['metadata'] ?? [];
 
-            $bookingId = $response['data']['metadata']['booking_id'];
+            if (($metadata['payment_for'] ?? null) === 'crm') {
+                $crm = Crm::findOrFail($metadata['crm_id']);
+
+                $crm->update([
+                    'payment_status' => 'paid',
+                    'payment_reference' => $reference,
+                    'paid_at' => now(),
+                ]);
+
+                return redirect()->route('client.crm.manager')
+                    ->with('success', 'Payment successful. Institution contract has been funded.');
+            }
+
+            $bookingId = $metadata['booking_id'] ?? null;
+            abort_unless($bookingId, 404);
 
             $booking = Booking::findOrFail($bookingId);
 
@@ -51,8 +67,25 @@ class PaystackController extends Controller
         if ($event === 'charge.success') {
 
             $data = $request->input('data');
+            $metadata = $data['metadata'] ?? [];
 
-            $bookingId = $data['metadata']['booking_id'];
+            if (($metadata['payment_for'] ?? null) === 'crm') {
+                $crm = Crm::find($metadata['crm_id'] ?? 0);
+                if ($crm && $crm->payment_status !== 'paid') {
+                    $crm->update([
+                        'payment_status' => 'paid',
+                        'payment_reference' => $data['reference'] ?? $crm->payment_reference,
+                        'paid_at' => now(),
+                    ]);
+                }
+
+                return response()->json(['status' => 'ok']);
+            }
+
+            $bookingId = $metadata['booking_id'] ?? null;
+            if (!$bookingId) {
+                return response()->json(['status' => 'ok']);
+            }
 
             $booking = Booking::find($bookingId);
 

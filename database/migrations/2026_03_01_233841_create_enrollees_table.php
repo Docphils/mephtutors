@@ -11,13 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bootcamps', function (Blueprint $table) {
+        Schema::create('enrollees', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('cohort_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('email');
             $table->string('phone');
             $table->text('address');
+
+            // lifecycle
+            $table->enum('status', [
+                'pending',
+                'confirmed',
+                'active',
+                'completed',
+                'withdrawn'
+            ])->default('pending');
+
+            // admin tracking
             $table->boolean('is_read')->default(false);
+            $table->timestamp('confirmed_at')->nullable();
+
+            // optional future analytics
+            $table->json('meta')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bootcamps');
+        Schema::dropIfExists('enrollees');
     }
 };

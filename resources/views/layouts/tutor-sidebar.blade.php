@@ -52,8 +52,8 @@
             <i class="fas fa-book text-cyan-100 w-6 hidden md:block"></i><span>My Lessons</span>
         </a>
 
-        <a @disabled(true) wire:navigate href="#"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('#') ? 'bg-cyan-600' : '' }}">
+        <a wire:navigate href="{{ route('tutor.institution-assignments') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.institution-assignments') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-code text-cyan-100 w-6 hidden md:block"></i><span>Institution Assignments</span>
         </a>
 

@@ -1,19 +1,19 @@
-<div class="w-full text-gray-700">
+<div class="w-full text-slate-800 p-10">
 
     {{-- Heading --}}
-    <h1 class="text-white text-3xl font-bold mb-4">MephEd Club/CRM Request Form</h1>
-    <p class="text-white mb-6">Fill out the form below and we’ll assign an instructor to manage your club or
+    <h1 class=" text-3xl font-bold mb-4">MephEd Club/CRM Request Form</h1>
+    <p class=" mb-6">Fill out the form below and we’ll assign an instructor to manage your club or
         activity. You can track requests and communications through your account.</p>
 
     <div class="shadow-xl rounded-2xl p-6">
 
         {{-- Progress Bar --}}
         <div class="mb-10">
-            <div class="flex items-center justify-between text-sm font-semibold text-cyan-50">
-                <div class="{{ $step >= 1 ? 'text-cyan-200' : '' }}">1. Your Details</div>
-                <div class="{{ $step >= 2 ? 'text-cyan-200' : '' }}">2. Service</div>
-                <div class="{{ $step >= 3 ? 'text-cyan-200' : '' }}">3. Schedule</div>
-                <div class="{{ $step >= 4 ? 'text-cyan-200' : '' }}">4. Done</div>
+            <div class="flex items-center justify-between text-sm font-semibold text-cyan-500">
+                <div class="{{ $step >= 1 ? 'text-cyan-800' : '' }}">1. Your Details</div>
+                <div class="{{ $step >= 2 ? 'text-cyan-800' : '' }}">2. Service</div>
+                <div class="{{ $step >= 3 ? 'text-cyan-800' : '' }}">3. Schedule</div>
+                <div class="{{ $step >= 4 ? 'text-cyan-800' : '' }}">4. Done</div>
             </div>
 
             <div class="w-full bg-gray-200 h-2 rounded-full mt-2">

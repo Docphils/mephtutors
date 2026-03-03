@@ -20,8 +20,8 @@ class WelcomeServices extends Component
 
             if ($dbItems->isEmpty()) {
                 return collect([
-                    (object)['name' => 'Home Tutoring', 'slug' => 'home-tutoring', 'image_path' => '/images/b-home-tutoring.jpg', 'description' => 'Unlock personalized academic support from the comfort of your home.', 'target' => 'tutor_requests'],
-                    (object)['name' => 'Coding Classes', 'slug' => 'coding', 'image_path' => '/images/coding-banner2.jpeg', 'description' => 'Master modern stacks with expert guidance.', 'target' => 'tutor_requests'],
+                    (object)['name' => 'Home Tutoring', 'slug' => 'home-tutoring', 'image_path' => '/images/b-home-tutoring.jpg', 'description' => 'Unlock personalized academic support from the comfort of your home.', 'target' => 'tutor_request'],
+                    (object)['name' => 'Coding Classes', 'slug' => 'coding', 'image_path' => '/images/coding-banner2.jpeg', 'description' => 'Master modern stacks with expert guidance.', 'target' => 'tutor_request'],
                     (object)['name' => 'School Clubs', 'slug' => 'clubs', 'image_path' => '/images/robotics.jpg', 'description' => 'Expert club instructors for coding, music, chess, etc.', 'target' => 'institutions'],
                 ]);
             }
@@ -32,7 +32,7 @@ class WelcomeServices extends Component
                     'slug' => $item->slug,
                     'image_path' => $item->image_path,
                     'description' => $item->description,
-                    'target' => $item->target ?? 'tutor_requests',
+                    'target' => $item->target ?? 'tutor_request',
                 ];
             });
         });

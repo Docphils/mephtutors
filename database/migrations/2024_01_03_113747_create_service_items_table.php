@@ -22,7 +22,7 @@ return new class extends Migration
 
             $table->text('description')->nullable();
             $table->string('image_path')->nullable();
-            $table->enum('target', ['tutor_request', 'institutions'])->default('tutor_request');
+            $table->enum('target', ['tutor_request', 'institutions', 'bootcamp'])->default('tutor_request');
             $table->boolean('has_subjects')->default(true);
             $table->boolean('requires_curriculum')->default(false);
             $table->boolean('requires_level')->default(true);

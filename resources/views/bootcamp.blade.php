@@ -184,7 +184,7 @@
             </div>
                         <div class="bt-form-box">
                 <h2 class="text-xl font-semibold">Enroll Now!</h2>
-                <div class="bt-input"><livewire:bootcamps />
+                <div class="bt-input"><livewire:enrollment-form :service-item-slug="$serviceItemSlug ?? null" />
                 </div>
             </div>
             </div>

@@ -3,7 +3,7 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use App\Models\{Booking, Crm, Payment, TutorRequest, User, TutorProfile, Bootcamp, Contact, Newsletter};
+use App\Models\{Booking, Crm, Payment, TutorRequest, User, TutorProfile, Enrollee, Contact, Newsletter};
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\{Layout, Title};
 use Carbon\Carbon;
@@ -26,9 +26,9 @@ class AdminDashboardController extends Component
             'earned_payments'    => Payment::where('status', 'Earned')->sum('amount'),
             'new_crm'            => Crm::where('status', 'new')->count(),
             'pending_tutors'     => TutorProfile::where('status', 'Pending')->count(),
-            'bootcamp_count'     => Bootcamp::count(), // Added from Bootcamp model
-            'unread_messages'    => Contact::where('is_read', false)->count(), // Added from Contact model
-            'campaigns_sent'     => Newsletter::where('status', 'Sent')->count(), // Added from Newsletter model
+            'bootcamp_count'     => Enrollee::count(), 
+            'unread_messages'    => Contact::where('is_read', false)->count(), 
+            'campaigns_sent'     => Newsletter::where('status', 'Sent')->count(), 
         ];
 
         // Advanced Chart Data: 7-Day Multi-Metric Growth

@@ -94,12 +94,17 @@
                     <span class="font-bold text-sm">Financial History</span>
                     <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                 </a>
+                <a href="{{ route('tutor.institution-assignments') }}" wire:navigate
+                    class="flex items-center justify-between p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all group">
+                    <span class="font-bold text-sm">Institution Assignments</span>
+                    <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                </a>
             </div>
         </div>
     </div>
 
     {{-- Financial Statistics Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {{-- Pending Payments --}}
         <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
             <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mb-4">
@@ -137,6 +142,40 @@
                 <p class="text-3xl font-black text-slate-800">{{ $completedPayments }}</p>
                 <span class="text-[10px] text-slate-400 font-medium mb-1 italic">Successful transfers</span>
             </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-4">
+                <i class="fa-solid fa-school-circle-check text-xl"></i>
+            </div>
+            <h4 class="text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">Institution Deployments</h4>
+            <div class="flex items-end justify-between">
+                <p class="text-3xl font-black text-slate-800">{{ $activeInstitutionDeployments }}</p>
+                <span class="text-[10px] text-slate-400 font-medium mb-1 italic">Assigned or active</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h4 class="font-black text-slate-800">Institution Assignments</h4>
+            <span class="text-xs font-bold text-slate-400 uppercase">Recent</span>
+        </div>
+        <div class="p-6 space-y-3">
+            @forelse ($institutionAssignments as $assignment)
+                <div class="rounded-2xl border border-slate-100 p-4 bg-slate-50">
+                    <p class="text-sm font-black text-slate-800">{{ $assignment->crm?->institution_name }}</p>
+                    <p class="text-xs text-cyan-700 font-bold">{{ $assignment->crm?->serviceItem?->name }}</p>
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="text-[10px] uppercase font-black text-slate-500">
+                            {{ $assignment->role }} | {{ $assignment->status }}
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-bold">{{ $assignment->created_at->diffForHumans() }}</span>
+                    </div>
+                </div>
+            @empty
+                <p class="text-sm text-slate-500">No institutional assignments yet.</p>
+            @endforelse
         </div>
     </div>
 </div>

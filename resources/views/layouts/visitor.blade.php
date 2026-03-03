@@ -6,7 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Terms of Service - MephEd' }}</title>
+    <title>{{ $title ?? 'MephEd' }}</title>
+    <meta name="description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">
+    <meta name="robots" content="{{ $metaRobots ?? 'index,follow' }}">
+    <link rel="canonical" href="{{ $canonicalUrl ?? url()->current() }}">
+
+    <meta property="og:title" content="{{ $title ?? 'MephEd' }}">
+    <meta property="og:description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">
+    <meta property="og:type" content="{{ $ogType ?? 'website' }}">
+    <meta property="og:url" content="{{ $canonicalUrl ?? url()->current() }}">
+    <meta property="og:image" content="{{ $ogImage ?? asset('images/MephEd.png') }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $title ?? 'MephEd' }}">
+    <meta name="twitter:description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">
+    <meta name="twitter:image" content="{{ $ogImage ?? asset('images/MephEd.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -34,13 +48,16 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased h-screen">
-    <div class="min-h-full bg-cyan-800 text-white">
+    @if (!empty($structuredData))
+        <script type="application/ld+json">{!! $structuredData !!}</script>
+    @endif
+    <div class="min-h-full bg-slate-50 text-slate-800">
         @include('layouts.header')
 
 
 
         <!-- Page Content -->
-        <main class="w-full p-10 mx-auto">
+        <main class="w-full mx-auto">
             {{ $slot }}
         </main>
         @include('layouts.footer')

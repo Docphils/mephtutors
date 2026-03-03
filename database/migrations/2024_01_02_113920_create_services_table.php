@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->enum('target', ['tutor_request', 'institutions'])->default('tutor_request');
+            $table->enum('target', ['tutor_request', 'institutions', 'bootcamp'])->default('tutor_request');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
