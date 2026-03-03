@@ -1,66 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# MephEd
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+MephEd is a tutoring and education support platform that connects learners, families, schools, and qualified tutors.
 
-## About Laravel
+This platform is built to help you request learning support, get matched with the right tutor, manage lessons, and track progress from one place.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Who MephEd Is For
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Parents and learners looking for trusted tutors
+- Schools and institutions requesting academic support services
+- Tutors who want to teach online or onsite
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## What You Can Do on MephEd
 
-## Learning Laravel
+### For Parents and Learners
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Submit tutoring requests based on subject, class level, and learning goals
+- Get matched with suitable tutors
+- Track lesson status from request to completion
+- Review lesson outcomes and payment status from your dashboard
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### For Tutors
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Create and update your tutor profile
+- Upload qualifications, CV, and intro details
+- Receive profile review and approval updates
+- Get matched to relevant learner requests
+- Manage assigned lessons and track payments
 
-## Laravel Sponsors
+### For Schools and Institutions
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Submit institutional learning support requests
+- Receive coordinated tutor assignment support
+- Follow request progress and status updates
 
-### Premium Partners
+## How MephEd Works
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+1. Create your account.
+2. Complete your profile (as a client, tutor, or institution).
+3. Submit a request or wait for assignment (depending on your role).
+4. Track status updates in your dashboard.
+5. Continue communication and lesson follow-up within the platform workflow.
 
-## Contributing
+## Tutor Profile Review Status
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Tutor profiles are managed with these status values:
 
-## Code of Conduct
+- `Pending` (default): profile submitted and awaiting review
+- `Approved`: profile verified and available for matching
+- `Review`: profile needs updates before approval
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Payments and Lesson Tracking
 
-## Security Vulnerabilities
+MephEd supports structured lesson and payment tracking so users can:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Monitor lesson progress through each stage
+- Review payment status updates
+- Keep records centralized for transparency
 
-## License
+## Support
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+If you need help with requests, tutor onboarding, lessons, or payments, use the contact/support channels available on the MephEd website.
+
+## About This Repository
+
+This repository powers the MephEd platform. This README is intentionally focused on platform users and service experience.
