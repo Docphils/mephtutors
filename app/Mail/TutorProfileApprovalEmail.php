@@ -6,6 +6,7 @@ use App\Models\TutorProfile;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -27,8 +28,9 @@ class TutorProfileApprovalEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Tutor Profile Status Notification',
-            from: 'support@mephed.ng'
+            subject: 'Tutor Profile Review Status',
+            from: 'support@mephed.ng',
+            bcc: [new Address('support@mephed.ng', 'MephEd Support')]
         );
     }
 

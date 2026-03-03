@@ -85,7 +85,7 @@
                                     </a>
                                 @endif
                             @else
-                                <div class="grid text-start mx-0">
+                                <div class="grid text-end mx-0">
                                     <a href="{{ route('login') }}" wire:navigate class="hover:text-gray-200">Login</a>
 
                                     @if (Route::has('register'))

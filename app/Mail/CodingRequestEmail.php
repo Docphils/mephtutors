@@ -30,7 +30,7 @@ class CodingRequestEmail extends Mailable
     {
         return new Envelope(
             subject: 'Coding Tutor Request Received',
-            from: 'support@meph.ng',
+            from: 'support@mephed.ng',
         );
     }
 

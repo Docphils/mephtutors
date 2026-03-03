@@ -3,131 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MephEd - Contact Notification</title>
-    <style>
-        /* Tailwind Preload */
-        @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
-    </style>
-    <style>
-        
-        /* Reset and font styling */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
-            margin: 0;
-            padding: 0;
-            color: #180404;
-        }
-
-        /* Main container */
-        .email-container {
-            max-width: 600px;
-            margin: 2rem auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Header */
-        .email-header {
-            background-color: rgb(17, 53, 53);
-            color: #ffffff;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .email-header img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-        }
-
-        .email-header h1 {
-            margin: 10px 0 0;
-            font-size: 24px;
-        }
-
-        /* Content */
-        .email-body {
-            padding: 20px;
-            background-color: #ffffff;
-            color: black;
-        }
-
-        .email-body p {
-            font-size: 16px;
-            margin-bottom: 1em;
-            line-height: 1.5;
-        }
-
-        .details-section {
-            background-color: #f9fafb;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-
-        .details-section p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .message-box {
-            background-color: #f0f4f8;
-            padding: 15px;
-            border-radius: 6px;
-            font-style: italic;
-            color: #555;
-        }
-
-        /* Footer */
-        .email-footer {
-            background-color: rgb(17, 53, 53);
-            color: white;
-            text-align: center;
-            padding: 15px;
-            font-size: 12px;
-        }
-
-        /*logo-image*/
-        .logo-image {
-            object-fit: contain;
-            height: 0.5rem; 
-            width: 10px;
-        }
-       
-    </style>
+    <title>New Bootcamp Registration</title>
 </head>
-
-<body>
-    <div class="email-container">
-        <!-- Header Section with Logo -->
-        <div class="email-header">
-            <img src="{{ asset('images/MephEd.png') }}" alt="Logo Image" class="logo-image">
-            <h1>New Bootcamp Registration</h1>
+<body style="margin:0;padding:24px;background:#e2e8f0;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+    <div style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #cbd5e1;border-radius:14px;overflow:hidden;">
+        <div style="background:linear-gradient(120deg,#0e7490,#1e293b);padding:20px 24px;color:#ecfeff;">
+            <h1 style="margin:0;font-size:22px;">Bootcamp Registration Received</h1>
+            <p style="margin:8px 0 0;font-size:13px;">A new enrollee submitted the bootcamp form.</p>
         </div>
 
-        <!-- Main Content -->
-        <div class="email-body">
-            <p>Hello Admin,</p>
-            <p>A new registration form has been submitted. Here are the details:</p>
+        <div style="padding:22px 24px;">
+            <p style="margin-top:0;">Hello Admin,</p>
+            <p style="margin:0 0 14px;">Please review this registration in Bootcamp Manager.</p>
 
-            <div class="details-section">
-                <p><strong>Name:</strong> {{ $registrant['name'] }}</p>
-                <p><strong>Email:</strong> {{ $registrant['email'] }}</p>
-                <p><strong>Phone:</strong> {{ $registrant['phone'] }}</p>
-                <p><strong>address:</strong></p>
-                <div class="message-box">{{ $registrant['address'] }}</div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                <p style="margin:0 0 8px;"><strong>Name:</strong> {{ $registrant['name'] ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Email:</strong> {{ $registrant['email'] ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Phone:</strong> {{ $registrant['phone'] ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Service:</strong> {{ $registrant['service'] ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Track:</strong> {{ $registrant['service_item'] ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Cohort:</strong> {{ $registrant['cohort'] ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Cohort Code:</strong> {{ $registrant['cohort_code'] ?? 'N/A' }}</p>
+                <p style="margin:0;"><strong>Address:</strong> {{ $registrant['address'] ?? 'N/A' }}</p>
             </div>
 
-            <p>Please respond promptly to this request.</p>
-            <p>Best regards,<br>– The MephEd Support Team</p>
+            <p style="margin:14px 0 0;">Regards,<br><strong>MephEd Intake Bot</strong></p>
         </div>
 
-        <!-- Footer Section -->
-        <div class="email-footer">
+        <div style="background:#0f172a;color:#cbd5e1;text-align:center;padding:12px;font-size:12px;">
             &copy; {{ date('Y') }} MephEd. All rights reserved.
         </div>
     </div>

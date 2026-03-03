@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -29,8 +30,9 @@ class LessonCompleteEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your lesson has been marked as completed by the tutor',
-            from: 'admin@mephed.ng'
+            subject: 'Tutor Marked Your Lesson As Completed',
+            from: 'admin@mephed.ng',
+            bcc: [new Address('admin@mephed.ng', 'MephEd Admin')]
         );
     }
 

@@ -24,7 +24,7 @@ class TutorProfileCreatedEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Tutor Profile Created Email',
+            subject: 'Tutor Profile Submitted For Review',
             from: 'admin@mephed.ng'
         );
     }

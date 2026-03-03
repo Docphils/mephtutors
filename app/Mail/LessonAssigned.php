@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -33,9 +34,15 @@ class LessonAssigned extends Mailable
      */
     public function envelope(): Envelope
     {
+        $cc = [];
+        if (!empty($this->tutor?->email)) {
+            $cc[] = new Address($this->tutor->email, $this->tutor->name ?? 'Assigned Tutor');
+        }
+
         return new Envelope(
-            subject: 'Your Requested Lesson Has Been Assigned',
-            from: 'admin@mephed.ng'
+            subject: 'Lesson Assigned To Your Request',
+            from: 'admin@mephed.ng',
+            cc: $cc
         );
     }
 

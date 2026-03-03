@@ -3,42 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Declined Lesson</title>
-    
-     @vite(['resources/css/app.css', 'resources/js/app.js'])
-     @livewireStyles
+    <title>Lesson Completion Declined</title>
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <div class="max-w-2xl mx-auto mt-10 bg-white shadow-lg rounded-lg overflow-hidden">
-        <!-- Header Section -->
-        <div class="bg-cyan-900 p-6 text-white">
-            <div class="flex items-center gap-4">
-                <img src="{{ asset('images/MephEd.png') }}" alt="MephEd Logo" class="w-12 h-6 mr-4">
-                <h1 class="text-2xl font-bold">Lesson completion declined</h1>
-            </div>
+<body style="margin:0;padding:24px;background:#e2e8f0;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+    @php
+        $subjectRaw = $declinedLesson->subjects;
+        if (is_string($subjectRaw)) {
+            $decodedSubjects = json_decode($subjectRaw, true);
+            $subjectRaw = is_array($decodedSubjects) ? $decodedSubjects : [$subjectRaw];
+        }
+        $subjectList = collect((array) $subjectRaw)->map(fn ($s) => is_array($s) ? ($s['name'] ?? null) : $s)->filter()->implode(', ');
+    @endphp
+    <div style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #cbd5e1;border-radius:14px;overflow:hidden;">
+        <div style="background:linear-gradient(120deg,#0e7490,#1e293b);padding:20px 24px;color:#ecfeff;">
+            <h1 style="margin:0;font-size:22px;">Lesson Completion Declined</h1>
+            <p style="margin:8px 0 0;font-size:13px;">Client requested adjustments before closure.</p>
         </div>
+        <div style="padding:22px 24px;">
+            <p style="margin-top:0;">Hello {{ $declinedLesson->tutor?->tutorProfile?->fullName ?? $declinedLesson->tutor?->name ?? 'Tutor' }},</p>
+            <p style="margin:0 0 14px;">The client declined completion for this booking. Please review remarks and proceed accordingly.</p>
 
-        <!-- Body Section -->
-        <div class="p-6">
-            <p class="text-lg font-medium mb-4">Hello {{ $declinedLesson->tutor->tutorProfile->fullName }},</p>
-            <p>The client declined your marking of a lesson as completed. Check your dashboard for details and contact our support team to resolve the issues raised.</p>
-
-            <!-- Request Details -->
-            <div class="mt-6 bg-gray-50 p-4 rounded-lg shadow">
-                <ul class="space-y-2 text-sm">
-                    <li><strong>Lesson ID:</strong> {{ $declinedLesson['id'] }}</li>
-                    <li><strong>Client's Name:</strong> {{ $declinedLesson->client->userProfile->fullname }}</li>
-                    <li><strong>Location:</strong> {{ $declinedLesson['location'] }}</li>
-                    <li><strong>Subjects:</strong> {{ $declinedLesson['subjects'] }}</li>
-                </ul>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                <p style="margin:0 0 8px;"><strong>Booking ID:</strong> #{{ $declinedLesson->id }}</p>
+                <p style="margin:0 0 8px;"><strong>Client:</strong> {{ $declinedLesson->client?->name ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Location:</strong> {{ $declinedLesson->location ?? 'N/A' }}</p>
+                <p style="margin:0 0 8px;"><strong>Subjects:</strong> {{ $subjectList ?: 'N/A' }}</p>
+                <p style="margin:0;"><strong>Client Remarks:</strong> {{ $declinedLesson->clientApprovalRemarks ?: 'None' }}</p>
             </div>
 
-            <p class="mt-6 text-gray-600">Do well to attend to the issues raised promptly</p>
-            <p class="mt-4 text-gray-600">Best regards,<br><strong>MephEd Support Team</strong></p>
+            <p style="margin:16px 0 0;">Coordinate with support if clarification is required.</p>
+            <p style="margin:14px 0 0;">Regards,<br><strong>MephEd Support Team</strong></p>
         </div>
-
-        <!-- Footer Section -->
-        <div class="bg-cyan-800 p-4 text-center text-white text-sm">
+        <div style="background:#0f172a;color:#cbd5e1;text-align:center;padding:12px;font-size:12px;">
             &copy; {{ date('Y') }} MephEd. All rights reserved.
         </div>
     </div>

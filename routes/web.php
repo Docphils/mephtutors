@@ -75,6 +75,34 @@ Route::get('/bootcamp', BootcampPage::class)->name('bootcamp');
 
 Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
 
+Route::get('/sitemap.xml', function () {
+    $pages = [
+        ['loc' => route('welcome'), 'changefreq' => 'daily', 'priority' => '1.0', 'lastmod' => now()->toDateString()],
+        ['loc' => route('services'), 'changefreq' => 'daily', 'priority' => '0.9', 'lastmod' => now()->toDateString()],
+        ['loc' => route('bootcamp'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
+        ['loc' => route('about'), 'changefreq' => 'monthly', 'priority' => '0.7', 'lastmod' => now()->toDateString()],
+        ['loc' => route('contact'), 'changefreq' => 'monthly', 'priority' => '0.6', 'lastmod' => now()->toDateString()],
+        ['loc' => route('privacy-policy'), 'changefreq' => 'yearly', 'priority' => '0.4', 'lastmod' => now()->toDateString()],
+    ];
+
+    $serviceItems = ServiceItem::query()
+        ->where('is_active', true)
+        ->orderBy('updated_at', 'desc')
+        ->get(['slug', 'updated_at'])
+        ->map(fn ($item) => [
+            'loc' => route('services.show', ['serviceItem' => $item->slug]),
+            'changefreq' => 'weekly',
+            'priority' => '0.8',
+            'lastmod' => optional($item->updated_at)->toDateString() ?? now()->toDateString(),
+        ]);
+
+    $urls = collect($pages)->concat($serviceItems);
+
+    return response()
+        ->view('sitemap', ['urls' => $urls])
+        ->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
 // Guest-accessible request forms (multi-step UI)
 Route::get('/apply/tutor/{serviceItem:slug}', TutorRequestWizard::class)->name('apply.tutor');
 Route::get('/apply/crm/{serviceItem:slug}', CrmRequestWizard::class)->name('apply.crm');
