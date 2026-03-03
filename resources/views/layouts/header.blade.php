@@ -9,7 +9,8 @@
                 <a href="{{ url('/') }}" wire:navigate
                     class="hover:text-gray-200 transition {{ request()->is('/') ? 'active' : '' }}">Home</a>
                 <a href="{{ url('/services') }}" wire:navigate
-                    class="hover:text-gray-200 transition {{ request()->is('services') ? 'active' : '' }}">Services</a>
+                    class="hover:text-gray-200 transition {{ request()->is('services') ? 'active' : '' }}">Our
+                    Services</a>
                 <a href="{{ url('/about') }}" wire:navigate
                     class="hover:text-gray-200 transition {{ request()->is('about') ? 'active' : '' }}">About</a>
                 <a href="{{ url('/contact') }}" wire:navigate
