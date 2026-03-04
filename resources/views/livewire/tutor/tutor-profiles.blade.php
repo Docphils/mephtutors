@@ -16,7 +16,7 @@
     </x-slot>
     <div class="max-w-6xl mx-auto">
 
-        {{-- Top Summary Header --}}
+        {{-- Top Summary Header --}} 
         <div
             class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row items-center gap-6">
             <div class="relative">
