@@ -31,7 +31,7 @@ use App\Livewire\Seo\ServiceItemLandingPage;
 use App\Livewire\Pages\WelcomePage;
 use App\Livewire\Pages\AboutPage;
 use App\Livewire\Pages\ContactPage;
-use App\Livewire\Pages\BootcampPage;
+use App\Livewire\EnrollmentForm;
 use App\Livewire\Pages\PrivacyPolicyPage;
 
 use Illuminate\Http\Request;
@@ -71,7 +71,7 @@ Route::get('/about', AboutPage::class)->name('about');
 
 Route::get('/contact', ContactPage::class)->name('contact');
 
-Route::get('/bootcamp', BootcampPage::class)->name('bootcamp');
+Route::get('/bootcamp', EnrollmentForm::class)->name('bootcamp');
 
 Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
 
@@ -119,7 +119,7 @@ Route::get('/sitemap.xml', function () {
 // Guest-accessible request forms (multi-step UI)
 Route::get('/apply/tutor/{serviceItem:slug}', TutorRequestWizard::class)->name('apply.tutor');
 Route::get('/apply/crm/{serviceItem:slug}', CrmRequestWizard::class)->name('apply.crm');
-Route::get('/apply/bootcamp/{serviceItem:slug}', BootcampPage::class)->name('apply.bootcamp');
+Route::get('/apply/bootcamp/{serviceItem:slug}', EnrollmentForm::class)->name('apply.bootcamp');
 
 
 Route::get('/terms-of-service', TermsOfService::class)->name('terms.service');

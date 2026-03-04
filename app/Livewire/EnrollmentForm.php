@@ -10,7 +10,11 @@ use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BootcampSubmissionNotification;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
+#[Layout('layouts.visitor')]
+#[Title('MephEd Learning - Enroll')]
 class EnrollmentForm extends Component
 {
     public $name;
@@ -26,9 +30,16 @@ class EnrollmentForm extends Component
     public $bootcampServiceIds = [];
     public $serviceItemSlug = null;
 
-    public function mount($serviceItemSlug = null)
+    public function mount($serviceItem = null, $serviceItemSlug = null)
     {
-        $this->serviceItemSlug = $serviceItemSlug;
+        if ($serviceItem instanceof ServiceItem) {
+            $this->serviceItemSlug = $serviceItem->slug;
+        } elseif (is_string($serviceItem) && $serviceItem !== '') {
+            $this->serviceItemSlug = $serviceItem;
+        } else {
+            $this->serviceItemSlug = $serviceItemSlug;
+        }
+
         $this->bootcampServiceIds = Service::where('target', 'bootcamp')
             ->where('is_active', true)
             ->pluck('id')
@@ -146,6 +157,17 @@ class EnrollmentForm extends Component
 
     public function render()
     {
-        return view('livewire.enrollment-form');
+        $description = 'Enroll to learn in-demand educational and technology skills with MephEd Learning bootcamps.';
+
+        return view('livewire.enrollment-form')
+            ->title('MephEd Learning - Enroll')
+            ->layoutData([
+                'metaDescription' => $description,
+                'canonicalUrl' => $this->serviceItemSlug
+                    ? route('apply.bootcamp', ['serviceItem' => $this->serviceItemSlug])
+                    : route('bootcamp'),
+                'ogType' => 'website',
+                'ogImage' => asset('images/banner.jpg'),
+            ]);
     }
 }
