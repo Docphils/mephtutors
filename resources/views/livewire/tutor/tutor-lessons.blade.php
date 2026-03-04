@@ -213,11 +213,11 @@
                                             class="font-bold text-slate-800">{{ $selectedLesson->examType->name ?? 'N/A' }}</span>
                                     </div>
                                 @endif
-                                @if ($selectedLesson->serviceItem->requires_level)
+                                @if ($selectedLesson?->serviceItem?->requires_level)
                                     <div>
                                         <span class="block text-xs text-slate-500">Level</span>
                                         <span
-                                            class="font-bold text-slate-800">{{ $selectedLesson->level->name ?? 'N/A' }}
+                                            class="font-bold text-slate-800">{{ $selectedLesson?->level ? $selectedLesson?->level?->name : 'N/A' }}
                                             Lessons</span>
                                     </div>
                                 @endif

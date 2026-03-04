@@ -30,7 +30,7 @@
                     happening today.</p>
 
                 @if (!$tutorProfile || $incompleteTutorProfile)
-                    <div class="flex items-center gap-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                    <div class="sm:flex items-center gap-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl">
                         <div class="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
                             <i class="fa-solid fa-circle-exclamation text-lg"></i>
                         </div>
@@ -170,7 +170,8 @@
                         <span class="text-[10px] uppercase font-black text-slate-500">
                             {{ $assignment->role }} | {{ $assignment->status }}
                         </span>
-                        <span class="text-[10px] text-slate-400 font-bold">{{ $assignment->created_at->diffForHumans() }}</span>
+                        <span
+                            class="text-[10px] text-slate-400 font-bold">{{ $assignment->created_at->diffForHumans() }}</span>
                     </div>
                 </div>
             @empty

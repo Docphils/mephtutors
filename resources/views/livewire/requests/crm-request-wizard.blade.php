@@ -1,15 +1,15 @@
-<div class="w-full text-slate-800 p-10">
+<div class="w-full text-slate-800 p-4 sm:p-6 lg:p-10">
 
     {{-- Heading --}}
-    <h1 class=" text-3xl font-bold mb-4">MephEd Club/CRM Request Form</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4">School Staffing Solutions Form</h1>
     <p class=" mb-6">Fill out the form below and we’ll assign an instructor to manage your club or
         activity. You can track requests and communications through your account.</p>
 
-    <div class="shadow-xl rounded-2xl p-6">
+    <div class="shadow-xl rounded-2xl p-4 sm:p-6">
 
         {{-- Progress Bar --}}
         <div class="mb-10">
-            <div class="flex items-center justify-between text-sm font-semibold text-cyan-500">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4 justify-between text-xs sm:text-sm font-semibold text-cyan-500">
                 <div class="{{ $step >= 1 ? 'text-cyan-800' : '' }}">1. Your Details</div>
                 <div class="{{ $step >= 2 ? 'text-cyan-800' : '' }}">2. Service</div>
                 <div class="{{ $step >= 3 ? 'text-cyan-800' : '' }}">3. Schedule</div>
@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
 
             {{-- STEP 1 --}}
             @if ($step === 1)
@@ -75,7 +75,7 @@
 
                 <div class="mt-8 text-right">
                     <button @if ($existingUser) disabled @endif wire:click="next"
-                        class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-700 disabled:opacity-50"
+                        class="w-full sm:w-auto bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-700 disabled:opacity-50"
                         @if ($existingUser) title="Sign in to continue" @endif>
                         Continue →
                     </button>
@@ -190,11 +190,11 @@
                     </div>
                 </div>
 
-                <div class="mt-8 flex justify-between">
-                    <button wire:click="back" class="bg-gray-200 hover:bg-gray-100 px-6 py-3 rounded-xl border">←
+                <div class="mt-8 flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between">
+                    <button wire:click="back" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-100 px-6 py-3 rounded-xl border">←
                         Back</button>
                     <button wire:click="next"
-                        class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold">Continue
+                        class="w-full sm:w-auto bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold">Continue
                         →</button>
                 </div>
             @endif
@@ -223,14 +223,14 @@
 
                 </div>
 
-                <div class="mt-8 flex justify-between">
-                    <button wire:click="back" class="bg-gray-200 hover:bg-gray-100 px-6 py-3 rounded-xl border"
+                <div class="mt-8 flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between">
+                    <button wire:click="back" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-100 px-6 py-3 rounded-xl border"
                         wire:target='submit' wire:loading.attr='disabled'>←
                         Back</button>
-                    <button wire:click="submit" class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold"
+                    <button wire:click="submit" class="w-full sm:w-auto bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold"
                         wire:target='submit' wire:loading.class='hidden'>Submit Request</button>
                     <p wire:loading wire:target='submit'
-                        class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+                        class="w-full sm:w-auto bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center sm:justify-start gap-2">
                         <i class="fas fa-spinner animate-spin"></i>
                         <span>Submitting...</span>
                     </p>
@@ -244,7 +244,7 @@
                     <h2 class="text-3xl font-bold mb-4">Request Submitted!</h2>
                     <p class="text-gray-600 mb-8">Thank you for your request. An acknowledgement email has been sent.
                         You can track your request from your account.</p>
-                    <a href="/" class="bg-cyan-600 text-white px-8 py-3 rounded-xl font-semibold">Return
+                    <a href="/" class="inline-block w-full sm:w-auto bg-cyan-600 text-white px-8 py-3 rounded-xl font-semibold">Return
                         Home</a>
                 </div>
             @endif

@@ -38,7 +38,7 @@ class PaymentsManager extends Component
     protected $listeners = [
         "confirmDelete" => "confirmDelete",
         "deletePayment" => "deletePayment",
-        "createPayment" => "create",
+        "create-payment" => "create",
     ];
 
     public function showPayment($id)

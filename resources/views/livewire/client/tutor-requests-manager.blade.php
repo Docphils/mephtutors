@@ -280,7 +280,7 @@
     {{-- REQUEST  MODAL --}}
     @if ($showModal)
         <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-zoom-in">
+            <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-zoom-in h-90%">
 
                 {{-- Progress Header --}}
                 <div
@@ -578,20 +578,20 @@
                 {{-- Footer --}}
                 <div class="p-6 bg-slate-50 border-t flex justify-between rounded-b-[2.5rem]">
                     <button wire:click="$set('showModal', false)" class="font-bold text-slate-400">Cancel</button>
-                    <div class="flex gap-3">
+                    <div class="flex gap-1 sm:gap-3">
                         @if ($step > 1)
-                            <button wire:click="back" class="px-8 py-2 border-2 rounded-xl font-black">Back</button>
+                            <button wire:click="back" class="px-4 py-2 border-2 rounded-xl font-black">Back</button>
                         @endif
                         @if ($step < 3)
                             <button wire:click="next"
-                                class="px-10 py-2 bg-cyan-600 text-white rounded-xl font-black">Continue</button>
+                                class="px-4 py-2 bg-cyan-600 text-white rounded-xl font-black">Continue</button>
                         @else
                             <button wire:loading.class='hidden' wire:click="save"
-                                class="px-10 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
+                                class="px-4 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
                                 {{ $isEditing ? 'Save Changes' : 'Submit Request' }}
                             </button>
                             <p wire:loading wire:target="save"
-                                class="flex items-center gap-2 px-10 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
+                                class="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-xl font-black shadow-lg">
                                 <i class="fas fa-spinner animate-spin mr-1"></i>
                                 <span>{{ $isEditing ? 'Saving Changes...' : 'Submitting Request...' }}</span>
                             </p>

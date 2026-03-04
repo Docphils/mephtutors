@@ -1,12 +1,12 @@
-<div class="p-6 bg-cyan-100 min-h-screen space-y-6">
+<div class="p-3 sm:p-4 lg:p-6 bg-cyan-100 min-h-screen space-y-6">
     <x-slot name="header">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h2 class="font-black text-2xl text-slate-800">Service <span class="text-cyan-600">Catalog</span></h2>
+                <h2 class="font-black text-xl sm:text-2xl text-slate-800">Service <span class="text-cyan-600">Catalog</span></h2>
                 <p class="text-sm text-slate-500 font-medium">Manage services, items, exams, and levels</p>
             </div>
             <a wire:navigate href="{{ route('admin.dashboard') }}"
-                class="inline-flex items-center px-4 py-2 rounded-xl bg-white border border-slate-200 text-cyan-700 text-sm font-bold shadow-sm hover:bg-slate-50 transition">
+                class="inline-flex w-full md:w-auto justify-center md:justify-start items-center px-4 py-2 rounded-xl bg-white border border-slate-200 text-cyan-700 text-sm font-bold shadow-sm hover:bg-slate-50 transition">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -24,10 +24,10 @@
         </div>
     @endif
 
-    <div class="flex flex-wrap gap-2 p-1 bg-cyan-700 rounded-2xl w-fit">
+    <div class="flex flex-wrap gap-2 p-1 bg-cyan-700 rounded-2xl w-full sm:w-fit">
         @foreach (['services' => 'Services', 'items' => 'Service Items', 'exams' => 'Exam Types', 'levels' => 'Levels'] as $key => $label)
             <button wire:click="setTab('{{ $key }}')"
-                class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all {{ $currentTab === $key ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-100 hover:bg-white/50' }}">
+                class="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold transition-all {{ $currentTab === $key ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-100 hover:bg-white/50' }}">
                 {{ $label }}
             </button>
         @endforeach
@@ -37,8 +37,8 @@
         {{-- SERVICES TAB --}}
         @if ($currentTab === 'services')
             <section
-                class="bg-white rounded-2xl border border-slate-100 p-6 space-y-6 shadow-sm animate-in fade-in duration-300">
-                <div class="flex items-center justify-between border-b border-slate-50 pb-4">
+                class="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 space-y-6 shadow-sm animate-in fade-in duration-300">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-50 pb-4">
                     <h3 class="text-lg font-black text-slate-800">Manage Services</h3>
                     <span class="px-3 py-1 bg-cyan-50 text-cyan-700 text-xs font-bold rounded-full">Total:
                         {{ $services->total() }}</span>
@@ -50,11 +50,17 @@
                         <label class="text-xs font-bold text-slate-100 ml-1">Service Name</label>
                         <input wire:model="service_name" placeholder="e.g. Home Tutoring"
                             class="w-full rounded-xl border-slate-200 text-sm focus:ring-cyan-500 focus:border-cyan-500" />
+                        @error('service_name')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-slate-100 ml-1">Slug (Optional)</label>
                         <input wire:model="service_slug" placeholder="home-tutoring"
                             class="w-full rounded-xl border-slate-200 text-sm focus:ring-cyan-500 focus:border-cyan-500" />
+                        @error('service_slug')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-slate-100 ml-1">Target Group</label>
@@ -64,6 +70,9 @@
                             <option value="institutions">Institutions</option>
                             <option value="bootcamp">Bootcamp</option>
                         </select>
+                        @error('service_target')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="flex items-end pb-2">
                         <label class="flex items-center gap-2 text-sm font-bold text-slate-100 cursor-pointer">
@@ -71,12 +80,18 @@
                                 class="w-5 h-5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500">
                             Active
                         </label>
+                        @error('service_is_active')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="md:col-span-2 lg:col-span-3">
                         <textarea wire:model="service_description" placeholder="Brief description of the service..." rows="1"
                             class="w-full rounded-xl border-slate-200 text-sm focus:ring-cyan-500 focus:border-cyan-500"></textarea>
+                        @error('service_description')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
-                    <div class="flex gap-2 items-center">
+                    <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                         @if ($serviceEditingId)
                             <button type="button" wire:click="resetServiceForm"
                                 class="flex-1 px-4 py-2 text-sm rounded-xl bg-slate-200 text-slate-700 font-bold hover:bg-slate-300 transition">Cancel</button>
@@ -99,7 +114,7 @@
                         </svg>
                     </div>
 
-                    <div class="overflow-hidden border border-slate-100 rounded-2xl shadow-sm">
+                    <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-sm">
                         <table class="w-full text-left">
                             <thead class="bg-cyan-700 border-b border-slate-100">
                                 <tr class="text-xs font-black uppercase text-slate-100">
@@ -147,8 +162,8 @@
         {{-- SERVICE ITEMS TAB --}}
         @if ($currentTab === 'items')
             <section
-                class="bg-white rounded-2xl border border-slate-100 p-6 space-y-6 shadow-sm animate-in fade-in duration-300">
-                <div class="flex items-center justify-between border-b border-slate-50 pb-4">
+                class="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 space-y-6 shadow-sm animate-in fade-in duration-300">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-50 pb-4">
                     <h3 class="text-lg font-black text-slate-800">Manage Service Items</h3>
                     <span class="px-3 py-1 bg-cyan-50 text-cyan-700 text-xs font-bold rounded-full">Total:
                         {{ $serviceItems->total() }}</span>
@@ -165,27 +180,56 @@
                                 <option value="{{ $opt->id }}">{{ $opt->name }}</option>
                             @endforeach
                         </select>
+                        @error('item_service_id')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-slate-100 ml-1">Item Name</label>
                         <input wire:model="item_name" placeholder="Item name"
                             class="w-full rounded-xl border-slate-200 text-sm focus:ring-cyan-500 focus:border-cyan-500" />
+                        @error('item_name')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-100 ml-1">Slug (Optional)</label>
+                        <input wire:model="item_slug" placeholder="e.g. maths-tutoring"
+                            class="w-full rounded-xl border-slate-200 text-sm focus:ring-cyan-500 focus:border-cyan-500" />
+                        @error('item_slug')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-slate-100 ml-1">Position & Target</label>
                         <div class="flex gap-2">
                             <input wire:model.live="item_display_position" type="number" placeholder="Pos"
-                                class="w-20 rounded-xl border-slate-200 text-sm" />
+                                class="w-16 sm:w-20 rounded-xl border-slate-200 text-sm" />
                             <select wire:model="item_target" class="flex-1 rounded-xl border-slate-200 text-sm">
                                 <option value="tutor_request">Tutor Request</option>
                                 <option value="institutions">Institutions</option>
                                 <option value="bootcamp">Bootcamp</option>
                             </select>
                         </div>
+                        @error('item_display_position')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
+                        @error('item_target')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="md:col-span-2 lg:col-span-3">
+                        <label class="block text-xs font-bold text-slate-100 mb-1 ml-1">Description</label>
+                        <textarea wire:model="item_description" rows="3"
+                            placeholder="Useful for service landing page SEO and user context..."
+                            class="w-full rounded-xl border-slate-200 text-sm focus:ring-cyan-500 focus:border-cyan-500"></textarea>
+                        @error('item_description')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div
-                        class="lg:col-span-3 grid grid-cols-2 md:grid-cols-5 gap-3 bg-white p-3 rounded-xl border border-slate-200">
+                        class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 bg-white p-3 rounded-xl border border-slate-200">
                         <label class="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox"
                                 wire:model="item_shown_on_welcome" class="rounded text-cyan-600"> Welcome</label>
                         <label class="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox"
@@ -197,17 +241,43 @@
                                 wire:model="item_requires_level" class="rounded text-cyan-600"> Level</label>
                         <label class="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox"
                                 wire:model="item_requires_exam_type" class="rounded text-cyan-600"> Exam Type</label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox"
+                                wire:model="item_is_active" class="rounded text-cyan-600"> Active</label>
+                        @error('item_shown_on_welcome')
+                            <span class="text-rose-600 text-xs">{{ $message }}</span>
+                        @enderror
+                        @error('item_has_subjects')
+                            <span class="text-rose-600 text-xs">{{ $message }}</span>
+                        @enderror
+                        @error('item_requires_curriculum')
+                            <span class="text-rose-600 text-xs">{{ $message }}</span>
+                        @enderror
+                        @error('item_requires_level')
+                            <span class="text-rose-600 text-xs">{{ $message }}</span>
+                        @enderror
+                        @error('item_requires_exam_type')
+                            <span class="text-rose-600 text-xs">{{ $message }}</span>
+                        @enderror
+                        @error('item_is_active')
+                            <span class="text-rose-600 text-xs">{{ $message }}</span>
+                        @enderror
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 lg:col-span-2">
                         <label class="block text-xs font-bold text-slate-100 mb-1 ml-1">Hero Image</label>
                         <input type="file" wire:model="item_image"
-                            class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100" />
+                            class="w-full text-xs text-slate-100 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-cyan-50 file:text-slate-100 hover:file:bg-cyan-100" />
+                        @error('item_image')
+                            <span class="text-rose-100 text-xs">{{ $message }}</span>
+                        @enderror
                         <div wire:loading wire:target="item_image"
-                            class="text-[10px] text-cyan-600 font-bold mt-1 uppercase">Uploading...</div>
+                            class="text-[10px] text-slate-100 font-bold mt-1 uppercase">Uploading...</div>
+                        @if ($item_existing_image_path)
+                            <p class="text-[10px] mt-1 text-slate-100">Current: {{ $item_existing_image_path }}</p>
+                        @endif
                     </div>
 
-                    <div class="flex gap-2 items-end">
+                    <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                         @if ($itemEditingId)
                             <button type="button" wire:click="resetServiceItemForm"
                                 class="flex-1 px-4 py-2 text-sm rounded-xl bg-slate-200 text-slate-700 font-bold">Cancel</button>
@@ -219,12 +289,14 @@
                     </div>
                 </form>
 
-                <div class="overflow-hidden border border-slate-100 rounded-2xl shadow-sm">
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-sm">
                     <table class="w-full text-left">
                         <thead class="bg-slate-50">
                             <tr>
                                 <th class="px-4 py-3 text-xs font-black uppercase text-slate-500">Item</th>
                                 <th class="px-4 py-3 text-xs font-black uppercase text-slate-500">Parent Service</th>
+                                <th class="px-4 py-3 text-xs font-black uppercase text-slate-500">Target</th>
+                                <th class="px-4 py-3 text-xs font-black uppercase text-slate-500">Status</th>
                                 <th class="px-4 py-3 text-xs font-black uppercase text-slate-500 text-right">Actions
                                 </th>
                             </tr>
@@ -236,8 +308,20 @@
                                         <div class="text-sm font-bold text-slate-700">{{ $item->name }}</div>
                                         <div class="text-[10px] text-slate-400 uppercase tracking-tighter">
                                             {{ $item->slug }}</div>
+                                        @if ($item->description)
+                                            <div class="text-xs text-slate-500 mt-1 line-clamp-2">
+                                                {{ $item->description }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-500">{{ $item->service->name ?? '-' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">{{ $item->target }}</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span
+                                            class="px-2 py-0.5 rounded-lg text-xs font-bold {{ $item->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
+                                            {{ $item->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex justify-end gap-3">
@@ -250,7 +334,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-10 text-center text-slate-400">No items found.
+                                    <td colspan="5" class="px-4 py-10 text-center text-slate-400">No items found.
                                     </td>
                                 </tr>
                             @endforelse
@@ -265,15 +349,18 @@
         @if ($currentTab === 'exams' || $currentTab === 'levels')
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-300">
                 @if ($currentTab === 'exams')
-                    <section class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 shadow-sm">
+                    <section class="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 space-y-4 shadow-sm">
                         <h3 class="text-lg font-black text-slate-800 border-b border-slate-50 pb-3">Exam Types</h3>
-                        <form wire:submit.prevent="saveExamType" class="flex gap-2">
+                        <form wire:submit.prevent="saveExamType" class="flex flex-col sm:flex-row gap-2">
                             <input wire:model="exam_name" placeholder="Exam Name"
                                 class="flex-1 rounded-xl border-slate-200 text-sm" />
+                            @error('exam_name')
+                                <span class="text-rose-600 text-xs">{{ $message }}</span>
+                            @enderror
                             <button type="submit"
-                                class="px-4 py-2 bg-cyan-600 text-white rounded-xl font-bold text-sm">{{ $examEditingId ? 'Update' : 'Add' }}</button>
+                                class="w-full sm:w-auto px-4 py-2 bg-cyan-600 text-white rounded-xl font-bold text-sm">{{ $examEditingId ? 'Update' : 'Add' }}</button>
                         </form>
-                        <div class="border border-slate-100 rounded-xl overflow-hidden">
+                        <div class="border border-slate-100 rounded-xl overflow-x-auto">
                             <table class="w-full text-left text-sm">
                                 <thead class="bg-cyan-700 font-bold text-slate-100">
                                     <tr>
@@ -300,18 +387,24 @@
                 @endif
 
                 @if ($currentTab === 'levels')
-                    <section class="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 shadow-sm">
+                    <section class="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 space-y-4 shadow-sm">
                         <h3 class="text-lg font-black text-slate-800 border-b border-slate-50 pb-3">Academic Levels
                         </h3>
-                        <form wire:submit.prevent="saveLevel" class="flex gap-2">
+                        <form wire:submit.prevent="saveLevel" class="flex flex-col sm:flex-row gap-2">
                             <input wire:model="level_name" placeholder="Level Name"
                                 class="flex-1 rounded-xl border-slate-200 text-sm" />
+                            @error('level_name')
+                                <span class="text-rose-600 text-xs">{{ $message }}</span>
+                            @enderror
                             <input wire:model="level_order" type="number" placeholder="Order"
-                                class="w-20 rounded-xl border-slate-200 text-sm" />
+                                class="w-full sm:w-20 rounded-xl border-slate-200 text-sm" />
+                            @error('level_order')
+                                <span class="text-rose-600 text-xs">{{ $message }}</span>
+                            @enderror
                             <button type="submit"
-                                class="px-4 py-2 bg-cyan-600 text-white rounded-xl font-bold text-sm">{{ $levelEditingId ? 'Update' : 'Add' }}</button>
+                                class="w-full sm:w-auto px-4 py-2 bg-cyan-600 text-white rounded-xl font-bold text-sm">{{ $levelEditingId ? 'Update' : 'Add' }}</button>
                         </form>
-                        <div class="border border-slate-100 rounded-xl overflow-hidden">
+                        <div class="border border-slate-100 rounded-xl overflow-x-auto">
                             <table class="w-full text-left text-sm">
                                 <thead class="bg-cyan-700 font-bold text-slate-100">
                                     <tr>

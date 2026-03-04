@@ -158,7 +158,7 @@
                         Profile Details</h3>
                     <p
                         class="relative h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-[10px] sm:text-xs shrink-0  border-2 border-cyan-700 overflow-hidden">
-                        @if ($selectedClient->userProfile->image)
+                        @if ($selectedClient?->userProfile?->image)
                             <img src="{{ asset('storage/' . $selectedClient->userProfile->image) }}"
                                 alt="{{ $selectedClient->name }}'s image" class="relative object-cover">
                         @else

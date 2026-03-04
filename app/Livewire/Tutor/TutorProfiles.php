@@ -50,7 +50,7 @@ class TutorProfiles extends Component
 
     public function setEditor()
     {
-        if($this->profile->status === 'Approved')
+        if($this->profile && $this->profile->status === 'Approved')
         {
             session()->flash('error', 'You can not edit an approved profile. Request edit access.');
             return;
@@ -62,7 +62,7 @@ class TutorProfiles extends Component
 
     public function setSection($section)
     {
-        if($this->profile->status === 'Approved')
+        if($this->profile && $this->profile->status === 'Approved')
         {
             session()->flash('error', 'You can not edit an approved profile. Request edit access.');
             return;
@@ -76,7 +76,7 @@ class TutorProfiles extends Component
     // Individual Save Methods for better UX
     public function savePersonal()
     {
-        if($this->profile->status === 'Approved')
+        if($this->profile && $this->profile->status === 'Approved')
         {
             session()->flash('error', 'You can not edit an approved profile. Request edit access.');
             return;
@@ -97,7 +97,7 @@ class TutorProfiles extends Component
 
     public function saveAcademic()
     {
-        if($this->profile->status === 'Approved')
+        if($this->profile && $this->profile->status === 'Approved')
         {
             session()->flash('error', 'You can not edit an approved profile. Request edit access.');
             return;
@@ -130,7 +130,7 @@ class TutorProfiles extends Component
 
     public function saveBanking()
     {
-        if($this->profile->status === 'Approved')
+        if($this->profile && $this->profile->status === 'Approved')
         {
             session()->flash('error', 'You can not edit an approved profile. Request edit access.');
             return;
@@ -148,7 +148,7 @@ class TutorProfiles extends Component
 
     public function saveMedia()
     {
-        if($this->profile->status === 'Approved')
+        if($this->profile && $this->profile->status === 'Approved')
         {
             session()->flash('error', 'You can not edit an approved profile. Request edit access.');
             return;

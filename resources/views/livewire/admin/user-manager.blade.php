@@ -71,17 +71,8 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @php
-                        $displayUsers = match ($roleFilter) {
-                            'client' => $clients,
-                            'tutor' => $tutors,
-                            'admin' => $admins,
-                            'search' => $searchedUser,
-                            default => $users,
-                        };
-                    @endphp
 
-                    @forelse ($displayUsers as $user)
+                    @forelse ($users as $user)
                         <tr class="hover:bg-cyan-50 transition-colors">
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">

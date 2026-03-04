@@ -354,24 +354,24 @@ class ServiceCatalogManager extends Component
             ->when($this->serviceSearch, fn ($q) => $q->where('name', 'like', '%' . $this->serviceSearch . '%')
                 ->orWhere('slug', 'like', '%' . $this->serviceSearch . '%'))
             ->latest()
-            ->paginate(8, ['*'], 'servicesPage');
+            ->paginate(12, ['*'], 'servicesPage');
 
         $serviceItems = ServiceItem::with('service')
             ->when($this->itemSearch, fn ($q) => $q->where('name', 'like', '%' . $this->itemSearch . '%')
                 ->orWhere('slug', 'like', '%' . $this->itemSearch . '%'))
             ->latest()
-            ->paginate(8, ['*'], 'itemsPage');
+            ->paginate(12, ['*'], 'itemsPage');
 
         $examTypes = ExamType::query()
             ->when($this->examSearch, fn ($q) => $q->where('name', 'like', '%' . $this->examSearch . '%')
                 ->orWhere('slug', 'like', '%' . $this->examSearch . '%'))
             ->latest()
-            ->paginate(8, ['*'], 'examsPage');
+            ->paginate(12, ['*'], 'examsPage');
 
         $levels = Level::query()
             ->when($this->levelSearch, fn ($q) => $q->where('name', 'like', '%' . $this->levelSearch . '%'))
             ->orderByRaw('`order` is null, `order` asc')
-            ->paginate(8, ['*'], 'levelsPage');
+            ->paginate(12, ['*'], 'levelsPage');
 
         return view('livewire.admin.service-catalog-manager', [
             'services' => $services,

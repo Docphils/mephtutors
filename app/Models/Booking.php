@@ -80,7 +80,7 @@ class Booking extends Model
 
     public function level()
     {
-        return $this->hasOne(Level::class, 'level_id');
+        return $this->belongsTo(Level::class, 'level_id');
     }
 
     public function examType()

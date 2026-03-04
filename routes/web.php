@@ -98,9 +98,22 @@ Route::get('/sitemap.xml', function () {
 
     $urls = collect($pages)->concat($serviceItems);
 
-    return response()
-        ->view('sitemap', ['urls' => $urls])
-        ->header('Content-Type', 'application/xml');
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
+
+    foreach ($urls as $url) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . e($url['loc']) . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . e($url['lastmod']) . '</lastmod>' . PHP_EOL;
+        $xml .= '    <changefreq>' . e($url['changefreq']) . '</changefreq>' . PHP_EOL;
+        $xml .= '    <priority>' . e($url['priority']) . '</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200)
+        ->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap');
 
 // Guest-accessible request forms (multi-step UI)

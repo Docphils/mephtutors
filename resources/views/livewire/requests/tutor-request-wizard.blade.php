@@ -4,9 +4,9 @@
         <p class="text-cyan-700/80">Complete the form below and we'll match you with an expert.</p>
     </div>
 
-    <div class="shadow-xl rounded-2xl overflow-hidden bg-white">
+    <div class="relative w-full shadow-xl rounded-2xl overflow-hidden bg-white">
         {{-- Progress Bar --}}
-        <div class="bg-cyan-50 px-8 py-4 border-b flex items-center justify-between">
+        <div class="relative w-full bg-cyan-50 px-8 py-4 border-b flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <span
                     class="flex items-center justify-center w-8 h-8 rounded-full {{ $step >= 1 ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-500' }} font-bold text-sm">1</span>
@@ -29,10 +29,10 @@
             </div>
         </div>
 
-        <div class="p-8">
+        <div class="relative w-full p-4 sm:p-6 lg:p-8">
             {{-- STEP 1: IDENTITY --}}
             @if ($step === 1)
-                <div class="grid md:grid-cols-2 gap-6">
+                <div class="relative w-full grid md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
                         <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Basic Information</h2>
                     </div>
@@ -82,7 +82,7 @@
 
                     <div class="md:col-span-2 mt-4 p-6 bg-cyan-50 rounded-xl">
                         <label class="block mb-4 font-bold text-gray-800">Who are the lessons for?</label>
-                        <div class="flex gap-6 mb-6">
+                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" wire:model.live="is_for_self" value="1"
                                     class="text-cyan-600">
@@ -99,7 +99,7 @@
                             <div class="space-y-3">
                                 <label class="block text-xs font-bold text-gray-500 uppercase">Learner Names</label>
                                 @foreach ($learners as $index => $learner)
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-2 items-center">
                                         <input type="text" wire:model="learners.{{ $index }}.name"
                                             class="flex-1 border-gray-300 rounded-lg px-4 py-2 text-sm"
                                             placeholder="Learner Full Name">
@@ -121,7 +121,7 @@
 
                 <div class="mt-8 flex justify-end">
                     <button wire:click="next"
-                        class="bg-cyan-600 hover:bg-cyan-700 text-white px-10 py-3 rounded-lg font-bold transition-all shadow-lg disabled:opacity-50"
+                        class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-6 sm:px-10 py-3 rounded-lg font-bold transition-all shadow-lg disabled:opacity-50"
                         {{ $existingUser ? 'disabled' : '' }}>
                         Next Step: Service Details
                     </button>
@@ -233,10 +233,10 @@
                     @endif
                 </div>
 
-                <div class="mt-8 flex justify-between">
-                    <button wire:click="back" class="text-gray-500 font-bold px-6 py-3">← Back</button>
+                <div class="mt-8 flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between">
+                    <button wire:click="back" class="w-full sm:w-auto text-gray-500 font-bold px-6 py-3">← Back</button>
                     <button wire:click="next"
-                        class="bg-cyan-600 hover:bg-cyan-700 text-white px-10 py-3 rounded-lg font-bold shadow-lg">Continue</button>
+                        class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-6 sm:px-10 py-3 rounded-lg font-bold shadow-lg">Continue</button>
                 </div>
             @endif
 
@@ -248,10 +248,10 @@
                     <div>
                         <label class="block mb-3 text-sm font-bold text-gray-600 uppercase">Preferred Lesson
                             Days</label>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                             @foreach ($dayOptions as $day)
                                 <div
-                                    class="flex flex-wrap items-center gap-4 p-3 border rounded-lg hover:bg-cyan-50 transition-all">
+                                    class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 p-3 border rounded-lg hover:bg-cyan-50 transition-all">
                                     <label class="flex items-center gap-2 cursor-pointer min-w-[120px]">
                                         <input type="checkbox"
                                             wire:model.live="preferred_days.{{ $day }}.selected"
@@ -377,14 +377,14 @@
                     </div>
                 </div>
 
-                <div class="mt-8 flex justify-between">
-                    <button wire:click="back" class="text-gray-500 font-bold px-6 py-3">← Back</button>
+                <div class="mt-8 flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between">
+                    <button wire:click="back" class="w-full sm:w-auto text-gray-500 font-bold px-6 py-3">← Back</button>
                     <button wire:click="submit" wire:target='submit' wire:loading.class='hidden'
-                        class="bg-cyan-600 hover:bg-cyan-700 text-white px-12 py-3 rounded-lg font-bold shadow-lg transition-all">
+                        class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-8 sm:px-12 py-3 rounded-lg font-bold shadow-lg transition-all">
                         Submit Tutor Request
                     </button>
                     <p wire:loading wire:target='submit'
-                        class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+                        class="w-full sm:w-auto bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center sm:justify-start gap-2">
                         <i class="fas fa-spinner animate-spin"></i>
                         <span>Submitting...</span>
                     </p>
@@ -400,7 +400,7 @@
                     <h2 class="text-3xl font-bold text-gray-800 mb-2">Request Submitted!</h2>
                     <p class="text-gray-600 max-w-sm mx-auto mb-8">We've received your details. Our team will review
                         your request and contact you within 24 hours.</p>
-                    <a href="/" class="bg-gray-900 text-white px-8 py-3 rounded-lg font-bold">Back to
+                    <a href="/" class="inline-block w-full sm:w-auto bg-gray-900 text-white px-8 py-3 rounded-lg font-bold">Back to
                         Homepage</a>
                 </div>
             @endif

@@ -129,7 +129,7 @@
 
             <div class="p-6 overflow-y-auto space-y-6">
                 @if ($selectedPayment)
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid sm:grid-cols-2 gap-4">
                         <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                             <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Amount
                                 Paid</label>
@@ -249,9 +249,9 @@
 
                 <div class="grid grid-cols-2 gap-3 mt-8">
                     <button wire:click="$set('showDisputeModal', false)"
-                        class="py-3 font-bold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">Cancel</button>
+                        class="py-1 sm:py-3 font-bold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">Cancel</button>
                     <button wire:click="submitDispute"
-                        class="py-3 font-bold text-white bg-rose-500 rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all">
+                        class="py-1 sm:py-3 font-bold text-white bg-rose-500 rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all">
                         <span wire:loading.remove wire:target="submitDispute">Submit for Review</span>
                         <span wire:loading wire:target="submitDispute"><i
                                 class="fa-solid fa-spinner animate-spin"></i> Submitting...</span>

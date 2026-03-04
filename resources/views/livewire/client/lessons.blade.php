@@ -94,14 +94,14 @@
                 </div>
                 @if ($booking->status === 'Pending')
                     <button wire:click="editAcceptance({{ $booking->id }})"
-                        class="w-full py-3.5 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-cyan-600 transition-all flex items-center justify-center gap-2">
+                        class="w-full p-2 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-cyan-600 transition-all flex items-center justify-center gap-2">
                         <span>Review Lesson Acceptance</span>
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                 @endif
                 @if (in_array($booking->status, ['Completed', 'Declined']))
                     <button wire:click="editApproval({{ $booking->id }})"
-                        class="w-full py-3.5 rounded-2xl bg-emerald-900 text-white font-bold text-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
+                        class="w-full p-2 rounded-2xl bg-emerald-900 text-white font-bold text-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
                         <span>Review Lesson Approval</span>
                         <i class="fa-solid fa-check-double"></i>
                     </button>
@@ -331,19 +331,19 @@
                         <div class="text-[10px] font-black text-slate-400 uppercase">
                             Status: <span class="text-cyan-600">{{ $selectedLesson->status }}</span>
                         </div>
-                        <div class="">
+                        <div class=" gap-2">
                             <button @click="open = false"
-                                class="py-3 px-8 bg-slate-900 text-white font-black rounded-xl hover:bg-black transition-all">
+                                class="p-2 bg-slate-900 text-white font-black rounded-xl hover:bg-black transition-all">
                                 Close Panel
                             </button>
                             @if ($selectedLesson->status === 'Pending')
                                 <button wire:click="editAcceptance({{ $selectedLesson->id }})"
-                                    class="px-8 py-3 rounded-2xl bg-cyan-600 text-white font-bold hover:bg-cyan-700 transition">
+                                    class="p-2 rounded-xl bg-cyan-600 text-white font-bold hover:bg-cyan-700 transition">
                                     Review Acceptance
                                 </button>
                             @elseif ($selectedLesson->status === 'Completed')
                                 <button wire:click="editApproval({{ $selectedLesson->id }})"
-                                    class="px-8 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">
+                                    class="p-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">
                                     Review Approval
                                 </button>
                             @endif

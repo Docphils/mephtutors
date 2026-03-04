@@ -51,28 +51,44 @@ class UserManager extends Component
         "createUser" => "create",
     ];
 
+    protected $updatesQueryString = ['search', 'roleFilter'];
+
     public function mount()
     {
         Gate::authorize('Admin');
         
     }
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingRoleFilter()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $query = User::query();
 
-        if ($this->search) {
-            $query->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%');
+        // Role filter
+        if ($this->roleFilter !== 'all') {
+            $query->where('role', $this->roleFilter);
         }
 
-        $searchedUser = $query->latest()->paginate(20);
-        $users = User::latest()->paginate(20);
-        $clients = User::where('role', 'client')->latest()->paginate(20);
-        $tutors = User::where('role', 'tutor')->latest()->paginate(20);
-        $admins = User::where('role', 'admin')->latest()->paginate(20);
+        // Search filter
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                ->orWhere('email', 'like', '%' . $this->search . '%');
+            });
+        }
 
-        return view('livewire.admin.user-manager', compact('users', 'clients', 'tutors', 'admins', 'searchedUser'));
+        $users = $query->latest()->paginate(20);
+
+        return view('livewire.admin.user-manager', compact('users'));
     }
 
     public function resetFilters()

@@ -12,7 +12,7 @@
                     <p class="text-slate-500 text-sm font-medium">Manage disbursements and resolve tutor disputes.</p>
                 </div>
             </div>
-            <button wire:click="create"
+            <button x-on:click="$dispatch('create-payment')"
                 class="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-cyan-200 transition-all">
                 <i class="fa-solid fa-plus text-sm"></i>
                 <span>Add Payment Record</span>
@@ -348,9 +348,9 @@
 
                     <div class="flex gap-3 pt-6">
                         <button type="button" wire:click.prevent="closeModals"
-                            class="flex-1 py-3 font-bold text-slate-500 bg-slate-100 rounded-xl">Cancel</button>
+                            class="flex-1 p-2  font-bold text-slate-500 bg-slate-100 rounded-xl">Cancel</button>
                         <button type="submit"
-                            class="flex-1 py-3 font-bold text-white bg-cyan-600 rounded-xl shadow-lg shadow-cyan-100">{{ $createModal ? 'Create Record' : 'Save Changes' }}</button>
+                            class="flex-1 p-2 font-bold text-white bg-cyan-600 rounded-xl shadow-lg shadow-cyan-100">{{ $createModal ? 'Create Record' : 'Save Changes' }}</button>
                     </div>
                 </form>
             </div>

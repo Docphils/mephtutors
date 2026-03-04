@@ -30,8 +30,8 @@
                     @endif
                 </div>
                 <div
-                    class="absolute -bottom-2 -right-2 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm uppercase tracking-tighter {{ $profile->status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500' }}">
-                    {{ $profile->status }}
+                    class="absolute -bottom-2 -right-2 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm uppercase tracking-tighter {{ $profile?->status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500' }}">
+                    {{ $profile?->status }}
                 </div>
             </div>
 
