@@ -19,6 +19,11 @@
             {{ session('success') }}
         </div>
     @endif
+    @if (session('error'))
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm font-bold bg-red-50 text-red-700 border border-red-100">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row gap-3">
         <input wire:model.live.debounce.300ms="search" placeholder="Search by title, room, client or tutor..."

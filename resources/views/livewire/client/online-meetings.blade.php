@@ -6,6 +6,12 @@
         </div>
     </x-slot>
 
+    @if (session('error'))
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm font-bold bg-rose-50 text-rose-700 border border-rose-100">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-2 mb-6">
         @foreach (['scheduled' => 'Scheduled', 'attended' => 'Attended', 'missed' => 'Missed'] as $key => $label)
             <button wire:click="setTab('{{ $key }}')"

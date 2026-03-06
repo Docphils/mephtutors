@@ -226,7 +226,11 @@ class OnlineMeetingManager extends Component
 
         foreach ($recipients as $recipient) {
             try {
-                Mail::to($recipient->email)->send(new OnlineMeetingScheduledEmail($meeting, $recipient));
+                Mail::to($recipient->email)
+                    ->later(
+                        now()->addSeconds(random_int(2, 8)),
+                        new OnlineMeetingScheduledEmail($meeting, $recipient)
+                    );
             } catch (\Throwable $th) {
                 report($th);
             }

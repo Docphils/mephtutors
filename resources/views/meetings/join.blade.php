@@ -19,15 +19,16 @@
                     {{ $meeting->ends_at?->format('M d, Y h:i A') ?? 'Open session' }}
                 </p>
             </div>
-            <a href="{{ $redirectRoute }}"
-                class="text-xs bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-lg font-bold">
+            <a href="{{ $redirectRoute }}" class="text-xs bg-cyan-600 hover:bg-cyan-700 px-3 py-2 rounded-lg font-bold">
                 Back to Sessions
             </a>
         </header>
 
         <div class="p-2 md:p-4 flex-1">
-            <div id="jitsi-container" class="w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-slate-800"></div>
-            <div id="jitsi-error" class="hidden mt-4 p-3 rounded-lg border border-rose-800 bg-rose-950/50 text-rose-200 text-sm"></div>
+            <div id="jitsi-container"
+                class="w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-slate-800"></div>
+            <div id="jitsi-error"
+                class="hidden mt-4 p-3 rounded-lg border border-rose-800 bg-rose-950/50 text-rose-200 text-sm"></div>
         </div>
     </div>
 

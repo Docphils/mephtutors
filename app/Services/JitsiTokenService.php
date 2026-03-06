@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\OnlineMeeting;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class JitsiTokenService
 {
@@ -110,6 +111,11 @@ class JitsiTokenService
         $signed = openssl_sign($headerEncoded . '.' . $payloadEncoded, $signature, $privateKey, OPENSSL_ALGO_SHA256);
 
         if (!$signed) {
+            Log::error('JaaS JWT signing failed', [
+                'openssl_error' => openssl_error_string(),
+                'kid' => $kid,
+                'app_id' => $appId,
+            ]);
             return null;
         }
 
