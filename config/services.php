@@ -36,4 +36,19 @@ return [
         'secret' => env('PAYSTACK_SECRET_KEY'),
     ],
 
+    'jitsi' => [
+        'domain' => env('JITSI_DOMAIN', 'meet.jit.si'),
+        'app_name' => env('JITSI_APP_NAME', env('APP_NAME', 'MephEd')),
+        'recording_enabled' => (bool) env('JITSI_RECORDING_ENABLED', true),
+        'jaas_app_id' => env('JITSI_JAAS_APP_ID'),
+        'jaas_kid' => env('JITSI_JAAS_KID'),
+        'jaas_private_key' => env('JITSI_JAAS_PRIVATE_KEY'),
+        'jaas_private_key_path' => env('JITSI_JAAS_PRIVATE_KEY_PATH'),
+        'jwt_app_id' => env('JITSI_JWT_APP_ID'),
+        'jwt_app_secret' => env('JITSI_JWT_APP_SECRET'),
+        'jwt_iss' => env('JITSI_JWT_ISS'),
+        'jwt_sub' => env('JITSI_JWT_SUB'),
+        'jwt_aud' => env('JITSI_JWT_AUD', 'jitsi'),
+    ],
+
 ];

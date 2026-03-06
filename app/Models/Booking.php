@@ -88,6 +88,11 @@ class Booking extends Model
         return $this->belongsTo(ExamType::class, 'exam_type_id');
     }
 
+    public function onlineMeetings()
+    {
+        return $this->hasMany(OnlineMeeting::class);
+    }
+
     protected static function boot()
     {
         parent::boot();

@@ -5,6 +5,7 @@ namespace App\Livewire\Client;
 use Livewire\Component;
 use App\Models\Booking;
 use App\Models\TutorRequest;
+use App\Models\OnlineMeetingAttendance;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -37,6 +38,16 @@ class DashboardController extends Component
 
         // Recent Activity
         $recentBookings = $bookings->sortByDesc('created_at')->take(5);
+        $meetingBase = OnlineMeetingAttendance::with('meeting')
+            ->where('user_id', $user->id)
+            ->where('role', 'client');
+
+        $upcomingMeetings = (clone $meetingBase)
+            ->where('attendance_status', 'scheduled')
+            ->whereHas('meeting', fn ($query) => $query->where('starts_at', '>=', now()))
+            ->orderByDesc('created_at')
+            ->take(3)
+            ->get();
 
         return view('livewire.client.dashboard-controller', [
             'user' => $user,
@@ -49,8 +60,12 @@ class DashboardController extends Component
                 'completedLessons' => $completedBookings->count(),
                 'totalInvestment' => $totalInvestment,
                 'activeInstitutions' => $activeInstitutions,
+                'scheduledMeetings' => (clone $meetingBase)->where('attendance_status', 'scheduled')->count(),
+                'attendedMeetings' => (clone $meetingBase)->where('attendance_status', 'attended')->count(),
+                'missedMeetings' => (clone $meetingBase)->where('attendance_status', 'missed')->count(),
             ],
             'recentBookings' => $recentBookings,
+            'upcomingMeetings' => $upcomingMeetings,
             'incompleteProfile' => !$userProfile || empty($userProfile->phone) || empty($userProfile->address)
         ]);
     }

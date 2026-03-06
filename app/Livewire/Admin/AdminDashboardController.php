@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Models\{Booking, Crm, Payment, TutorRequest, User, TutorProfile, Enrollee, Contact, Newsletter};
+use App\Models\OnlineMeeting;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\{Layout, Title};
 use Carbon\Carbon;
@@ -29,6 +30,8 @@ class AdminDashboardController extends Component
             'bootcamp_count'     => Enrollee::count(), 
             'unread_messages'    => Contact::where('is_read', false)->count(), 
             'campaigns_sent'     => Newsletter::where('status', 'Sent')->count(), 
+            'scheduled_meetings' => OnlineMeeting::where('status', 'scheduled')->count(),
+            'completed_meetings' => OnlineMeeting::where('status', 'completed')->count(),
         ];
 
         // Advanced Chart Data: 7-Day Multi-Metric Growth
@@ -59,6 +62,11 @@ class AdminDashboardController extends Component
             'user'          => $user,
             'stats'         => $stats,
             'chartData'     => $chartData,
+            'upcomingMeetings' => OnlineMeeting::with(['client', 'tutor'])
+                ->where('starts_at', '>=', now())
+                ->latest('starts_at')
+                ->take(4)
+                ->get(),
         ]);
     }
 }

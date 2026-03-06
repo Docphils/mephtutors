@@ -15,10 +15,11 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('bookings:close-completed')->everySixHours();
+        $schedule->command('sessions:close-completed')->everyFiveMinutes();
 
-        $schedule->call(function(){
-            User::whereNull('email_verified_at')->delete();
-        })->monthly();
+        // $schedule->call(function(){
+        //     User::whereNull('email_verified_at')->delete();
+        // })->monthly();
     }
 
     /**

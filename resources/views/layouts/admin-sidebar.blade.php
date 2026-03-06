@@ -58,6 +58,12 @@
             <span>Manage Lessons</span>
         </a>
 
+        <a wire:navigate href="{{ route('admin.online-meetings') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.online-meetings') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-video w-5 text-cyan-300"></i>
+            <span>Online Sessions</span>
+        </a>
+
         <a wire:navigate href="{{ route('admin.bootcamps') }}"
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.bootcamps') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-user-graduate w-5 text-cyan-300"></i>

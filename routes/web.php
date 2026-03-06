@@ -19,6 +19,9 @@ use App\Livewire\Admin\UserManager;
 use App\Livewire\Admin\InstitutionRequestManager;
 use App\Livewire\Admin\PaymentsManager;
 use App\Livewire\Admin\TutorProfileView;
+use App\Livewire\Admin\OnlineMeetingManager;
+use App\Livewire\Client\OnlineMeetings as ClientOnlineMeetings;
+use App\Livewire\Tutor\OnlineMeetings as TutorOnlineMeetings;
 
 // Tutor Routes
 use App\Livewire\Tutor\DashboardController;
@@ -48,6 +51,7 @@ use App\Livewire\Requests\TutorRequestWizard;
 use App\Livewire\Testimonials\Testimonials;
 use App\Livewire\Testimonials\IndexTestimonials;
 use App\Http\Controllers\PaystackController;
+use App\Http\Controllers\OnlineMeetingController;
 
 use App\Livewire\Partials\UserProfileEditor;
 
@@ -157,6 +161,7 @@ Route::middleware(['auth', 'can:Client'])->group(function () {
     // Client Dashboard
     Route::get('/dashboard', ClientDashboard::class)->name('client.dashboard');
     Route::get('/client/lessons', Lessons::class)->name('client.lessons');
+    Route::get('/client/online-meetings', ClientOnlineMeetings::class)->name('client.online-meetings');
     // Livewire manager pages
     Route::get('client/crm-manager', CrmManager::class)->name('client.crm.manager');
     Route::get('client/tutor-requests-manager', TutorRequestsManager::class)->name('client.tutorRequests.manager');
@@ -169,6 +174,7 @@ Route::middleware(['auth', 'can:Tutor', 'verified'])->group(function () {
     // Tutor Dashboard
     Route::get('/tutor/dashboard', DashboardController::class)->name('tutor.dashboard');
     Route::get('/tutor/lessons', TutorLessons::class)->name('tutor.lessons');
+    Route::get('/tutor/online-meetings', TutorOnlineMeetings::class)->name('tutor.online-meetings');
     Route::get('/tutor/tutor-profile', TutorProfiles::class)->name('tutor.tutor-profile');
     Route::get('/tutor/payments', Payments::class)->name('tutor.payments');
     Route::get('/tutor/institution-assignments', InstitutionAssignments::class)->name('tutor.institution-assignments');
@@ -184,6 +190,7 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
 
     //Bookings (consolidated booking manager)
     Route::get('admin/lessons', BookingManager::class)->name('admin.lessons');
+    Route::get('admin/online-meetings', OnlineMeetingManager::class)->name('admin.online-meetings');
     Route::get('admin/bootcamps', BootcampManager::class)->name('admin.bootcamps');
     Route::get('admin/service-catalog', ServiceCatalogManager::class)->name('admin.serviceCatalog');
 
@@ -203,6 +210,10 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     Route::get('admin/newsletter', Newsletter::class)->name('admin.newsletter');
   
 
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/meetings/{meeting}/join', [OnlineMeetingController::class, 'join'])->name('meetings.join');
 });
 
 require __DIR__.'/auth.php';

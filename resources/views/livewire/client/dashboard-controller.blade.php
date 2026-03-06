@@ -63,12 +63,15 @@
 
         <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between mb-4">
-                <div class="bg-purple-50 p-3 rounded-2xl">
-                    <i class="fas fa-school text-purple-600 text-xl"></i>
+                <div class="bg-emerald-50 p-3 rounded-2xl">
+                    <i class="fas fa-video text-emerald-600 text-xl"></i>
                 </div>
             </div>
-            <h4 class="text-slate-500 text-sm font-bold uppercase tracking-widest">Institutions</h4>
-            <p class="text-3xl font-black text-slate-800 mt-1">{{ $stats['activeInstitutions'] }}</p>
+            <h4 class="text-slate-500 text-sm font-bold uppercase tracking-widest">Online Sessions</h4>
+            <p class="text-3xl font-black text-slate-800 mt-1">{{ $stats['scheduledMeetings'] }}</p>
+            <p class="text-[10px] text-slate-400 font-bold mt-1">
+                {{ $stats['attendedMeetings'] }} attended | {{ $stats['missedMeetings'] }} missed
+            </p>
         </div>
 
         <div class="bg-gradient-to-br from-cyan-600 to-cyan-800 p-6 rounded-3xl shadow-lg shadow-cyan-200">
@@ -152,6 +155,11 @@
                         <i class="fas fa-building text-cyan-600 mb-2 group-hover:scale-110 transition"></i>
                         <span class="text-[10px] font-black text-slate-600 uppercase">Institution</span>
                     </a>
+                    <a wire:navigate href="{{ route('client.online-meetings') }}"
+                        class="flex flex-col items-center p-4 rounded-2xl bg-slate-50 hover:bg-cyan-50 group transition-all">
+                        <i class="fas fa-video text-cyan-600 mb-2 group-hover:scale-110 transition"></i>
+                        <span class="text-[10px] font-black text-slate-600 uppercase">Sessions</span>
+                    </a>
                 </div>
             </div>
 
@@ -170,6 +178,23 @@
                     </div>
                 </div>
                 <i class="fas fa-graduation-cap absolute -bottom-4 -right-4 text-white/5 text-8xl rotate-12"></i>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-black text-slate-800">Upcoming Sessions</h4>
+                    <a wire:navigate href="{{ route('client.online-meetings') }}" class="text-xs font-bold text-cyan-600">Open</a>
+                </div>
+                <div class="space-y-3">
+                    @forelse($upcomingMeetings as $meetingRecord)
+                        <div class="p-3 rounded-xl border border-slate-100 bg-slate-50">
+                            <p class="text-sm font-bold text-slate-700">{{ $meetingRecord->meeting?->title }}</p>
+                            <p class="text-xs text-slate-500">{{ $meetingRecord->meeting?->starts_at?->format('M d, h:i A') }}</p>
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-500">No upcoming sessions.</p>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>

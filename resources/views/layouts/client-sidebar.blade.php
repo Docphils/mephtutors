@@ -52,6 +52,12 @@
             <span>Manage Lessons</span>
         </a>
 
+        <a wire:navigate href="{{ route('client.online-meetings') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.online-meetings') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-video w-5 text-cyan-300"></i>
+            <span>Online Sessions</span>
+        </a>
+
         <a wire:navigate href="{{ route('client.crm.manager') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('client.crm.manager') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-school w-5 text-cyan-300"></i>

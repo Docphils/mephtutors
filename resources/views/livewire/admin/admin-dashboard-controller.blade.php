@@ -79,14 +79,14 @@
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Support</p>
-                            <h3 class="text-3xl font-black text-slate-800">{{ $stats['unread_messages'] }}</h3>
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Online Sessions</p>
+                            <h3 class="text-3xl font-black text-slate-800">{{ $stats['scheduled_meetings'] }}</h3>
                         </div>
-                        <div class="bg-blue-100 text-blue-600 p-3 rounded-2xl">
-                            <i class="fas fa-envelope-open-text"></i>
+                        <div class="bg-emerald-100 text-emerald-600 p-3 rounded-2xl">
+                            <i class="fas fa-video"></i>
                         </div>
                     </div>
-                    <p class="text-blue-600 text-xs font-bold mt-2">Unread Messages</p>
+                    <p class="text-emerald-600 text-xs font-bold mt-2">{{ $stats['completed_meetings'] }} completed</p>
                 </div>
             </div>
 
@@ -124,7 +124,30 @@
                             </div>
                             <span class="font-bold text-slate-800">{{ $stats['tutor_requests'] }}</span>
                         </div>
+                        <a wire:navigate href="{{ route('admin.online-meetings') }}"
+                            class="flex items-center justify-between p-3 bg-cyan-50 rounded-2xl border border-cyan-100">
+                            <span class="text-sm font-bold text-cyan-700">Open Online Sessions</span>
+                            <i class="fas fa-arrow-right text-cyan-700"></i>
+                        </a>
                     </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-slate-800">Upcoming Online Sessions</h4>
+                    <a wire:navigate href="{{ route('admin.online-meetings') }}" class="text-xs font-bold text-cyan-600">Manage</a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @forelse($upcomingMeetings as $meeting)
+                        <div class="p-3 rounded-xl border border-slate-100 bg-slate-50">
+                            <p class="text-sm font-bold text-slate-800">{{ $meeting->title }}</p>
+                            <p class="text-xs text-slate-500">{{ $meeting->starts_at?->format('M d, Y h:i A') }}</p>
+                            <p class="text-xs text-cyan-700">{{ $meeting->client?->name ?? 'N/A' }} / {{ $meeting->tutor?->name ?? 'N/A' }}</p>
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-500">No upcoming online sessions.</p>
+                    @endforelse
                 </div>
             </div>
         </div>

@@ -14,6 +14,8 @@ use App\Models\TutorRequest;
 use App\Models\Crm;
 use App\Models\Payment;
 use App\Models\CrmAssignment;
+use App\Models\OnlineMeeting;
+use App\Models\OnlineMeetingAttendance;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -99,6 +101,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function crmAssignments()
     {
         return $this->hasMany(CrmAssignment::class, 'user_id');
+    }
+
+    public function scheduledOnlineMeetings()
+    {
+        return $this->hasMany(OnlineMeeting::class, 'scheduled_by');
+    }
+
+    public function onlineMeetingsAsClient()
+    {
+        return $this->hasMany(OnlineMeeting::class, 'client_id');
+    }
+
+    public function onlineMeetingsAsTutor()
+    {
+        return $this->hasMany(OnlineMeeting::class, 'tutor_id');
+    }
+
+    public function onlineMeetingAttendances()
+    {
+        return $this->hasMany(OnlineMeetingAttendance::class);
     }
 
 }
