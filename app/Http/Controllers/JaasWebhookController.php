@@ -34,7 +34,10 @@ class JaasWebhookController extends Controller
         if ($meeting) {
             $eventLower = strtolower($event);
             if (str_contains($eventLower, 'end') || str_contains($eventLower, 'destroy')) {
-                $meeting->update(['status' => 'completed']);
+                $meeting->update([
+                    'status' => 'completed',
+                    'ended_at' => now(),
+                ]);
                 $meeting->attendances()
                     ->where('attendance_status', 'scheduled')
                     ->update(['attendance_status' => 'missed']);

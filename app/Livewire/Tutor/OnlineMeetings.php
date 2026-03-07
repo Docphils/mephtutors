@@ -40,7 +40,10 @@ class OnlineMeetings extends Component
             ->whereIn('status', ['scheduled', 'live'])
             ->whereNotNull('ends_at')
             ->where('ends_at', '<', now()->subMinutes(10))
-            ->update(['status' => 'completed']);
+            ->update([
+                'status' => 'completed',
+                'ended_at' => now(),
+            ]);
 
         OnlineMeetingAttendance::query()
             ->where('user_id', auth()->id())

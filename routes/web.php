@@ -214,6 +214,7 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/meetings/{meeting}/join', [OnlineMeetingController::class, 'join'])->name('meetings.join');
+    Route::post('/meetings/{meeting}/end', [OnlineMeetingController::class, 'endSession'])->name('meetings.end');
 });
 
 require __DIR__.'/auth.php';

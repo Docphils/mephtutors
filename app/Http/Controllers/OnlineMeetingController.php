@@ -29,7 +29,10 @@ class OnlineMeetingController extends Controller
         }
 
         if ($meeting->ends_at && now()->gt($meeting->ends_at->copy()->addMinutes(10))) {
-            $meeting->update(['status' => 'completed']);
+            $meeting->update([
+                'status' => 'completed',
+                'ended_at' => $meeting->ended_at ?? now(),
+            ]);
             $meeting->attendances()
                 ->where('attendance_status', 'scheduled')
                 ->update(['attendance_status' => 'missed']);
@@ -84,6 +87,34 @@ class OnlineMeetingController extends Controller
             'roomName' => $roomName,
             'redirectRoute' => $redirectRoute,
             'jaasAppId' => $jaasAppId,
+            'endSessionUrl' => route('meetings.end', $meeting),
+        ]);
+    }
+
+    public function endSession(Request $request, OnlineMeeting $meeting)
+    {
+        $user = Auth::user();
+        abort_unless($meeting->isParticipant($user), 403);
+
+        $privileges = data_get($meeting->jitsi_options, 'privileges', []);
+        $isModerator = $user->role === 'admin'
+            || ($user->role === 'tutor' && data_get($privileges, 'tutor', 'participant') === 'moderator');
+
+        abort_unless($isModerator, 403);
+
+        $meeting->update([
+            'status' => 'completed',
+            'ended_at' => now(),
+            'ends_at' => $meeting->ends_at ?? now(),
+        ]);
+
+        $meeting->attendances()
+            ->where('attendance_status', 'scheduled')
+            ->update(['attendance_status' => 'missed']);
+
+        return response()->json([
+            'ok' => true,
+            'ended_at' => optional($meeting->ended_at)->toISOString(),
         ]);
     }
 }

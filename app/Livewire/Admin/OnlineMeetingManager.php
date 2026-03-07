@@ -86,11 +86,12 @@ class OnlineMeetingManager extends Component
         if (!$booking) {
             return;
         }
+        $sessionCount = OnlineMeeting::where('booking_id', $booking->id)->count() + 1;
 
         $this->service_item_id = $booking->service_item_id;
         $this->client_id = $booking->client_id;
         $this->tutor_id = $booking->tutor_id;
-        $this->title = 'Online Class - Booking #' . $booking->id;
+        $this->title = 'MephEd Online - L' . $booking->id . '-S' . $sessionCount;
         if (!$this->editingId) {
             $this->jitsi_room = $this->generateRoomId();
         }
@@ -266,7 +267,10 @@ class OnlineMeetingManager extends Component
             ->whereIn('status', ['scheduled', 'live'])
             ->whereNotNull('ends_at')
             ->where('ends_at', '<', now()->subMinutes(10))
-            ->update(['status' => 'completed']);
+            ->update([
+                'status' => 'completed',
+                'ended_at' => now(),
+            ]);
 
         \App\Models\OnlineMeetingAttendance::query()
             ->where('attendance_status', 'scheduled')

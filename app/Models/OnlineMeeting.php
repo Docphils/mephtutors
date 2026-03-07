@@ -22,6 +22,7 @@ class OnlineMeeting extends Model
         'jitsi_password',
         'starts_at',
         'ends_at',
+        'ended_at',
         'status',
         'recording_enabled',
         'recording_url',
@@ -31,6 +32,7 @@ class OnlineMeeting extends Model
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'ended_at' => 'datetime',
         'recording_enabled' => 'boolean',
         'jitsi_options' => 'array',
     ];
