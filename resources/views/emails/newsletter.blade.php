@@ -1,141 +1,45 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="x-apple-disable-message-reformatting">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+    <meta charset="UTF-8">
     <title>{{ $content['subject'] }}</title>
-    <style>
-        .body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            word-break: break-word;
-            -webkit-font-smoothing: antialiased;
-            background-color: #f8fafc;
-        }
-
-        .content-table {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            margin-top: 40px;
-            margin-bottom: 40px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            background-color: #0891b2;
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .inner-body {
-            padding: 40px 30px;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #334155;
-            line-height: 1.6;
-        }
-
-        .footer {
-            background-color: #f1f5f9;
-            padding: 24px;
-            text-align: center;
-            font-family: sans-serif;
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        h1 {
-            color: #ffffff;
-            margin: 0;
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-        }
-
-        .button {
-            background-color: #0891b2;
-            color: #ffffff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 20px;
-        }
-    </style>
 </head>
 
-<body class="body">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-        <tr>
-            <td align="center">
-                <table class="content-table" role="presentation" cellspacing="0" cellpadding="0" border="0">
-                    <tr>
-                        <td class="header">
-                            <img src="{{ asset('images/MephEd.png') }}" alt="MephEd Logo" width="120"
-                                style="margin-bottom: 20px; display: inline-block; border: 0;">
-                            <h1>{{ $content['title'] }}</h1>
-                        </td>
-                    </tr>
+<body style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;color:#0f172a;padding:24px;">
+    <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+        <div style="background:#0891b2;color:#fff;padding:18px 20px;">
+            <h1 style="margin:0;font-size:20px;">{{ $content['title'] }}</h1>
+            <p style="margin:6px 0 0;font-size:12px;opacity:.9;">MephEd newsletter update</p>
+        </div>
 
-                    <tr>
-                        <td class="inner-body">
-                            {{-- <p style="font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 16px;">
-                                Hello there,
-                            </p> --}}
+        <div style="padding:20px;">
+            <p style="margin:0 0 14px;">Hello {{ $user->name ?? 'there' }},</p>
 
-                            <div style="font-size: 15px; color: #475569;">
-                                {!! str_replace(
-                                    ['<ul>', '<ol>'],
-                                    ['<ul style="padding-left:20px; margin:10px 0;">', '<ol style="padding-left:20px; margin:10px 0;">'],
-                                    $content['body'],
-                                ) !!}
-                            </div>
+            <div style="margin:0 0 14px;line-height:1.6;color:#334155;">
+                {!! str_replace(
+                    ['<ul>', '<ol>'],
+                    ['<ul style="padding-left:20px; margin:10px 0;">', '<ol style="padding-left:20px; margin:10px 0;">'],
+                    $content['body'],
+                ) !!}
+            </div>
 
-                            @if (!empty($content['body2']))
-                                <div
-                                    style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #f1f5f9; font-size: 14px; color: #64748b; font-style: italic;">
-                                    {{ $content['body2'] }}
-                                </div>
-                            @endif
+            @if (!empty($content['body2']))
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin:0 0 14px;color:#334155;">
+                    {{ $content['body2'] }}
+                </div>
+            @endif
 
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0"
-                                style="margin-top: 40px;">
-                                <tr>
-                                    <td>
-                                        <p style="margin: 0; font-size: 14px; color: #1e293b;">Best regards,</p>
-                                        <p style="margin: 0; font-size: 15px; font-weight: 800; color: #0891b2;">MephEd
-                                            Support Team</p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="footer">
-                            <p style="margin: 0 0 10px 0;">&copy; {{ date('Y') }} MephEd. All rights reserved.</p>
-                            <p style="margin: 0;">
-                                Changed your mind?
-                                <a href="{{ $unsubscribeUrl }}"
-                                    style="color: #0891b2; text-decoration: underline; font-weight: bold;">
-                                    Click here to Unsubscribe
-                                </a>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+            <p style="margin:16px 0 0;">Best regards,<br><strong>MephEd Support Team</strong></p>
+            <p style="margin:16px 0 0;font-size:12px;color:#64748b;">
+                Changed your mind?
+                <a href="{{ $unsubscribeUrl }}" style="color:#0891b2;text-decoration:underline;font-weight:700;">
+                    Click here to Unsubscribe
+                </a>
+            </p>
+            <p style="margin:8px 0 0;font-size:12px;color:#64748b;">&copy; {{ date('Y') }} MephEd. All rights reserved.</p>
+        </div>
+    </div>
 </body>
 
 </html>
