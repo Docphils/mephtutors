@@ -7,7 +7,7 @@
         </p>
     </section>
 
-    @foreach ($services as $service)
+    @foreach ($services->sortByDesc('name') as $service)
         @if ($service->serviceItems->isNotEmpty())
             <section class="space-y-4">
                 <div class="flex items-end justify-between gap-3">

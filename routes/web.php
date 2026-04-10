@@ -79,6 +79,9 @@ Route::get('/bootcamp', EnrollmentForm::class)->name('bootcamp');
 
 Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
 
+Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
+Route::post('/paystack/webhook', [PaystackController::class, 'webhook']);
+
 Route::get('/sitemap.xml', function () {
     $pages = [
         ['loc' => route('welcome'), 'changefreq' => 'daily', 'priority' => '1.0', 'lastmod' => now()->toDateString()],
@@ -165,8 +168,6 @@ Route::middleware(['auth', 'can:Client'])->group(function () {
     // Livewire manager pages
     Route::get('client/crm-manager', CrmManager::class)->name('client.crm.manager');
     Route::get('client/tutor-requests-manager', TutorRequestsManager::class)->name('client.tutorRequests.manager');
-    Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
-    Route::post('/paystack/webhook', [PaystackController::class, 'webhook']);
     
 });
 

@@ -36,6 +36,10 @@ return [
         'secret' => env('PAYSTACK_SECRET_KEY'),
     ],
 
+    'solar_sapient' => [
+        'webhook_url' => env('SOLAR_SAPIENT_WEBHOOK_URL'),
+    ],
+
     'jitsi' => [
         'domain' => env('JITSI_DOMAIN', 'meet.jit.si'),
         'app_name' => env('JITSI_APP_NAME', env('APP_NAME', 'MephEd')),

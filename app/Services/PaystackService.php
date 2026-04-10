@@ -21,6 +21,8 @@ class PaystackService
                 'reference' => $reference,
                 'callback_url' => route('paystack.callback'),
                 'metadata' => [
+                    'app' => 'mephed',
+                    'payment_for' => 'booking',
                     'booking_id' => $booking->id,
                 ],
             ])->json();
@@ -52,6 +54,7 @@ class PaystackService
                 'reference' => $reference,
                 'callback_url' => route('paystack.callback'),
                 'metadata' => [
+                    'app' => 'mephed',
                     'payment_for' => 'crm',
                     'crm_id' => $crm->id,
                 ],

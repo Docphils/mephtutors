@@ -41,7 +41,7 @@
         </div>
 
         <hr class="border-slate-300 mb-10">
-        <div class="text-center mb-12">
+        {{-- <div class="text-center mb-12">
             <h3 class="text-3xl font-semibold text-slate-900">Our Team</h3>
             <p class="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
                 With several years of industry experience and diverse expertise, our team members are committed to
@@ -69,6 +69,61 @@
                 <div class="bg-white px-3">
                     <h4 class="text-xl font-bold text-slate-900">Philip Nwachukwu</h4>
                     <p class="mt-2 text-base sm:text-lg text-slate-600">Founder/CEO</p>
+                </div>
+            </div>
+        </div> --}}
+
+        <div class="text-center mb-12">
+            <h3 class="text-3xl font-semibold text-slate-900">Our Products</h3>
+            <p class="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
+                Beyond tutoring and educational support, MephEd is also building practical digital solutions that
+                address real
+                needs in education and energy. Explore our growing platforms below.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full sm:w-3/4 lg:w-2/3 mx-auto mt-8">
+            <div class="relative text-center border-4 border-cyan-100 bg-white rounded-lg shadow-sm overflow-hidden"
+                style="box-shadow 0.3s ease;" onmouseover="this.style.boxShadow='0 10px 15px rgba(0,0,0,0.1)';"
+                onmouseout="this.style.boxShadow='none';">
+                <div class="relative w-full">
+                    <img src="{{ asset('images/zaramed.png') }}" class="object-cover w-full h-56 sm:h-64"
+                        style="transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';"
+                        onmouseout="this.style.transform='scale(1)';" alt="Zaramed">
+                </div>
+                <div class="bg-white px-5 py-6">
+                    <h4 class="text-xl font-bold text-slate-900">Zaramed</h4>
+                    <p class="mt-3 text-sm sm:text-base text-slate-600">
+                        A smart school management and CBT platform designed to help schools simplify administration,
+                        improve assessments, and strengthen communication across their operations.
+                    </p>
+
+                    <a href="https://www.zaramed.ng" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center mt-5 px-5 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 transition">
+                        Visit Zaramed
+                    </a>
+                </div>
+            </div>
+
+            <div class="relative text-center border-4 border-cyan-100 bg-white rounded-lg shadow-sm overflow-hidden"
+                style="box-shadow 0.3s ease;" onmouseover="this.style.boxShadow='0 10px 15px rgba(0,0,0,0.1)';"
+                onmouseout="this.style.boxShadow='none';">
+                <div class="relative w-full">
+                    <img src="{{ asset('images/solar-sapient.png') }}" class="object-cover w-full h-56 sm:h-64"
+                        style="transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';"
+                        onmouseout="this.style.transform='scale(1)';" alt="Solar Sapient">
+                </div>
+                <div class="bg-white px-5 py-6">
+                    <h4 class="text-xl font-bold text-slate-900">Solar Sapient</h4>
+                    <p class="mt-3 text-sm sm:text-base text-slate-600">
+                        An intelligent solar education, advisory, and audit platform built to help users make better
+                        energy decisions with more clarity, confidence, and structure.
+                    </p>
+
+                    <a href="https://solar-sapient.mephed.ng" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center mt-5 px-5 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 transition">
+                        Visit Solar Sapient
+                    </a>
                 </div>
             </div>
         </div>

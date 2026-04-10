@@ -45,59 +45,94 @@ class PaystackController extends Controller
                 ->with('success', 'Payment successful. Lesson activated.');
         }
 
-        return redirect()->back()->with('error', 'Payment failed.');
+        return redirect()->route('client.lessons')->with('error', 'Payment failed.');
     }
 
     public function webhook(Request $request)
     {
-        $signature = $request->header('x-paystack-signature');
+        $signature = (string) $request->header('x-paystack-signature', '');
+
+        $rawPayload = $request->getContent();
 
         $hash = hash_hmac(
             'sha512',
-            $request->getContent(),
+            $rawPayload,
             config('services.paystack.secret')
         );
 
-        if ($hash !== $signature) {
+        if (! hash_equals($hash, $signature)) {
             abort(403);
         }
 
-        $event = $request->input('event');
+        if ($request->input('event') !== 'charge.success') {
+            return response()->json(['status' => 'ok']);
+        }
 
-        if ($event === 'charge.success') {
+        $data = (array) $request->input('data', []);
+        $metadata = (array) ($data['metadata'] ?? []);
+        $app = (string) ($metadata['app'] ?? 'mephed');
 
-            $data = $request->input('data');
-            $metadata = $data['metadata'] ?? [];
+        if ($app === 'solar_sapient') {
+            $this->forwardToSolarSapient($rawPayload, $signature);
 
-            if (($metadata['payment_for'] ?? null) === 'crm') {
-                $crm = Crm::find($metadata['crm_id'] ?? 0);
-                if ($crm && $crm->payment_status !== 'paid') {
-                    $crm->update([
-                        'payment_status' => 'paid',
-                        'payment_reference' => $data['reference'] ?? $crm->payment_reference,
-                        'paid_at' => now(),
-                    ]);
-                }
+            return response()->json(['status' => 'ok']);
+        }
 
-                return response()->json(['status' => 'ok']);
-            }
+        // Default: mephed flow
+        if (($metadata['payment_for'] ?? null) === 'crm') {
+            $crm = Crm::find($metadata['crm_id'] ?? 0);
 
-            $bookingId = $metadata['booking_id'] ?? null;
-            if (!$bookingId) {
-                return response()->json(['status' => 'ok']);
-            }
-
-            $booking = Booking::find($bookingId);
-
-            if ($booking && $booking->client_payment_status !== 'Paid') {
-
-                $booking->update([
-                    'client_payment_status' => 'Paid',
-                    'status' => 'Accepted',
+            if ($crm && $crm->payment_status !== 'paid') {
+                $crm->update([
+                    'payment_status' => 'paid',
+                    'payment_reference' => $data['reference'] ?? $crm->payment_reference,
+                    'paid_at' => now(),
                 ]);
             }
+
+            return response()->json(['status' => 'ok']);
+        }
+
+        $bookingId = $metadata['booking_id'] ?? null;
+        if (! $bookingId) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        $booking = Booking::find($bookingId);
+
+        if ($booking && $booking->client_payment_status !== 'Paid') {
+            $booking->update([
+                'client_payment_status' => 'Paid',
+                'status' => 'Active',
+            ]);
         }
 
         return response()->json(['status' => 'ok']);
+    }
+
+    protected function forwardToSolarSapient(string $rawPayload, string $signature): void
+    {
+        $url = config('services.solar_sapient.webhook_url');
+
+        if (! $url) {
+            throw new \RuntimeException('Solar Sapient webhook URL is not configured.');
+        }
+
+        $response = Http::timeout(15)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'x-paystack-signature' => $signature,
+            ])
+            ->withBody($rawPayload, 'application/json')
+            ->post($url);
+
+        if (! $response->successful()) {
+            Log::error('Solar Sapient webhook forward failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new \RuntimeException('Failed to forward webhook to Solar Sapient.');
+        }
     }
 }
