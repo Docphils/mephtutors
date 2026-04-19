@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Requests;
 
-use App\Mail\ProgrammeEnquiryNotification;
 use App\Mail\ProgrammeGuestAcknowledgement;
 use App\Models\AcademicProgramme;
 use App\Models\ProgrammeEnquiry;
@@ -20,6 +19,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use App\Support\InterventionStatusNotifier;
 
 #[Layout('layouts.visitor')]
 class ProgrammeEnquiryWizard extends Component
@@ -222,10 +222,9 @@ class ProgrammeEnquiryWizard extends Component
                 ));
             }
 
-            Mail::to('support@mephed.ng')->send(
-                new ProgrammeEnquiryNotification(
-                    $programmeRequest->load(['programme', 'user.userProfile'])
-                )
+            InterventionStatusNotifier::notifyAdmins(
+                $programmeRequest->load(['programme', 'user.userProfile']),
+                InterventionStatusNotifier::ADMIN_SUBMISSION_NOTIFICATION
             );
         } catch (\Throwable $e) {
             logger()->warning('Intervention request acknowledgement email failed: ' . $e->getMessage());

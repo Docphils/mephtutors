@@ -7,6 +7,7 @@ use App\Models\Crm;
 use App\Models\Payment;
 use App\Models\ProgrammeEnquiry;
 use App\Services\PaystackService;
+use App\Support\InterventionStatusNotifier;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -36,6 +37,8 @@ class PaystackController extends Controller
 
             if (($metadata['payment_for'] ?? null) === 'programme_request') {
                 $programmeEnquiry = ProgrammeEnquiry::findOrFail($metadata['programme_enquiry_id']);
+                $wasPaid = ($programmeEnquiry->payment_status ?? 'pending') === 'paid';
+                $wasInProgress = ($programmeEnquiry->status ?? null) === 'in_progress';
                 $programmeEnquiry->update([
                     'payment_status' => 'paid',
                     'status' => 'in_progress',
@@ -61,8 +64,28 @@ class PaystackController extends Controller
                     );
                 }
 
+                if (! $wasPaid || ! $wasInProgress) {
+                    InterventionStatusNotifier::notifyClient(
+                        $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
+                        InterventionStatusNotifier::CLIENT_ACTIVATED,
+                        ['note' => 'Your payment was confirmed successfully.']
+                    );
+                    if ($assignment) {
+                        $assignment->loadMissing(['tutor.tutorProfile', 'tutor.userProfile']);
+                        InterventionStatusNotifier::notifyTutor(
+                            $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
+                            $assignment->tutor,
+                            InterventionStatusNotifier::TUTOR_ASSIGNED,
+                            [
+                                'note' => 'Client payment has been confirmed and this intervention is now active.',
+                                'payment_status' => 'pending',
+                            ]
+                        );
+                    }
+                }
+
                 return redirect()->route('client.programmeRequests.manager')
-                    ->with('success', 'Payment successful. Your programme request is now active.');
+                    ->with('success', 'Payment successful. Your intervention request is now active.');
             }
 
             $bookingId = $metadata['booking_id'] ?? null;
@@ -81,7 +104,7 @@ class PaystackController extends Controller
 
         if (($metadata['payment_for'] ?? null) === 'programme_request') {
             return redirect()->route('client.programmeRequests.manager')
-                ->with('error', 'Payment was not successful. Please try again from your programme requests dashboard.');
+                ->with('error', 'Payment was not successful. Please try again from your intervention requests dashboard.');
         }
 
         return redirect()->route('client.lessons')->with('error', 'Payment failed.');
@@ -136,6 +159,8 @@ class PaystackController extends Controller
             $programmeEnquiry = ProgrammeEnquiry::find($metadata['programme_enquiry_id'] ?? 0);
 
             if ($programmeEnquiry && $programmeEnquiry->payment_status !== 'paid') {
+                $wasPaid = ($programmeEnquiry->payment_status ?? 'pending') === 'paid';
+                $wasInProgress = ($programmeEnquiry->status ?? null) === 'in_progress';
                 $programmeEnquiry->update([
                     'payment_status' => 'paid',
                     'status' => 'in_progress',
@@ -158,6 +183,26 @@ class PaystackController extends Controller
                             'status' => 'Pending',
                         ]
                     );
+                }
+
+                if (! $wasPaid || ! $wasInProgress) {
+                    InterventionStatusNotifier::notifyClient(
+                        $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
+                        InterventionStatusNotifier::CLIENT_ACTIVATED,
+                        ['note' => 'Your payment was confirmed successfully.']
+                    );
+                    if ($assignment) {
+                        $assignment->loadMissing(['tutor.tutorProfile', 'tutor.userProfile']);
+                        InterventionStatusNotifier::notifyTutor(
+                            $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
+                            $assignment->tutor,
+                            InterventionStatusNotifier::TUTOR_ASSIGNED,
+                            [
+                                'note' => 'Client payment has been confirmed and this intervention is now active.',
+                                'payment_status' => 'pending',
+                            ]
+                        );
+                    }
                 }
             }
 

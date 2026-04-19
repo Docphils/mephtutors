@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('bookings:close-completed')->everySixHours();
+        $schedule->command('interventions:close-completed')->everyFiveMinutes();
         $schedule->command('sessions:close-completed')->everyFiveMinutes();
 
         // $schedule->call(function(){

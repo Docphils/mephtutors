@@ -68,6 +68,10 @@
                     $paymentTone = ($request->payment_status ?? 'pending') === 'paid'
                         ? 'bg-emerald-100 text-emerald-700'
                         : 'bg-slate-100 text-slate-600';
+                    $canPayNow = $request->status === 'matched'
+                        && ($request->payment_status ?? 'pending') !== 'paid'
+                        && (float) ($request->price_quote ?? 0) > 0
+                        && $latestAssignment;
                 @endphp
 
                 <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
@@ -121,7 +125,7 @@
                                 class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-200">
                                 View
                             </button>
-                            @if ($request->payment_status !== 'paid')
+                            @if ($canPayNow)
                                 <button wire:click="payNow({{ $request->id }})" wire:loading.attr="disabled" wire:target="payNow"
                                     class="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-cyan-700 disabled:opacity-60">
                                     Pay Now
@@ -152,7 +156,17 @@
     @if ($showDetails && $selectedRequest)
         @php
             $latestAssignment = $selectedRequest->assignments->sortByDesc('id')->first() ?? $selectedRequest->activeAssignment;
-            $pendingReviewAssignment = $selectedRequest->assignments->where('status', 'pending_client_review')->sortByDesc('id')->first();
+            $pendingReviewAssignment = $selectedRequest->status === 'pending_client_review'
+                ? $selectedRequest->assignments
+                    ->sortByDesc('id')
+                    ->first(fn ($assignment) => in_array($assignment->status, ['completed', 'pending_client_review'], true) && $assignment->completed_at)
+                : null;
+            $canPayFromDetails = $selectedRequest->status === 'matched'
+                && ($selectedRequest->payment_status ?? 'pending') !== 'paid'
+                && (float) ($selectedRequest->price_quote ?? 0) > 0
+                && $latestAssignment;
+            $clientAdjustmentNote = $selectedRequest->meta['client_adjustment_note'] ?? null;
+            $adminAdjustmentNote = $latestAssignment?->admin_notes ?? ($selectedRequest->meta['admin_adjustment_note'] ?? null);
             $tutor = $latestAssignment?->tutor;
             $tutorProfile = $tutor?->tutorProfile;
             $tutorPhone = $tutorProfile?->phone ?: $tutor?->userProfile?->phone ?: 'Not available yet';
@@ -289,6 +303,34 @@
                             <p class="mt-1">Reference: {{ $selectedRequest->payment_reference ?: 'Not generated' }}</p>
                         </div>
 
+                        @if ($canPayFromDetails)
+                            <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-xs text-cyan-900">
+                                <p class="font-bold">Match confirmed. You can accept this offer and pay now, or request adjustment.</p>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <button wire:click="payNow({{ $selectedRequest->id }})"
+                                        class="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-cyan-700">
+                                        Proceed to Payment
+                                    </button>
+                                    <button wire:click="openAdjustmentModal"
+                                        class="rounded-xl bg-white px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100">
+                                        Request Adjustment
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($clientAdjustmentNote || $adminAdjustmentNote)
+                            <div class="rounded-2xl border border-slate-200 p-4 text-xs text-slate-700 space-y-2">
+                                <p class="text-[10px] font-black uppercase text-slate-400">Adjustment Trail</p>
+                                @if ($clientAdjustmentNote)
+                                    <p><span class="font-black text-slate-500">Client Note:</span> {{ $clientAdjustmentNote }}</p>
+                                @endif
+                                @if ($adminAdjustmentNote)
+                                    <p><span class="font-black text-slate-500">Admin Update:</span> {{ $adminAdjustmentNote }}</p>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="rounded-2xl border border-slate-200 p-4 text-xs text-slate-700">
                             <p class="text-[10px] font-black uppercase text-slate-400">Timeline</p>
                             <p class="mt-2">Request Submitted: {{ $selectedRequest->created_at?->format('d M Y, H:i') ?: 'Not available' }}</p>
@@ -301,7 +343,7 @@
                         @if ($pendingReviewAssignment)
                             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
                                 <p class="font-bold">Tutor marked this intervention complete and awaits your confirmation.</p>
-                                <p class="mt-2">Deadline: {{ $pendingReviewAssignment->completed_at ? $pendingReviewAssignment->completed_at->addDay()->format('d M Y, H:i') : 'Not available' }}</p>
+                                <p class="mt-2">Deadline: {{ $pendingReviewAssignment->completed_at ? $pendingReviewAssignment->completed_at->copy()->addDay()->format('d M Y, H:i') : 'Not available' }}</p>
                                 <div class="mt-3 flex gap-2">
                                     <button wire:click="approveReview({{ $selectedRequest->id }})"
                                         class="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700">
@@ -337,6 +379,31 @@
                         <button wire:click="requestReview({{ $selectedRequest->id }})"
                             class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700">
                             Submit Review
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($showAdjustmentModal)
+            <div class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-slate-900/65" wire:click="closeAdjustmentModal"></div>
+                <div class="relative w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+                    <h3 class="text-lg font-black text-slate-900">Request Offer Adjustment</h3>
+                    <p class="mt-1 text-sm text-slate-500">State the changes you need for tutor fit, schedule, or quote.</p>
+                    <textarea wire:model.defer="clientAdjustmentMessage" rows="5" class="mt-4 w-full rounded-2xl border-slate-200 text-sm"
+                        placeholder="Describe the adjustment you want before payment."></textarea>
+                    @error('clientAdjustmentMessage')
+                        <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
+                    @enderror
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button wire:click="closeAdjustmentModal"
+                            class="rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-200">
+                            Cancel
+                        </button>
+                        <button wire:click="requestAdjustment({{ $selectedRequest->id }})"
+                            class="rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-cyan-700">
+                            Submit Adjustment
                         </button>
                     </div>
                 </div>

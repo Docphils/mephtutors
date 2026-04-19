@@ -48,11 +48,12 @@ class DashboardController extends Component
         $interventionBase = ProgrammeEnquiryAssignment::where('tutor_id', $user->id);
         $interventionAssignments = ProgrammeEnquiryAssignment::with(['programmeEnquiry.programme', 'programmeEnquiry.user'])
             ->where('tutor_id', $user->id)
+            ->whereIn('status', ['active', 'declined', 'completed', 'cancelled'])
             ->latest()
             ->take(5)
             ->get();
         $activeInterventionAssignments = (clone $interventionBase)
-            ->whereIn('status', ['assigned', 'accepted', 'active'])
+            ->where('status', 'active')
             ->count();
         $completedInterventionAssignments = (clone $interventionBase)
             ->where('status', 'completed')

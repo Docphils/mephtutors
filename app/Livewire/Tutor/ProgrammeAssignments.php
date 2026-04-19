@@ -3,6 +3,7 @@
 namespace App\Livewire\Tutor;
 
 use App\Models\ProgrammeEnquiryAssignment;
+use App\Support\InterventionStatusNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -19,37 +20,64 @@ class ProgrammeAssignments extends Component
     public string $search = '';
     public ?ProgrammeEnquiryAssignment $selectedAssignment = null;
     public bool $showDetailsModal = false;
-
-    public function accept(int $id): void
-    {
-        // Intentionally left blank: tutors no longer accept assignments.
-    }
-
-    public function decline(int $id): void
-    {
-        // Tutors no longer decline assignments via this UI.
-    }
-
-    public function start(int $id): void
-    {
-        // Starting is handled automatically when payment activates the assignment.
-    }
+    public bool $showCompletedModal = false;
+    public ?int $completionAssignmentId = null;
+    public string $completionRemark = '';
+    public array $visibleStatuses = ProgrammeEnquiryAssignment::VISIBLE_TO_TUTOR;
+    public array $canBeMarkedComplete = ProgrammeEnquiryAssignment::CAN_BE_MARKED_COMPLETE;
 
     public function complete(int $id): void
     {
         $assignment = $this->findTutorAssignment($id);
-        abort_unless(in_array($assignment->status, ['active'], true), 403);
+        abort_unless(in_array($assignment->status, ProgrammeEnquiryAssignment::canBeMarkedCompleteStatuses(), true), 403);
+        $this->completionAssignmentId = $assignment->id;
+        $this->completionRemark = '';
+        $this->showCompletedModal = true;
+    }
 
-        // Mark as completed by tutor but await client approval. Store completed_at for deadline.
+    public function submitCompletion(): void
+    {
+        $this->validate([
+            'completionRemark' => ['required', 'string', 'min:10', 'max:4000'],
+        ]);
+
+        abort_unless($this->completionAssignmentId, 404);
+        $assignment = $this->findTutorAssignment($this->completionAssignmentId);
+        abort_unless(in_array($assignment->status, ProgrammeEnquiryAssignment::canBeMarkedCompleteStatuses(), true), 403);
+
         $assignment->update([
-            'status' => 'pending_client_review',
+            'status' => ProgrammeEnquiryAssignment::STATUS_COMPLETED,
+            'tutor_notes' => trim($this->completionRemark),
             'completed_at' => now(),
         ]);
 
         $assignment->programmeEnquiry()->update(['status' => 'pending_client_review']);
+        $assignment->loadMissing([
+            'programmeEnquiry.programme',
+            'programmeEnquiry.user.userProfile',
+            'tutor.tutorProfile',
+            'tutor.userProfile',
+        ]);
+
+        InterventionStatusNotifier::notifyClient(
+            $assignment->programmeEnquiry,
+            InterventionStatusNotifier::CLIENT_COMPLETED_REVIEW_REQUIRED,
+            [
+                'tutor_name' => $assignment->tutor?->tutorProfile?->fullName ?? $assignment->tutor?->name ?? 'Assigned tutor',
+                'review_deadline' => optional($assignment->completed_at?->copy()->addDay())->format('M d, Y h:i A'),
+            ]
+        );
         $this->refreshSelectedAssignment($assignment->id);
+        $this->closeCompleteModal();
 
         session()->flash('success', 'Assignment marked complete - awaiting client approval.');
+    }
+
+    public function closeCompleteModal(): void
+    {
+        $this->showCompletedModal = false;
+        $this->completionAssignmentId = null;
+        $this->completionRemark = '';
     }
 
     public function openDetails(int $id): void
@@ -57,6 +85,7 @@ class ProgrammeAssignments extends Component
         $this->selectedAssignment = ProgrammeEnquiryAssignment::query()
             ->where('tutor_id', Auth::id())
             ->with([
+                'payment',
                 'programmeEnquiry.programme',
                 'programmeEnquiry.user.userProfile',
                 'programmeEnquiry.assignments.tutor.tutorProfile',
@@ -78,6 +107,7 @@ class ProgrammeAssignments extends Component
         return ProgrammeEnquiryAssignment::query()
             ->where('tutor_id', Auth::id())
             ->with([
+                'payment',
                 'programmeEnquiry.programme',
                 'programmeEnquiry.user.userProfile',
                 'programmeEnquiry.assignments.tutor.tutorProfile',
@@ -95,6 +125,7 @@ class ProgrammeAssignments extends Component
         $this->selectedAssignment = ProgrammeEnquiryAssignment::query()
             ->where('tutor_id', Auth::id())
             ->with([
+                'payment',
                 'programmeEnquiry.programme',
                 'programmeEnquiry.user.userProfile',
                 'programmeEnquiry.assignments.tutor.tutorProfile',
@@ -117,8 +148,9 @@ class ProgrammeAssignments extends Component
     {
         $assignments = ProgrammeEnquiryAssignment::query()
             ->where('tutor_id', Auth::id())
-            ->whereHas('programmeEnquiry', fn ($q) => $q->whereIn('status', ['in_progress', 'pending_client_review']))
+            ->whereIn('status', ProgrammeEnquiryAssignment::visibleToTutorStatuses())
             ->with([
+                'payment',
                 'programmeEnquiry.programme',
                 'programmeEnquiry.user.userProfile',
                 'programmeEnquiry.assignments.tutor.tutorProfile',

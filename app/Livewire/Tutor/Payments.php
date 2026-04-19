@@ -5,6 +5,7 @@ namespace App\Livewire\Tutor;
 use Livewire\Component;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Payment;
+use App\Support\InterventionStatusNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -68,6 +69,24 @@ class Payments extends Component
         $this->selectedPayment->update([
             'dispute' => $disputeData
         ]);
+
+        $this->selectedPayment->loadMissing([
+            'tutor.tutorProfile',
+            'programmeAssignment.programmeEnquiry.programme',
+            'programmeAssignment.programmeEnquiry.user.userProfile',
+        ]);
+
+        if ($this->selectedPayment->programmeAssignment?->programmeEnquiry) {
+            InterventionStatusNotifier::notifyAdmins(
+                $this->selectedPayment->programmeAssignment->programmeEnquiry,
+                InterventionStatusNotifier::ADMIN_TUTOR_PAYMENT_DISPUTED,
+                [
+                    'dispute_reason' => $this->disputeReason,
+                    'payment_id' => $this->selectedPayment->id,
+                    'note' => 'Tutor ' . ($this->selectedPayment->tutor?->name ?? 'N/A') . ' submitted a dispute.',
+                ]
+            );
+        }
 
         session()->flash('success', 'Dispute submitted successfully. Admin will review your request.');
         $this->showDisputeModal = false;

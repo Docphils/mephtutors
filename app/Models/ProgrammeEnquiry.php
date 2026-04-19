@@ -64,7 +64,16 @@ class ProgrammeEnquiry extends Model
     public function activeAssignment(): HasOne
     {
         return $this->hasOne(ProgrammeEnquiryAssignment::class)
-            ->whereIn('status', ['assigned', 'accepted', 'active'])
+            ->whereIn('status', ['assigned', 'accepted', 'active', 'declined'])
+            ->latestOfMany();
+    }
+
+    /**
+     * Return the latest assignment regardless of status (completed or otherwise).
+     */
+    public function latestAssignment(): HasOne
+    {
+        return $this->hasOne(ProgrammeEnquiryAssignment::class)
             ->latestOfMany();
     }
 }
