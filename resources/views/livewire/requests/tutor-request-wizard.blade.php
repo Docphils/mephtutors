@@ -54,7 +54,7 @@
                             <span class="text-red-500 text-xs">{{ $message }}</span>
                         @enderror
                         @if ($existingUser)
-                            <div class="mt-1 text-xs text-red-600 font-bold">Account exists! <a
+                            <div class="mt-1 text-xs text-red-600 font-bold">Account exists! <a wire:navigate
                                     href="{{ route('login') }}" class="underline">Login here</a> or use another email.
                             </div>
                         @endif

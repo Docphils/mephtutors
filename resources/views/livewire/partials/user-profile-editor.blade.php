@@ -157,14 +157,14 @@
                     Save
                 </button>
                 @can('Client')
-                    <button wire:navigate href="{{ route('client.dashboard') }}"
+                    <a wire:navigate href="{{ route('client.dashboard') }}"
                         class="px-4 py-2 bg-gray-500 text-white rounded-md flex items-center gap-2"> <i
-                            class="fas fa-house-shield"></i> Dashboard </button>
+                            class="fas fa-house-shield"></i> Dashboard </a>
                 @endcan
                 @can('Admin')
-                    <button wire:navigate href="{{ route('admin.dashboard') }}"
+                    <a wire:navigate href="{{ route('admin.dashboard') }}"
                         class="px-4 py-2 bg-gray-500 text-white rounded-md flex items-center gap-2"> <i
-                            class="fas fa-house-shield"></i> Dashboard </button>
+                            class="fas fa-house-shield"></i> Dashboard </a>
                 @endcan
             </div>
         </form>

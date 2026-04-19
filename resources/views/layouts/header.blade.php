@@ -1,3 +1,12 @@
+@php
+    $interventionNavUrl = match (auth()->user()->role ?? null) {
+        'client' => route('programmes.enquiry'),
+        'admin' => route('admin.dashboard'),
+        'tutor' => route('tutor.dashboard'),
+        default => route('programmes.enquiry'),
+    };
+@endphp
+
 <!-- Header Section -->
 <header x-data="{ open: false }" class="bg-gradient-to-r from-cyan-500 to-cyan-900 text-white py-6 shadow-lg">
     <div class="container mx-auto grid grid-cols-3 items-center px-6">
@@ -11,6 +20,8 @@
                 <a href="{{ url('/services') }}" wire:navigate
                     class="hover:text-gray-200 transition {{ request()->is('services') ? 'active' : '' }}">Our
                     Services</a>
+                <a href="{{ $interventionNavUrl }}" wire:navigate
+                    class="hover:text-gray-200 transition {{ request()->is('programmes*') || request()->routeIs('client.interventions.create') ? 'active' : '' }}">Interventions</a>
                 <a href="{{ url('/about') }}" wire:navigate
                     class="hover:text-gray-200 transition {{ request()->is('about') ? 'active' : '' }}">About</a>
                 <a href="{{ url('/contact') }}" wire:navigate
@@ -60,6 +71,8 @@
                     <a href="{{ url('/services') }}" wire:navigate
                         class="hover:text-gray-200 transition {{ request()->is('services') ? 'active' : '' }}">Our
                         Services</a>
+                    <a href="{{ $interventionNavUrl }}" wire:navigate
+                        class="hover:text-gray-200 transition {{ request()->is('programmes*') || request()->routeIs('client.interventions.create') ? 'active' : '' }}">Interventions</a>
                     <a href="{{ url('/about') }}" wire:navigate
                         class="hover:text-gray-200 transition {{ request()->is('about') ? 'active' : '' }}">About</a>
                     <a href="{{ url('/contact') }}" wire:navigate

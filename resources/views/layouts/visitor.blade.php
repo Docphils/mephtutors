@@ -10,6 +10,7 @@
     <meta name="description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">
     <meta name="robots" content="{{ $metaRobots ?? 'index,follow' }}">
     <link rel="canonical" href="{{ $canonicalUrl ?? url()->current() }}">
+    <link rel="alternate" type="text/plain" title="LLMs" href="{{ route('llms') }}">
 
     <meta property="og:title" content="{{ $title ?? 'MephEd' }}">
     <meta property="og:description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">

@@ -10,7 +10,9 @@
         transform
         sm:translate-x-0
         transition-transform duration-300 ease-in-out
+        shrink-0
         flex flex-col
+        overflow-y-auto
     ">
 
     <!--Logo-->
@@ -32,7 +34,7 @@
     </div>
 
     <!-- ===== Navigation ===== -->
-    <nav class="flex-1 px-4 py-6 overflow-y-auto text-sm">
+    <nav class="flex-1 px-4 py-6  text-sm">
 
         <a wire:navigate href="{{ route('admin.dashboard') }}"
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.dashboard') ? 'bg-cyan-600' : '' }}">
@@ -74,6 +76,18 @@
             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.serviceCatalog') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-list-check w-5 text-cyan-300"></i>
             <span>Service Catalog</span>
+        </a>
+
+        <a wire:navigate href="{{ route('admin.programmeSettings') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.programmeSettings') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-sliders w-5 text-cyan-300"></i>
+            <span>Intervention Settings</span>
+        </a>
+
+        <a wire:navigate href="{{ route('admin.programmeEnquiries') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('admin.programmeEnquiries') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-envelope-open-text w-5 text-cyan-300"></i>
+            <span>Intervention Enquiries</span>
         </a>
 
         <a wire:navigate href="{{ route('admin.crm.index') }}"

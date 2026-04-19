@@ -23,7 +23,7 @@
 <body class="min-h-screen bg-cyan-50 font-sans antialiased text-slate-900">
 
     <div x-data="{ sidebarOpen: false, showEditor: false }" @edit-user-profile.window="showEditor = true"
-        x-on:close-profile-editor.window="showEditor = false" class="flex min-h-screen w-full overflow-x-hidden">
+        x-on:close-profile-editor.window="showEditor = false" class="flex h-screen w-full overflow-hidden">
 
         <!-- ===== MOBILE OVERLAY ===== -->
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"
@@ -41,7 +41,7 @@
         @endcan
 
         <!-- ===== MAIN CONTENT ===== -->
-        <div class="relative w-full flex-1 flex flex-col min-h-screen">
+        <div class="relative min-w-0 flex-1 flex flex-col min-h-screen">
 
             <!-- Top Bar -->
             <header class="bg-white shadow-sm border-b">
@@ -61,10 +61,9 @@
             </header>
 
             <!-- Page Content -->
-            <main class="relative w-full flex-1 p-4 sm:p-6 lg:p-8">
+            <main class="relative w-full flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
                 {{ $slot }}
             </main>
-            @include('layouts.footer')
         </div>
 
     </div>

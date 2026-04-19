@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Crm;
+use App\Models\Payment;
+use App\Models\ProgrammeEnquiry;
 use App\Services\PaystackService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class PaystackController extends Controller
@@ -14,10 +18,9 @@ class PaystackController extends Controller
         $reference = $request->reference;
 
         $response = $paystack->verifyPayment($reference);
+        $metadata = $response['data']['metadata'] ?? [];
 
         if (($response['data']['status'] ?? null) === 'success') {
-            $metadata = $response['data']['metadata'] ?? [];
-
             if (($metadata['payment_for'] ?? null) === 'crm') {
                 $crm = Crm::findOrFail($metadata['crm_id']);
 
@@ -29,6 +32,37 @@ class PaystackController extends Controller
 
                 return redirect()->route('client.crm.manager')
                     ->with('success', 'Payment successful. Institution contract has been funded.');
+            }
+
+            if (($metadata['payment_for'] ?? null) === 'programme_request') {
+                $programmeEnquiry = ProgrammeEnquiry::findOrFail($metadata['programme_enquiry_id']);
+                $programmeEnquiry->update([
+                    'payment_status' => 'paid',
+                    'status' => 'in_progress',
+                    'payment_reference' => $reference,
+                ]);
+
+                // Activate any existing assignment so tutor can see the active request
+                $assignment = $programmeEnquiry->assignments()->whereIn('status', ['assigned','accepted'])->latest()->first();
+                if ($assignment) {
+                    $assignment->update([
+                        'status' => 'active',
+                        'started_at' => $assignment->started_at ?: now(),
+                    ]);
+
+                    Payment::query()->updateOrCreate(
+                        ['programme_enquiry_assignment_id' => $assignment->id],
+                        [
+                            'tutor_id' => $assignment->tutor_id,
+                            'booking_id' => null,
+                            'amount' => round(max((float) ($programmeEnquiry->price_quote ?? 0), 0) * 0.7, 2),
+                            'status' => 'Pending',
+                        ]
+                    );
+                }
+
+                return redirect()->route('client.programmeRequests.manager')
+                    ->with('success', 'Payment successful. Your programme request is now active.');
             }
 
             $bookingId = $metadata['booking_id'] ?? null;
@@ -43,6 +77,11 @@ class PaystackController extends Controller
 
             return redirect()->route('client.lessons', $booking)
                 ->with('success', 'Payment successful. Lesson activated.');
+        }
+
+        if (($metadata['payment_for'] ?? null) === 'programme_request') {
+            return redirect()->route('client.programmeRequests.manager')
+                ->with('error', 'Payment was not successful. Please try again from your programme requests dashboard.');
         }
 
         return redirect()->route('client.lessons')->with('error', 'Payment failed.');
@@ -88,6 +127,38 @@ class PaystackController extends Controller
                     'payment_reference' => $data['reference'] ?? $crm->payment_reference,
                     'paid_at' => now(),
                 ]);
+            }
+
+            return response()->json(['status' => 'ok']);
+        }
+
+        if (($metadata['payment_for'] ?? null) === 'programme_request') {
+            $programmeEnquiry = ProgrammeEnquiry::find($metadata['programme_enquiry_id'] ?? 0);
+
+            if ($programmeEnquiry && $programmeEnquiry->payment_status !== 'paid') {
+                $programmeEnquiry->update([
+                    'payment_status' => 'paid',
+                    'status' => 'in_progress',
+                    'payment_reference' => $data['reference'] ?? $programmeEnquiry->payment_reference,
+                ]);
+
+                $assignment = $programmeEnquiry->assignments()->whereIn('status', ['assigned','accepted'])->latest()->first();
+                if ($assignment) {
+                    $assignment->update([
+                        'status' => 'active',
+                        'started_at' => $assignment->started_at ?: now(),
+                    ]);
+
+                    Payment::query()->updateOrCreate(
+                        ['programme_enquiry_assignment_id' => $assignment->id],
+                        [
+                            'tutor_id' => $assignment->tutor_id,
+                            'booking_id' => null,
+                            'amount' => round(max((float) ($programmeEnquiry->price_quote ?? 0), 0) * 0.7, 2),
+                            'status' => 'Pending',
+                        ]
+                    );
+                }
             }
 
             return response()->json(['status' => 'ok']);

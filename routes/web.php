@@ -29,21 +29,30 @@ use App\Livewire\Tutor\TutorLessons;
 use App\Livewire\Tutor\Payments;
 use App\Livewire\Tutor\TutorProfiles;
 use App\Livewire\Tutor\InstitutionAssignments;
+use App\Livewire\Tutor\ProgrammeAssignments;
 use App\Livewire\Seo\ServiceCatalogPage;
 use App\Livewire\Seo\ServiceItemLandingPage;
 use App\Livewire\Pages\WelcomePage;
+use App\Livewire\Pages\ProgrammePage;
 use App\Livewire\Pages\AboutPage;
 use App\Livewire\Pages\ContactPage;
 use App\Livewire\EnrollmentForm;
 use App\Livewire\Pages\PrivacyPolicyPage;
+use App\Livewire\Requests\ProgrammeEnquiryWizard;
+use App\Livewire\Requests\ProgrammeConsultationForm;
+use App\Livewire\Admin\ProgrammeSettingsManager;
+use App\Livewire\Admin\ProgrammeEnquiriesManager;
 
 use Illuminate\Http\Request;
+use App\Models\AcademicProgramme;
 use App\Models\ServiceItem;
 use App\Models\User;
 
 // Client Livewire Components
 use App\Livewire\Client\CrmManager;
 use App\Livewire\Client\DashboardController as ClientDashboard;
+use App\Livewire\Client\InterventionRequestCreate;
+use App\Livewire\Client\ProgrammeRequestsManager;
 use App\Livewire\Client\TutorRequestsManager;
 use App\Livewire\Client\Lessons;
 use App\Livewire\Requests\CrmRequestWizard;
@@ -67,6 +76,12 @@ use App\Livewire\Partials\UserProfileEditor;
 */
 
 Route::get('/', WelcomePage::class)->name('welcome');
+Route::get('/programmes/enquiry', ProgrammeConsultationForm::class)->name('programmes.enquiry');
+Route::get('/programmes/{academicProgramme:slug}/request', ProgrammeEnquiryWizard::class)->name('programmes.request');
+Route::get('/programmes/enquiry/{programme}', function (string $programme) {
+    return redirect()->route('programmes.enquiry', ['programme' => $programme]);
+})->name('programmes.enquiry.prefilled');
+Route::get('/programmes/{academicProgramme:slug}', ProgrammePage::class)->name('programmes.show');
 
 Route::get('/services', ServiceCatalogPage::class)->name('services');
 Route::get('/services/{serviceItem:slug}', ServiceItemLandingPage::class)->name('services.show');
@@ -90,6 +105,9 @@ Route::get('/sitemap.xml', function () {
         ['loc' => route('about'), 'changefreq' => 'monthly', 'priority' => '0.7', 'lastmod' => now()->toDateString()],
         ['loc' => route('contact'), 'changefreq' => 'monthly', 'priority' => '0.6', 'lastmod' => now()->toDateString()],
         ['loc' => route('privacy-policy'), 'changefreq' => 'yearly', 'priority' => '0.4', 'lastmod' => now()->toDateString()],
+        ['loc' => route('programmes.enquiry'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
+        ['loc' => route('llms'), 'changefreq' => 'weekly', 'priority' => '0.5', 'lastmod' => now()->toDateString()],
+        ['loc' => route('llms.full'), 'changefreq' => 'weekly', 'priority' => '0.5', 'lastmod' => now()->toDateString()],
     ];
 
     $serviceItems = ServiceItem::query()
@@ -103,7 +121,18 @@ Route::get('/sitemap.xml', function () {
             'lastmod' => optional($item->updated_at)->toDateString() ?? now()->toDateString(),
         ]);
 
-    $urls = collect($pages)->concat($serviceItems);
+    $programmes = AcademicProgramme::query()
+        ->where('is_active', true)
+        ->orderBy('updated_at', 'desc')
+        ->get(['slug', 'updated_at'])
+        ->map(fn ($programme) => [
+            'loc' => route('programmes.show', ['academicProgramme' => $programme->slug]),
+            'changefreq' => 'weekly',
+            'priority' => '0.8',
+            'lastmod' => optional($programme->updated_at)->toDateString() ?? now()->toDateString(),
+        ]);
+
+    $urls = collect($pages)->concat($serviceItems)->concat($programmes);
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
@@ -122,6 +151,70 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)
         ->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap');
+
+Route::get('/llms.txt', function () {
+    $programmes = AcademicProgramme::query()
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->get(['name', 'slug', 'summary']);
+
+    $lines = [
+        '# MephEd',
+        '',
+        '> Structured academic support platform for families, learners, schools, and tutors.',
+        '',
+        '## Canonical',
+        '- Home: ' . route('welcome'),
+        '- Services: ' . route('services'),
+        '- Interventions: ' . route('programmes.enquiry'),
+        '- Contact: ' . route('contact'),
+        '- Sitemap: ' . route('sitemap'),
+        '',
+        '## Academic Interventions',
+    ];
+
+    foreach ($programmes as $programme) {
+        $lines[] = '- ' . $programme->name . ': ' . route('programmes.show', ['academicProgramme' => $programme->slug]);
+        if (!empty($programme->summary)) {
+            $lines[] = '  Summary: ' . $programme->summary;
+        }
+    }
+
+    $lines[] = '';
+    $lines[] = '## Policy Notes';
+    $lines[] = '- Confidence & Tutor Match Promise applies across programme pages.';
+    $lines[] = '- Pricing depends on lesson frequency, duration, mode, and location for home lessons.';
+
+    return response(implode(PHP_EOL, $lines), 200)->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('llms');
+
+Route::get('/llms-full.txt', function () {
+    $programmes = AcademicProgramme::query()
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->get();
+
+    $lines = [
+        '# MephEd Full Context',
+        '',
+        'Homepage: ' . route('welcome'),
+        'Interventions: ' . route('programmes.enquiry'),
+        '',
+    ];
+
+    foreach ($programmes as $programme) {
+        $lines[] = '## ' . $programme->name;
+        $lines[] = 'URL: ' . route('programmes.show', ['academicProgramme' => $programme->slug]);
+        $lines[] = 'Summary: ' . ($programme->summary ?: $programme->tagline);
+        $lines[] = 'Frequency: ' . implode(', ', $programme->frequency_options ?: []);
+        $lines[] = 'Duration: ' . implode(', ', $programme->duration_options ?: []);
+        $lines[] = 'Modes: ' . implode(', ', $programme->mode_options ?: []);
+        $lines[] = 'Pricing note: ' . ($programme->pricing_note ?: 'Pricing varies by frequency, duration, mode, and location.');
+        $lines[] = '';
+    }
+
+    return response(implode(PHP_EOL, $lines), 200)->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('llms.full');
 
 // Guest-accessible request forms (multi-step UI)
 Route::get('/apply/tutor/{serviceItem:slug}', TutorRequestWizard::class)->name('apply.tutor');
@@ -165,6 +258,8 @@ Route::middleware(['auth', 'can:Client'])->group(function () {
     Route::get('/dashboard', ClientDashboard::class)->name('client.dashboard');
     Route::get('/client/lessons', Lessons::class)->name('client.lessons');
     Route::get('/client/online-meetings', ClientOnlineMeetings::class)->name('client.online-meetings');
+    Route::get('/client/interventions/new', InterventionRequestCreate::class)->name('client.interventions.create');
+    Route::get('/client/programme-requests', ProgrammeRequestsManager::class)->name('client.programmeRequests.manager');
     // Livewire manager pages
     Route::get('client/crm-manager', CrmManager::class)->name('client.crm.manager');
     Route::get('client/tutor-requests-manager', TutorRequestsManager::class)->name('client.tutorRequests.manager');
@@ -179,6 +274,7 @@ Route::middleware(['auth', 'can:Tutor', 'verified'])->group(function () {
     Route::get('/tutor/tutor-profile', TutorProfiles::class)->name('tutor.tutor-profile');
     Route::get('/tutor/payments', Payments::class)->name('tutor.payments');
     Route::get('/tutor/institution-assignments', InstitutionAssignments::class)->name('tutor.institution-assignments');
+    Route::get('/tutor/programme-assignments', ProgrammeAssignments::class)->name('tutor.programme-assignments');
    
 });
 
@@ -194,6 +290,8 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     Route::get('admin/online-meetings', OnlineMeetingManager::class)->name('admin.online-meetings');
     Route::get('admin/bootcamps', BootcampManager::class)->name('admin.bootcamps');
     Route::get('admin/service-catalog', ServiceCatalogManager::class)->name('admin.serviceCatalog');
+    Route::get('admin/programme-settings', ProgrammeSettingsManager::class)->name('admin.programmeSettings');
+    Route::get('admin/programme-enquiries', ProgrammeEnquiriesManager::class)->name('admin.programmeEnquiries');
 
     //Crm Routes
     Route::get('admin/intitution-requests', InstitutionRequestManager::class)->name('admin.crm.index');

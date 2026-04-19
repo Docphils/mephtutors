@@ -46,7 +46,7 @@
                             <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
                                 <p class="text-sm text-yellow-800">An account already exists for this email.</p>
                                 <div class="mt-2 flex items-center gap-3">
-                                    <a href="{{ route('login') }}" class="text-cyan-600 underline">Sign in</a>
+                                    <a wire:navigate href="{{ route('login') }}" class="text-cyan-600 underline">Sign in</a>
                                     <button type="button" wire:click="$set('email', '')"
                                         class="text-sm text-gray-600">Use different email</button>
                                 </div>

@@ -21,7 +21,10 @@ class DashboardController extends Component
         
         // Tutor Request Metrics
         $tutorRequests = $user->tutorRequests;
+        $programmeRequests = $user->programmeEnquiries()->with('programme')->get();
         $pendingRequests = $tutorRequests->where('status', 'pending')->count();
+        $pendingProgrammeRequests = $programmeRequests->whereIn('status', ['pending', 'reviewing'])->count();
+        $activeProgrammeRequests = $programmeRequests->whereIn('status', ['new', 'pending', 'reviewing', 'matched', 'in_progress'])->count();
         $matchRate = $tutorRequests->count() > 0 
             ? round(($tutorRequests->whereIn('status', ['matched', 'in_progress', 'completed'])->count() / $tutorRequests->count()) * 100) 
             : 0;
@@ -55,6 +58,12 @@ class DashboardController extends Component
             'stats' => [
                 'totalRequests' => $tutorRequests->count(),
                 'pendingRequests' => $pendingRequests,
+                'totalProgrammeRequests' => $programmeRequests->count(),
+                'pendingProgrammeRequests' => $pendingProgrammeRequests,
+                'activeProgrammeRequests' => $activeProgrammeRequests,
+                'completedProgrammeRequests' => $programmeRequests->where('status', 'completed')->count(),
+                'paidProgrammeRequests' => $programmeRequests->where('payment_status', 'paid')->count(),
+                'unpaidProgrammeRequests' => $programmeRequests->where('payment_status', '!=', 'paid')->count(),
                 'matchRate' => $matchRate,
                 'activeLessons' => $activeBookings->count(),
                 'completedLessons' => $completedBookings->count(),
@@ -65,6 +74,7 @@ class DashboardController extends Component
                 'missedMeetings' => (clone $meetingBase)->where('attendance_status', 'missed')->count(),
             ],
             'recentBookings' => $recentBookings,
+            'recentProgrammeRequests' => $programmeRequests->sortByDesc('created_at')->take(3),
             'upcomingMeetings' => $upcomingMeetings,
             'incompleteProfile' => !$userProfile || empty($userProfile->phone) || empty($userProfile->address)
         ]);

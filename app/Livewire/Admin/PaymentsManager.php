@@ -44,9 +44,12 @@ class PaymentsManager extends Component
     public function showPayment($id)
     {
         $this->selectedPayment = Payment::with([
-        'tutor.tutorProfile', 
-        'booking.client'
-    ])->findOrFail($id);
+            'tutor.tutorProfile',
+            'booking.client',
+            'booking.serviceItem',
+            'programmeAssignment.programmeEnquiry.programme',
+            'programmeAssignment.programmeEnquiry.user',
+        ])->findOrFail($id);
         $this->showModal = true;
     }
 
@@ -87,7 +90,12 @@ class PaymentsManager extends Component
 
     public function render()
     {
-        $payments = Payment::when($this->status, function ($query) {
+        $payments = Payment::with([
+            'tutor.tutorProfile',
+            'booking.client',
+            'programmeAssignment.programmeEnquiry.programme',
+            'programmeAssignment.programmeEnquiry.user',
+        ])->when($this->status, function ($query) {
             // Support filtering by 'Disputed' specifically
             if($this->status === 'Disputed') {
                 return $query->whereNotNull('dispute');
@@ -116,8 +124,8 @@ class PaymentsManager extends Component
             'amount' => 'required|string|max:255',
             'evidence' => 'nullable|file|mimes:pdf,jpg,png|max:10240',
             'tutor_id' => 'required|exists:users,id',
-            'booking_id' => 'required|exists:bookings,id',
-            'status' => 'required|in:Pending,Earned,Paid',
+            'booking_id' => 'nullable|exists:bookings,id',
+            'status' => 'required|in:Pending,Earned,Paid,Cancelled',
         ]);
 
         $path = $this->evidence ? $this->evidence->store('payments', 'public') : null;
@@ -152,8 +160,8 @@ class PaymentsManager extends Component
             'amount' => 'required|string|max:255',
             'newEvidence' => 'nullable|file|mimes:pdf,jpg,png|max:10240',
             'tutor_id' => 'required|exists:users,id',
-            'booking_id' => 'required|exists:bookings,id',
-            'status' => 'required|in:Pending,Earned,Paid',
+            'booking_id' => 'nullable|exists:bookings,id',
+            'status' => 'required|in:Pending,Earned,Paid,Cancelled',
         ]);
 
         if ($this->newEvidence) {

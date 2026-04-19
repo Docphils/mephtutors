@@ -22,7 +22,7 @@
     @endif
 
     <div class="flex flex-wrap gap-2 mb-8">
-        @foreach (['All Payments', 'Pending Payments', 'Earned Payments', 'Completed Payments', 'Disputed'] as $tab)
+        @foreach (['All Payments', 'Pending Payments', 'Earned Payments', 'Completed Payments', 'Cancelled Payments', 'Disputed'] as $tab)
             <button wire:click="setTab('{{ $tab }}')"
                 class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all {{ $activeTab === $tab ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-200' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-100' }}">
                 {{ str_replace(' Payments', '', $tab) }}
@@ -50,10 +50,12 @@
                     @forelse($payments as $payment)
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4">
-                                <div class="font-bold text-slate-800">{{ $payment->booking->client->name ?? 'N/A' }}
+                                <div class="font-bold text-slate-800">
+                                    {{ $payment->booking?->client?->name ?? $payment->programmeAssignment?->programmeEnquiry?->user?->name ?? 'N/A' }}
                                 </div>
                                 <div class="text-xs text-cyan-600 font-semibold">
-                                    {{ $payment->booking->serviceItem->name ?? 'Tuition' }}</div>
+                                    {{ $payment->booking?->serviceItem?->name ?? $payment->programmeAssignment?->programmeEnquiry?->programme?->name ?? 'Intervention' }}
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm font-black text-slate-700">₦{{ number_format($payment->amount, 2) }}
@@ -66,7 +68,8 @@
                                     class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
                                     {{ $payment->status === 'Pending' ? 'bg-amber-100 text-amber-700' : '' }}
                                     {{ $payment->status === 'Earned' ? 'bg-emerald-100 text-emerald-700' : '' }}
-                                    {{ $payment->status === 'Paid' ? 'bg-blue-100 text-blue-700' : '' }}">
+                                    {{ $payment->status === 'Paid' ? 'bg-blue-100 text-blue-700' : '' }}
+                                    {{ $payment->status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : '' }}">
                                     {{ $payment->status }}
                                 </span>
                             </td>

@@ -48,7 +48,7 @@
             </div>
 
             <div class="flex gap-2">
-                <a href="{{ route('tutor.dashboard') }}"
+                <a wire:navigate href="{{ route('tutor.dashboard') }}"
                     class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition-all">Dashboard</a>
             </div>
         </div>

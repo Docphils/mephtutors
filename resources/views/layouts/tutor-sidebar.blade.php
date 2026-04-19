@@ -10,7 +10,9 @@
         transform
         sm:translate-x-0
         transition-transform duration-300 ease-in-out
+        shrink-0
         flex flex-col
+        overflow-y-auto
     ">
 
     <!--Logo-->
@@ -39,7 +41,7 @@
     </div>
 
     <!-- ===== Navigation ===== -->
-    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+    <nav class="flex-1 px-4 py-6 space-y-2">
 
         <a wire:navigate href="{{ route('tutor.dashboard') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.dashboard') ? 'bg-cyan-600' : '' }}">
@@ -60,6 +62,11 @@
         <a wire:navigate href="{{ route('tutor.institution-assignments') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.institution-assignments') ? 'bg-cyan-600' : '' }}">
             <i class="fas fa-code text-cyan-100 w-6 hidden md:block"></i><span>Institution Assignments</span>
+        </a>
+
+        <a wire:navigate href="{{ route('tutor.programme-assignments') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600 transition {{ request()->routeIs('tutor.programme-assignments') ? 'bg-cyan-600' : '' }}">
+            <i class="fas fa-graduation-cap text-cyan-100 w-6 hidden md:block"></i><span>Intervention Assignments</span>
         </a>
 
         <a wire:navigate href="{{ route('tutor.payments') }}"

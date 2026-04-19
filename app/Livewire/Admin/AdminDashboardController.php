@@ -3,7 +3,7 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use App\Models\{Booking, Crm, Payment, TutorRequest, User, TutorProfile, Enrollee, Contact, Newsletter};
+use App\Models\{Booking, Crm, Payment, TutorRequest, ProgrammeEnquiry, User, TutorProfile, Enrollee, Contact, Newsletter};
 use App\Models\OnlineMeeting;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\{Layout, Title};
@@ -22,6 +22,10 @@ class AdminDashboardController extends Component
             'total_users'        => User::count(),
             'tutor_requests'     => TutorRequest::count(),
             'pending_requests'   => TutorRequest::where('status', 'Pending')->count(),
+            'intervention_requests' => ProgrammeEnquiry::count(),
+            'pending_interventions' => ProgrammeEnquiry::whereIn('status', ['new', 'pending', 'reviewing'])->count(),
+            'active_interventions' => ProgrammeEnquiry::whereIn('status', ['matched', 'in_progress'])->count(),
+            'completed_interventions' => ProgrammeEnquiry::where('status', 'completed')->count(),
             'active_bookings'    => Booking::where('status', 'Active')->count(),
             'completed_bookings' => Booking::where('status', 'Completed')->count(),
             'earned_payments'    => Payment::where('status', 'Earned')->sum('amount'),

@@ -1,3 +1,7 @@
 User-agent: *
 Disallow:
 Sitemap: /sitemap.xml
+
+# LLM discovery endpoints
+Allow: /llms.txt
+Allow: /llms-full.txt

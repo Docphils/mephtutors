@@ -32,6 +32,7 @@
             <option value="Pending">Pending</option>
             <option value="Earned">Earned</option>
             <option value="Paid">Paid</option>
+            <option value="Cancelled">Cancelled</option>
             <option value="Disputed">⚠️ Disputed Only</option>
         </select>
     </div>
@@ -58,8 +59,14 @@
                     @forelse($payments as $payment)
                         <tr class="group hover:bg-cyan-50/30 transition-colors">
                             <td class="px-8 py-6">
-                                <div class="font-black text-slate-800">{{ $payment->tutor->name }}</div>
-                                <div class="text-xs text-cyan-600 font-bold">Booking #{{ $payment->booking_id }}</div>
+                                <div class="font-black text-slate-800">{{ $payment->tutor->name ?? 'N/A' }}</div>
+                                @if ($payment->booking_id)
+                                    <div class="text-xs text-cyan-600 font-bold">Booking #{{ $payment->booking_id }}</div>
+                                @elseif ($payment->programme_enquiry_assignment_id)
+                                    <div class="text-xs text-cyan-600 font-bold">Intervention Assignment #{{ $payment->programme_enquiry_assignment_id }}</div>
+                                @else
+                                    <div class="text-xs text-slate-400 font-bold">Unlinked payment record</div>
+                                @endif
                             </td>
                             <td class="px-8 py-6">
                                 <div class="text-sm font-black text-slate-700">₦{{ number_format($payment->amount, 2) }}
@@ -70,7 +77,10 @@
                             <td class="px-8 py-6">
                                 <span
                                     class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
-                                    {{ $payment->status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
+                                    {{ $payment->status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : '' }}
+                                    {{ $payment->status === 'Earned' ? 'bg-cyan-100 text-cyan-700' : '' }}
+                                    {{ $payment->status === 'Pending' ? 'bg-amber-100 text-amber-700' : '' }}
+                                    {{ $payment->status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : '' }}">
                                     {{ $payment->status }}
                                 </span>
                             </td>
@@ -201,7 +211,7 @@
                             <p class="font-bold text-slate-800">
                                 {{ $selectedPayment->tutor?->tutorProfile?->fullName }}</p>
                             <p class="text-[10px] text-slate-500">
-                                {{ $selectedPayment->tutor->tutorProfile->phone ?? 'No Phone' }}</p>
+                                {{ $selectedPayment->tutor?->tutorProfile?->phone ?? 'No Phone' }}</p>
                         </div>
                         <div class="text-center flex-1 px-2">
                             <p class="text-[10px] font-black text-slate-400 uppercase">Amount</p>
@@ -211,30 +221,36 @@
                         </div>
                     </div>
 
-                    {{-- Booking Details Section --}}
+                    {{-- Booking / Intervention Details Section --}}
                     <div class="space-y-3">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Booking Info</h4>
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Context</h4>
                         <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <div>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">Client</p>
                                 <p class="text-xs font-bold text-slate-700">
-                                    {{ $selectedPayment->booking->client->name }}</p>
+                                    {{ $selectedPayment->booking?->client?->name ?? $selectedPayment->programmeAssignment?->programmeEnquiry?->user?->name ?? 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">Class & Duration</p>
-                                <p class="text-xs font-bold text-slate-700">{{ $selectedPayment->booking->classes }}
-                                    ({{ $selectedPayment->booking->duration }})</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Type</p>
+                                <p class="text-xs font-bold text-slate-700">
+                                    {{ $selectedPayment->booking_id ? 'Lesson Booking' : ($selectedPayment->programme_enquiry_assignment_id ? 'Intervention Assignment' : 'N/A') }}
+                                </p>
                             </div>
                             <div class="col-span-2">
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">Address / Location</p>
-                                <p class="text-xs font-bold text-slate-700">{{ $selectedPayment->booking->location }}
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Service / Location</p>
+                                <p class="text-xs font-bold text-slate-700">
+                                    {{ $selectedPayment->booking?->serviceItem?->name ?? $selectedPayment->programmeAssignment?->programmeEnquiry?->programme?->name ?? 'N/A' }}
+                                    @if ($selectedPayment->booking?->location || $selectedPayment->programmeAssignment?->programmeEnquiry?->city_area)
+                                        |
+                                        {{ $selectedPayment->booking?->location ?? ($selectedPayment->programmeAssignment?->programmeEnquiry?->city_area . ', ' . $selectedPayment->programmeAssignment?->programmeEnquiry?->state) }}
+                                    @endif
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     {{-- Tutor Profile / Bank Section --}}
-                    @if ($selectedPayment->tutor->tutorProfile)
+                    @if ($selectedPayment->tutor?->tutorProfile)
                         <div class="space-y-3">
                             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tutor Bank
                                 Details</h4>
@@ -243,17 +259,17 @@
                                     <div>
                                         <p class="text-[9px] font-bold text-slate-400 uppercase">Bank</p>
                                         <p class="text-xs font-black text-slate-800">
-                                            {{ $selectedPayment->tutor->tutorProfile->bankName ?? 'N/A' }}</p>
+                                            {{ $selectedPayment->tutor?->tutorProfile?->bankName ?? 'N/A' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-[9px] font-bold text-slate-400 uppercase">Account Number</p>
                                         <p class="text-xs font-black text-cyan-700">
-                                            {{ $selectedPayment->tutor->tutorProfile->accountNumber ?? 'N/A' }}</p>
+                                            {{ $selectedPayment->tutor?->tutorProfile?->accountNumber ?? 'N/A' }}</p>
                                     </div>
                                     <div class="col-span-2 mt-1">
                                         <p class="text-[9px] font-bold text-slate-400 uppercase">Account Name</p>
                                         <p class="text-xs font-bold text-slate-700 uppercase">
-                                            {{ $selectedPayment->tutor->tutorProfile->accountName ?? 'N/A' }}</p>
+                                            {{ $selectedPayment->tutor?->tutorProfile?->accountName ?? 'N/A' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -324,6 +340,7 @@
                                 <option value="Pending">Pending</option>
                                 <option value="Earned">Earned</option>
                                 <option value="Paid">Paid</option>
+                                <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
                     </div>

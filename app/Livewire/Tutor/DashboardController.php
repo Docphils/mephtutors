@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\CrmAssignment;
+use App\Models\ProgrammeEnquiryAssignment;
 use App\Models\OnlineMeetingAttendance;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On; 
@@ -44,6 +45,19 @@ class DashboardController extends Component
             ->whereIn('status', ['assigned', 'active'])
             ->count();
 
+        $interventionBase = ProgrammeEnquiryAssignment::where('tutor_id', $user->id);
+        $interventionAssignments = ProgrammeEnquiryAssignment::with(['programmeEnquiry.programme', 'programmeEnquiry.user'])
+            ->where('tutor_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+        $activeInterventionAssignments = (clone $interventionBase)
+            ->whereIn('status', ['assigned', 'accepted', 'active'])
+            ->count();
+        $completedInterventionAssignments = (clone $interventionBase)
+            ->where('status', 'completed')
+            ->count();
+
         $meetingBase = OnlineMeetingAttendance::with('meeting')
             ->where('user_id', $user->id)
             ->where('role', 'tutor');
@@ -61,6 +75,9 @@ class DashboardController extends Component
             'completedPayments' => $completedPayments,
             'activeInstitutionDeployments' => $activeInstitutionDeployments,
             'institutionAssignments' => $institutionAssignments,
+            'activeInterventionAssignments' => $activeInterventionAssignments,
+            'completedInterventionAssignments' => $completedInterventionAssignments,
+            'interventionAssignments' => $interventionAssignments,
             'meetingStats' => [
                 'scheduled' => (clone $meetingBase)->where('attendance_status', 'scheduled')->count(),
                 'attended' => (clone $meetingBase)->where('attendance_status', 'attended')->count(),

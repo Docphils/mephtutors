@@ -34,7 +34,12 @@ class Payments extends Component
 
     public function showPayment($id)
     {
-        $this->selectedPayment = Payment::with(['booking.client', 'booking.serviceItem'])->findOrFail($id); 
+        $this->selectedPayment = Payment::with([
+            'booking.client',
+            'booking.serviceItem',
+            'programmeAssignment.programmeEnquiry.programme',
+            'programmeAssignment.programmeEnquiry.user',
+        ])->findOrFail($id); 
         $this->showModal = true;
     }
 
@@ -75,7 +80,12 @@ class Payments extends Component
         Gate::authorize('Tutor');
 
         $query = Payment::where('tutor_id', $user->id)
-            ->with(['booking.client', 'booking.serviceItem']);
+            ->with([
+                'booking.client',
+                'booking.serviceItem',
+                'programmeAssignment.programmeEnquiry.programme',
+                'programmeAssignment.programmeEnquiry.user',
+            ]);
 
         switch ($this->activeTab) {
             case 'Pending Payments':
@@ -86,6 +96,9 @@ class Payments extends Component
                 break;
             case 'Completed Payments':
                 $query->where('status', 'Paid');
+                break;
+            case 'Cancelled Payments':
+                $query->where('status', 'Cancelled');
                 break;
             case 'Disputed':
                 $query->whereNotNull('dispute');

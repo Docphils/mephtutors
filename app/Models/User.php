@@ -16,6 +16,8 @@ use App\Models\Payment;
 use App\Models\CrmAssignment;
 use App\Models\OnlineMeeting;
 use App\Models\OnlineMeetingAttendance;
+use App\Models\ProgrammeEnquiry;
+use App\Models\ProgrammeEnquiryAssignment;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -121,6 +123,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function onlineMeetingAttendances()
     {
         return $this->hasMany(OnlineMeetingAttendance::class);
+    }
+
+    public function programmeEnquiries()
+    {
+        return $this->hasMany(ProgrammeEnquiry::class);
+    }
+
+    public function programmeAssignmentsAsTutor()
+    {
+        return $this->hasMany(ProgrammeEnquiryAssignment::class, 'tutor_id');
     }
 
 }

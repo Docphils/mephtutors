@@ -54,13 +54,13 @@
                         <div>
                             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Pending Items</p>
                             <h3 class="text-3xl font-black text-slate-800">
-                                {{ $stats['pending_tutors'] + $stats['pending_requests'] }}</h3>
+                                {{ $stats['pending_tutors'] + $stats['pending_requests'] + $stats['pending_interventions'] }}</h3>
                         </div>
                         <div class="bg-orange-100 text-orange-600 p-3 rounded-2xl">
                             <i class="fas fa-clock"></i>
                         </div>
                     </div>
-                    <p class="text-orange-600 text-xs font-bold mt-2">Tutors & Private Requests</p>
+                    <p class="text-orange-600 text-xs font-bold mt-2">Tutors, Private Requests & Interventions</p>
                 </div>
 
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
@@ -123,6 +123,13 @@
                                 <span class="text-sm font-medium text-slate-600">Private Tutors</span>
                             </div>
                             <span class="font-bold text-slate-800">{{ $stats['tutor_requests'] }}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-violet-500"></span>
+                                <span class="text-sm font-medium text-slate-600">Interventions</span>
+                            </div>
+                            <span class="font-bold text-slate-800">{{ $stats['intervention_requests'] }}</span>
                         </div>
                         <a wire:navigate href="{{ route('admin.online-meetings') }}"
                             class="flex items-center justify-between p-3 bg-cyan-50 rounded-2xl border border-cyan-100">
@@ -233,10 +240,10 @@
             new Chart(ctx2, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Institutions', 'Private Tutors'],
+                    labels: ['Institutions', 'Private Tutors', 'Interventions'],
                     datasets: [{
-                        data: [{{ $stats['new_crm'] }}, {{ $stats['tutor_requests'] }}],
-                        backgroundColor: ['#0891b2', '#f59e0b'],
+                        data: [{{ $stats['new_crm'] }}, {{ $stats['tutor_requests'] }}, {{ $stats['intervention_requests'] }}],
+                        backgroundColor: ['#0891b2', '#f59e0b', '#8b5cf6'],
                         hoverOffset: 10,
                         borderWidth: 0
                     }]

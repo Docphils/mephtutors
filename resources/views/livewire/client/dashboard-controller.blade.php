@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between mb-4">
                 <div class="bg-cyan-50 p-3 rounded-2xl">
@@ -63,6 +63,19 @@
 
         <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between mb-4">
+                <div class="bg-violet-50 p-3 rounded-2xl">
+                    <i class="fas fa-graduation-cap text-violet-600 text-xl"></i>
+                </div>
+            </div>
+            <h4 class="text-slate-500 text-sm font-bold uppercase tracking-widest">Active Interventions</h4>
+            <p class="text-3xl font-black text-slate-800 mt-1">{{ $stats['activeProgrammeRequests'] }}</p>
+            <p class="text-[10px] text-slate-400 font-bold mt-1">
+                {{ $stats['paidProgrammeRequests'] }} paid | {{ $stats['unpaidProgrammeRequests'] }} pending payment
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-4">
                 <div class="bg-emerald-50 p-3 rounded-2xl">
                     <i class="fas fa-video text-emerald-600 text-xl"></i>
                 </div>
@@ -81,7 +94,7 @@
                 </div>
             </div>
             <h4 class="text-cyan-100 text-sm font-bold uppercase tracking-widest">Total Investment</h4>
-            <p class="text-3xl font-black text-white mt-1">₦{{ number_format($stats['totalInvestment'], 2) }}</p>
+            <p class="text-3xl font-black text-white mt-1">NGN {{ number_format($stats['totalInvestment'], 2) }}</p>
         </div>
     </div>
 
@@ -132,7 +145,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-black text-slate-700 text-right">
-                                    ₦{{ number_format($booking->amount, 0) }}
+                                    NGN {{ number_format($booking->amount, 0) }}
                                 </td>
                             </tr>
                         @endforeach
@@ -159,6 +172,11 @@
                         class="flex flex-col items-center p-4 rounded-2xl bg-slate-50 hover:bg-cyan-50 group transition-all">
                         <i class="fas fa-video text-cyan-600 mb-2 group-hover:scale-110 transition"></i>
                         <span class="text-[10px] font-black text-slate-600 uppercase">Sessions</span>
+                    </a>
+                    <a wire:navigate href="{{ route('client.programmeRequests.manager') }}"
+                        class="flex flex-col items-center p-4 rounded-2xl bg-slate-50 hover:bg-cyan-50 group transition-all">
+                        <i class="fas fa-graduation-cap text-cyan-600 mb-2 group-hover:scale-110 transition"></i>
+                        <span class="text-[10px] font-black text-slate-600 uppercase">Interventions</span>
                     </a>
                 </div>
             </div>
@@ -196,6 +214,24 @@
                     @endforelse
                 </div>
             </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-black text-slate-800">Recent Interventions</h4>
+                    <a wire:navigate href="{{ route('client.programmeRequests.manager') }}" class="text-xs font-bold text-cyan-600">Open</a>
+                </div>
+                <div class="space-y-3">
+                    @forelse($recentProgrammeRequests as $request)
+                        <div class="p-3 rounded-xl border border-slate-100 bg-slate-50">
+                            <p class="text-sm font-bold text-slate-700">{{ $request->programme?->name ?? 'Intervention' }}</p>
+                            <p class="text-xs text-slate-500">{{ $request->learner_name }} | {{ ucfirst($request->status) }}</p>
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-500">No intervention requests yet.</p>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
