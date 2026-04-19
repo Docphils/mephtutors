@@ -37,7 +37,7 @@
                     <option value="matched">Matched</option>
                     <option value="in_progress">In Progress</option>
                     <option value="pending_client_review">Pending Client Review</option>
-                    <option value="completed">Completed</option>
+                    <option value="completed">Closed</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
                 <select wire:model.live="paymentFilter" class="rounded-2xl border-slate-200 text-sm focus:border-cyan-500 focus:ring-cyan-500">
@@ -68,6 +68,7 @@
                     $paymentTone = ($request->payment_status ?? 'pending') === 'paid'
                         ? 'bg-emerald-100 text-emerald-700'
                         : 'bg-slate-100 text-slate-600';
+                    $requestStatusLabel = $request->status === 'completed' ? 'closed' : $request->status;
                     $canPayNow = $request->status === 'matched'
                         && ($request->payment_status ?? 'pending') !== 'paid'
                         && (float) ($request->price_quote ?? 0) > 0
@@ -82,7 +83,7 @@
                             <p class="text-xs text-slate-500">Submitted {{ $request->created_at?->format('d M Y') }}</p>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $statusTone }}">
-                            {{ str_replace('_', ' ', $request->status) }}
+                            {{ str_replace('_', ' ', $requestStatusLabel) }}
                         </span>
                     </div>
 
@@ -181,9 +182,13 @@
                 'matched', 'in_progress', 'pending_client_review' => 'bg-cyan-100 text-cyan-700',
                 default => 'bg-amber-100 text-amber-700',
             };
+            $selectedRequestStatusLabel = $selectedRequest->status === 'completed' ? 'closed' : $selectedRequest->status;
             $paymentTone = ($selectedRequest->payment_status ?? 'pending') === 'paid'
                 ? 'bg-emerald-100 text-emerald-700'
                 : 'bg-slate-100 text-slate-600';
+            $assignmentStatusLabel = $latestAssignment
+                ? ($latestAssignment->status === 'completed' && $selectedRequest->status === 'completed' ? 'closed' : $latestAssignment->status)
+                : null;
         @endphp
 
         <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -197,7 +202,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $statusTone }}">
-                            {{ str_replace('_', ' ', $selectedRequest->status) }}
+                            {{ str_replace('_', ' ', $selectedRequestStatusLabel) }}
                         </span>
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $paymentTone }}">
                             {{ ucfirst($selectedRequest->payment_status ?? 'pending') }} payment
@@ -292,7 +297,7 @@
                                 </div>
                             </div>
                             <p class="mt-2">Tutor Phone: {{ $tutorPhone }}</p>
-                            <p class="mt-1">Assignment Status: {{ $latestAssignment ? str_replace('_', ' ', $latestAssignment->status) : 'Pending' }}</p>
+                            <p class="mt-1">Assignment Status: {{ $assignmentStatusLabel ? str_replace('_', ' ', $assignmentStatusLabel) : 'Pending' }}</p>
                             <p class="mt-1">Planned Start Date: {{ $latestAssignment?->start_date?->format('d M Y') ?: 'Not set by admin' }}</p>
                         </div>
 

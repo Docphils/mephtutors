@@ -38,7 +38,7 @@
                     <option value="matched">Matched</option>
                     <option value="in_progress">In Progress</option>
                     <option value="pending_client_review">Pending Client Review</option>
-                    <option value="completed">Completed</option>
+                    <option value="completed">Closed</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
                 <select wire:model.live="paymentStatus"
@@ -73,6 +73,7 @@
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-slate-100 text-slate-600';
                     $assignedTutor = $enquiry->activeAssignment?->tutor;
+                    $enquiryStatusLabel = $enquiry->status === 'completed' ? 'closed' : $enquiry->status;
                 @endphp
 
                 <article
@@ -86,7 +87,7 @@
                                 {{ $enquiry->programme?->name ?? 'Intervention' }}</h3>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $statusTone }}">
-                            {{ str_replace('_', ' ', $enquiry->status) }}
+                            {{ str_replace('_', ' ', $enquiryStatusLabel) }}
                         </span>
                     </div>
 
@@ -186,6 +187,7 @@
             $tutorRemarks = $selectedEnquiry->assignments
                 ->sortByDesc('id')
                 ->filter(fn($assignment) => !empty($assignment->tutor_notes));
+            $selectedEnquiryStatusLabel = $selectedEnquiry->status === 'completed' ? 'closed' : $selectedEnquiry->status;
         @endphp
 
         <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -205,7 +207,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $statusTone }}">
-                            {{ str_replace('_', ' ', $selectedEnquiry->status) }}
+                            {{ str_replace('_', ' ', $selectedEnquiryStatusLabel) }}
                         </span>
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $paymentTone }}">
                             {{ $selectedEnquiry->payment_status ?? 'pending' }} payment
@@ -361,7 +363,7 @@
                                 <option value="matched">Matched</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="pending_client_review">Pending Client Review</option>
-                                <option value="completed">Completed</option>
+                                <option value="completed">Closed</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
                             <button wire:click="updateStatus({{ $selectedId }})" wire:loading.attr="disabled"

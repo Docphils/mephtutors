@@ -175,7 +175,7 @@
             <div class="flex items-end justify-between">
                 <p class="text-3xl font-black text-slate-800">{{ $activeInterventionAssignments }}</p>
                 <span class="text-[10px] text-slate-400 font-medium mb-1 italic">
-                    {{ $completedInterventionAssignments }} completed
+                    {{ $completedInterventionAssignments }} marked completed
                 </span>
             </div>
         </div>
@@ -229,11 +229,16 @@
         </div>
         <div class="p-6 space-y-3">
             @forelse ($interventionAssignments as $assignment)
+                @php
+                    $assignmentStatusLabel = $assignment->status === 'completed' && $assignment->programmeEnquiry?->status === 'completed'
+                        ? 'closed'
+                        : $assignment->status;
+                @endphp
                 <div class="rounded-2xl border border-slate-100 p-4 bg-slate-50">
                     <p class="text-sm font-black text-slate-800">{{ $assignment->programmeEnquiry?->learner_name }}</p>
                     <p class="text-xs text-cyan-700 font-bold">{{ $assignment->programmeEnquiry?->programme?->name }}</p>
                     <div class="mt-2 flex items-center justify-between">
-                        <span class="text-[10px] uppercase font-black text-slate-500">{{ ucfirst($assignment->status) }}</span>
+                        <span class="text-[10px] uppercase font-black text-slate-500">{{ ucwords(str_replace('_', ' ', $assignmentStatusLabel)) }}</span>
                         <span class="text-[10px] text-slate-400 font-bold">{{ $assignment->created_at->diffForHumans() }}</span>
                     </div>
                 </div>

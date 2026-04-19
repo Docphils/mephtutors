@@ -30,7 +30,7 @@
                     class="rounded-2xl border-slate-200 text-sm focus:border-cyan-500 focus:ring-cyan-500">
                     <option value="">All statuses</option>
                     <option value="active">Active</option>
-                    <option value="completed">Completed</option>
+                    <option value="completed">Completed (Awaiting Client)</option>
                     <option value="declined">Declined</option>
                     <option value="cancelled">Cancelled</option>
                     <option value="closed">Closed</option>
@@ -47,7 +47,7 @@
                 @php
                     $enquiry = $assignment->programmeEnquiry;
                     $assignmentTone = match ($assignment->status) {
-                        'completed' => 'bg-emerald-100 text-emerald-700',
+                        'completed', 'closed' => 'bg-emerald-100 text-emerald-700',
                         'declined', 'cancelled' => 'bg-rose-100 text-rose-700',
                         default => 'bg-cyan-100 text-cyan-700',
                     };
@@ -59,6 +59,9 @@
                         'Cancelled' => 'bg-rose-100 text-rose-700',
                         default => 'bg-slate-100 text-slate-600',
                     };
+                    $displayAssignmentStatus = $assignment->status === 'completed' && $enquiry?->status === 'completed'
+                        ? 'closed'
+                        : $assignment->status;
                     $declineNote = $enquiry->meta['client_completion_decline_note'] ?? null;
                     $showCompleteAction = in_array($assignment->status, $canBeMarkedComplete, true);
                 @endphp
@@ -75,7 +78,7 @@
                                 {{ $enquiry->class_level ?: 'Learner profile in request details' }}</p>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $assignmentTone }}">
-                            {{ str_replace('_', ' ', $assignment->status) }}
+                            {{ str_replace('_', ' ', $displayAssignmentStatus) }}
                         </span>
                     </div>
 
@@ -123,8 +126,11 @@
     @if ($showDetailsModal && $selectedAssignment)
         @php
             $enquiry = $selectedAssignment->programmeEnquiry;
+            $displaySelectedAssignmentStatus = $selectedAssignment->status === 'completed' && $enquiry?->status === 'completed'
+                ? 'closed'
+                : $selectedAssignment->status;
             $statusTone = match ($selectedAssignment->status) {
-                'completed' => 'bg-emerald-100 text-emerald-700',
+                'completed', 'closed' => 'bg-emerald-100 text-emerald-700',
                 'declined', 'cancelled' => 'bg-rose-100 text-rose-700',
                 default => 'bg-cyan-100 text-cyan-700',
             };
@@ -147,7 +153,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase {{ $statusTone }}">
-                            {{ str_replace('_', ' ', $selectedAssignment->status) }}
+                            {{ str_replace('_', ' ', $displaySelectedAssignmentStatus) }}
                         </span>
                         <button wire:click="closeDetails"
                             class="rounded-lg px-2 py-1 text-xl leading-none text-slate-300 transition hover:bg-white/10 hover:text-white">&times;</button>
@@ -239,8 +245,8 @@
                     <aside class="space-y-4">
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
                             <p class="text-[10px] font-black uppercase text-slate-400">Assignment Status</p>
-                            <p class="mt-2">Status: {{ str_replace('_', ' ', $selectedAssignment->status) }}</p>
-                            <p class="mt-1">Request Stage: {{ str_replace('_', ' ', $enquiry->status) }}</p>
+                            <p class="mt-2">Status: {{ str_replace('_', ' ', $displaySelectedAssignmentStatus) }}</p>
+                            <p class="mt-1">Request Stage: {{ str_replace('_', ' ', $enquiry->status === 'completed' ? 'closed' : $enquiry->status) }}</p>
                             <p class="mt-1">Tutor Payout: {{ $selectedPayoutStatus }}</p>
                             <p class="mt-1">Earning Amount:
                                 {{ $selectedPayoutAmount ? 'NGN ' . number_format((float) $selectedPayoutAmount, 2) : 'Pending quote' }}

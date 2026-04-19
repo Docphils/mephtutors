@@ -222,9 +222,12 @@
                 </div>
                 <div class="space-y-3">
                     @forelse($recentProgrammeRequests as $request)
+                        @php
+                            $requestStatusLabel = $request->status === 'completed' ? 'closed' : $request->status;
+                        @endphp
                         <div class="p-3 rounded-xl border border-slate-100 bg-slate-50">
                             <p class="text-sm font-bold text-slate-700">{{ $request->programme?->name ?? 'Intervention' }}</p>
-                            <p class="text-xs text-slate-500">{{ $request->learner_name }} | {{ ucfirst($request->status) }}</p>
+                            <p class="text-xs text-slate-500">{{ $request->learner_name }} | {{ ucwords(str_replace('_', ' ', $requestStatusLabel)) }}</p>
                         </div>
                     @empty
                         <p class="text-sm text-slate-500">No intervention requests yet.</p>

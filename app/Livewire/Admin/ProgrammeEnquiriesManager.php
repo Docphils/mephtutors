@@ -85,7 +85,7 @@ class ProgrammeEnquiriesManager extends Component
     {
         $enquiry = ProgrammeEnquiry::query()->findOrFail($enquiryId);
         if (in_array($enquiry->status, ['cancelled', 'completed'], true)) {
-            $this->addError("tutorInputs.{$enquiryId}", 'Cannot assign tutor on cancelled or completed requests.');
+            $this->addError("tutorInputs.{$enquiryId}", 'Cannot assign tutor on cancelled or closed requests.');
             return;
         }
         $tutorId = (int) ($this->tutorInputs[$enquiryId] ?? 0);
@@ -278,7 +278,9 @@ class ProgrammeEnquiriesManager extends Component
 
         $allowedNextStates = $this->statusTransitions[$enquiry->status] ?? [];
         if (!in_array($status, $allowedNextStates, true)) {
-            $this->addError("statusInputs.{$enquiryId}", "Cannot move from {$enquiry->status} to {$status}.");
+            $from = $this->displayStatusLabel($enquiry->status);
+            $to = $this->displayStatusLabel($status);
+            $this->addError("statusInputs.{$enquiryId}", "Cannot move from {$from} to {$to}.");
             return;
         }
 
@@ -306,7 +308,7 @@ class ProgrammeEnquiriesManager extends Component
         $lifecycleAssignment = $enquiry->activeAssignment ?: $this->getLatestLifecycleAssignment($enquiry->id);
 
         if ($status === 'completed' && (!$lifecycleAssignment || !in_array($lifecycleAssignment->status, ['active', 'completed'], true))) {
-            $this->addError("statusInputs.{$enquiryId}", 'Only active assignments can be completed.');
+            $this->addError("statusInputs.{$enquiryId}", 'Only active assignments can be closed.');
             return;
         }
 
@@ -498,6 +500,12 @@ class ProgrammeEnquiriesManager extends Component
         return $tutor?->tutorProfile?->fullName
             ?? $tutor?->name
             ?? 'Assigned tutor';
+    }
+
+    protected function displayStatusLabel(string $status): string
+    {
+        $normalized = $status === 'completed' ? 'closed' : $status;
+        return str_replace('_', ' ', $normalized);
     }
 
     public function render()

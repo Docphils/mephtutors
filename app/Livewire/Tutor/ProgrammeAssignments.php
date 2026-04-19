@@ -156,7 +156,26 @@ class ProgrammeAssignments extends Component
                 'programmeEnquiry.assignments.tutor.tutorProfile',
                 'programmeEnquiry.assignments.tutor.userProfile',
             ])
-            ->when($this->statusFilter, fn ($query) => $query->where('status', $this->statusFilter))
+            ->when($this->statusFilter, function ($query) {
+                if ($this->statusFilter === 'closed') {
+                    $query->where(function ($sub) {
+                        $sub->where('status', ProgrammeEnquiryAssignment::STATUS_CLOSED)
+                            ->orWhere(function ($finalized) {
+                                $finalized->where('status', ProgrammeEnquiryAssignment::STATUS_COMPLETED)
+                                    ->whereHas('programmeEnquiry', fn ($enquiry) => $enquiry->where('status', 'completed'));
+                            });
+                    });
+                    return;
+                }
+
+                if ($this->statusFilter === 'completed') {
+                    $query->where('status', ProgrammeEnquiryAssignment::STATUS_COMPLETED)
+                        ->whereHas('programmeEnquiry', fn ($enquiry) => $enquiry->where('status', 'pending_client_review'));
+                    return;
+                }
+
+                $query->where('status', $this->statusFilter);
+            })
             ->when($this->search, function ($query) {
                 $query->whereHas('programmeEnquiry', function ($sub) {
                     $sub->where('learner_name', 'like', '%' . $this->search . '%')

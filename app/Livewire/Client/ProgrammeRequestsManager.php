@@ -42,7 +42,7 @@ class ProgrammeRequestsManager extends Component
         }
 
         if (in_array($enquiry->status, ['cancelled', 'completed'], true)) {
-            session()->flash('error', 'Payment is not available for cancelled or completed requests.');
+            session()->flash('error', 'Payment is not available for cancelled or closed requests.');
             return null;
         }
 
