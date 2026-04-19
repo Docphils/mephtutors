@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('online_meetings') || Schema::hasColumn('online_meetings', 'ended_at')) {
+            return;
+        }
+
         Schema::table('online_meetings', function (Blueprint $table) {
             $table->timestamp('ended_at')->nullable()->after('ends_at');
         });
@@ -15,6 +19,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasTable('online_meetings') || !Schema::hasColumn('online_meetings', 'ended_at')) {
+            return;
+        }
+
         Schema::table('online_meetings', function (Blueprint $table) {
             $table->dropColumn('ended_at');
         });
