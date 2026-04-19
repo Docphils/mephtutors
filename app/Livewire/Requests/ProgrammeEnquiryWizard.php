@@ -41,6 +41,7 @@ class ProgrammeEnquiryWizard extends Component
     public string $preferred_duration = '';
     public array $preferred_days = [];
     public string $preferred_time = '';
+    public string $preferred_start_date = '';
     public string $state = '';
     public string $city_area = '';
     public string $address = '';
@@ -93,6 +94,7 @@ class ProgrammeEnquiryWizard extends Component
         $this->preferred_duration = $this->durationOptions[0] ?? '';
         $this->lesson_mode = $this->normalizeLessonModeValue($this->modeOptions[0] ?? ($this->modeValueOptions[0] ?? 'online'));
         $this->preferred_time = '16:00';
+        $this->preferred_start_date = now()->toDateString();
 
         $this->hydrateAuthenticatedDefaults();
         $this->hydrateDraft();
@@ -209,6 +211,7 @@ class ProgrammeEnquiryWizard extends Component
                 'submitted_at' => now()->toIso8601String(),
                 'is_exam_programme' => $this->isExamSpecificProgramme,
                 'used_existing_address' => $this->isHomeLessonMode && $this->canUseExistingAddress && $this->use_existing_address,
+                'preferred_start_date' => $this->preferred_start_date,
             ],
         ]);
 
@@ -290,6 +293,7 @@ class ProgrammeEnquiryWizard extends Component
                 'preferred_days' => ['required', 'array', 'size:' . $this->frequencyCount],
                 'preferred_days.*' => ['required', 'string', 'distinct', Rule::in($this->dayOptions)],
                 'preferred_time' => 'required|date_format:H:i',
+                'preferred_start_date' => 'required|date',
             ];
 
             if ($this->isHomeLessonMode && $this->shouldUseExistingAddress) {
@@ -344,6 +348,7 @@ class ProgrammeEnquiryWizard extends Component
             'preferred_days' => ['required', 'array', 'size:' . $this->frequencyCount],
             'preferred_days.*' => ['required', 'string', 'distinct', Rule::in($this->dayOptions)],
             'preferred_time' => 'required|date_format:H:i',
+            'preferred_start_date' => 'required|date',
             'parent_name' => $this->isAuthenticatedUser
                 ? 'nullable|string|min:2|max:120'
                 : 'required|string|min:2|max:120',
@@ -766,6 +771,7 @@ class ProgrammeEnquiryWizard extends Component
             'preferred_duration',
             'preferred_days',
             'preferred_time',
+            'preferred_start_date',
             'state',
             'city_area',
             'address',
@@ -806,6 +812,7 @@ class ProgrammeEnquiryWizard extends Component
             'preferred_duration' => $this->preferred_duration,
             'preferred_days' => $this->preferred_days,
             'preferred_time' => $this->preferred_time,
+            'preferred_start_date' => $this->preferred_start_date,
             'state' => $this->state,
             'city_area' => $this->city_area,
             'address' => $this->address,

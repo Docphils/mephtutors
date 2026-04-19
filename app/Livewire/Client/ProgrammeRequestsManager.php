@@ -178,6 +178,61 @@ class ProgrammeRequestsManager extends Component
         session()->flash('success', 'Intervention request cancelled.');
     }
 
+    public function renewRequest(int $id)
+    {
+        $enquiry = ProgrammeEnquiry::query()
+            ->where('user_id', Auth::id())
+            ->with(['programme', 'user.userProfile'])
+            ->findOrFail($id);
+
+        $renewableStatuses = ['in_progress', 'pending_client_review', 'completed'];
+        if (!in_array((string) $enquiry->status, $renewableStatuses, true)) {
+            session()->flash('error', 'Renew/Rebook is available from in-progress stage onward.');
+            return null;
+        }
+
+        $programmeSlug = (string) ($enquiry->programme?->slug ?? '');
+        if ($programmeSlug === '') {
+            session()->flash('error', 'Intervention programme could not be resolved for renewal.');
+            return null;
+        }
+
+        $preferredTime = collect((array) ($enquiry->preferred_times ?? []))
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->first() ?: '16:00';
+
+        $user = $enquiry->user;
+        $draft = [
+            'step' => 1,
+            'learner_name' => (string) ($enquiry->learner_name ?? ''),
+            'class_level' => (string) ($enquiry->class_level ?? ''),
+            'school_name' => (string) ($enquiry->school_name ?? ''),
+            'subjects' => is_array($enquiry->subjects) ? $enquiry->subjects : [],
+            'weak_areas' => (string) ($enquiry->weak_areas ?? ''),
+            'lesson_mode' => (string) ($enquiry->lesson_mode ?? 'online'),
+            'preferred_frequency' => (string) ($enquiry->preferred_frequency ?? ''),
+            'preferred_duration' => (string) ($enquiry->preferred_duration ?? ''),
+            'preferred_days' => is_array($enquiry->preferred_days) ? $enquiry->preferred_days : [],
+            'preferred_time' => (string) $preferredTime,
+            'preferred_start_date' => now()->toDateString(),
+            'state' => (string) ($enquiry->state ?? ''),
+            'city_area' => (string) ($enquiry->city_area ?? ''),
+            'address' => (string) ($enquiry->parent_address ?? ''),
+            'use_existing_address' => false,
+            'selected_existing_address' => '',
+            'parent_name' => (string) ($enquiry->parent_name ?: ($user?->name ?? '')),
+            'parent_phone' => (string) ($enquiry->parent_phone ?: ($user?->userProfile?->phone ?? '')),
+            'account_email' => (string) ($user?->email ?? Auth::user()?->email ?? ''),
+        ];
+
+        session()->put('programme_enquiry_draft:' . $programmeSlug, $draft);
+        session()->forget('programme_enquiry_submitted:user:' . (string) Auth::id() . ':' . $programmeSlug);
+        session()->flash('success', 'Renewal form prepared. Review and update details before submitting.');
+
+        return $this->redirectRoute('client.interventions.create', ['programme' => $programmeSlug], navigate: true);
+    }
+
     public function approveReview(int $id): void
     {
         $enquiry = ProgrammeEnquiry::query()

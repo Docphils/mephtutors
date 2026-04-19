@@ -7,6 +7,18 @@
     </x-slot>
 
     <div class="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 space-y-4">
+        @if (session()->has('success'))
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-700">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">
+                {{ session('error') }}
+            </div>
+        @endif
+
         @if ($programmes->isEmpty())
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 No active interventions are currently available. Please check back shortly.
@@ -38,4 +50,3 @@
         </div>
     @endif
 </div>
-

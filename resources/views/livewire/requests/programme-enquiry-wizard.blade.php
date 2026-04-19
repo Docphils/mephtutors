@@ -173,6 +173,14 @@
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-600">Preferred Start Date</label>
+                        <input type="date" wire:model.live="preferred_start_date"
+                            class="mt-1 w-full rounded-xl border-slate-300">
+                        @error('preferred_start_date')
+                            <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <div>
@@ -333,6 +341,9 @@
                     <p><strong>Subjects Selected:</strong> {{ count($subjects) }}</p>
                     <p><strong>Frequency:</strong> {{ $preferred_frequency }}</p>
                     <p><strong>Duration:</strong> {{ $preferred_duration }}</p>
+                    <p><strong>Preferred Start Date:</strong>
+                        {{ $preferred_start_date ? \Carbon\Carbon::parse($preferred_start_date)->format('d M Y') : 'Not set' }}
+                    </p>
                     <p><strong>Mode:</strong> {{ $this->isHomeLessonMode ? 'Home' : 'Online' }}</p>
                     <p><strong>Parent Contact:</strong> {{ $parent_name }} | {{ $parent_phone }} |
                         {{ $account_email }}</p>

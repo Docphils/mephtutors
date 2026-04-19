@@ -73,6 +73,7 @@
                         && ($request->payment_status ?? 'pending') !== 'paid'
                         && (float) ($request->price_quote ?? 0) > 0
                         && $latestAssignment;
+                    $canRenew = in_array($request->status, ['in_progress', 'pending_client_review', 'completed'], true);
                 @endphp
 
                 <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
@@ -132,6 +133,12 @@
                                     Pay Now
                                 </button>
                             @endif
+                            @if ($canRenew)
+                                <button wire:click="renewRequest({{ $request->id }})" wire:loading.attr="disabled" wire:target="renewRequest"
+                                    class="rounded-xl bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 transition hover:bg-violet-100">
+                                    Rebook
+                                </button>
+                            @endif
                             @if (in_array($request->status, ['new', 'pending', 'reviewing'], true))
                                 <button wire:click="cancelRequest({{ $request->id }})" wire:confirm="Cancel this intervention request?"
                                     wire:loading.attr="disabled" wire:target="cancelRequest"
@@ -166,6 +173,7 @@
                 && ($selectedRequest->payment_status ?? 'pending') !== 'paid'
                 && (float) ($selectedRequest->price_quote ?? 0) > 0
                 && $latestAssignment;
+            $canRenewFromDetails = in_array($selectedRequest->status, ['in_progress', 'pending_client_review', 'completed'], true);
             $clientAdjustmentNote = $selectedRequest->meta['client_adjustment_note'] ?? null;
             $adminAdjustmentNote = $latestAssignment?->admin_notes ?? ($selectedRequest->meta['admin_adjustment_note'] ?? null);
             $tutor = $latestAssignment?->tutor;
@@ -319,6 +327,19 @@
                                     <button wire:click="openAdjustmentModal"
                                         class="rounded-xl bg-white px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100">
                                         Request Adjustment
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($canRenewFromDetails)
+                            <div class="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-xs text-violet-900">
+                                <p class="font-bold">Need a new cycle? Start a renewal from this intervention.</p>
+                                <p class="mt-1">We will prefill the form with this request and set start date to today for adjustments.</p>
+                                <div class="mt-3">
+                                    <button wire:click="renewRequest({{ $selectedRequest->id }})" wire:loading.attr="disabled" wire:target="renewRequest"
+                                        class="rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-violet-700">
+                                        Renew / Rebook
                                     </button>
                                 </div>
                             </div>
