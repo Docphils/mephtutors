@@ -1,4 +1,5 @@
 import './bootstrap';
+import './pwa';
 
 const revealObserver = new IntersectionObserver(
     (entries) => {

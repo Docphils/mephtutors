@@ -76,6 +76,7 @@ use App\Livewire\Partials\UserProfileEditor;
 */
 
 Route::get('/', WelcomePage::class)->name('welcome');
+Route::view('/offline', 'offline')->name('offline');
 Route::get('/programmes/enquiry', ProgrammeConsultationForm::class)->name('programmes.enquiry');
 Route::get('/programmes/{academicProgramme:slug}/request', ProgrammeEnquiryWizard::class)->name('programmes.request');
 Route::get('/programmes/enquiry/{programme}', function (string $programme) {

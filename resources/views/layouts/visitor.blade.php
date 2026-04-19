@@ -5,6 +5,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#0e7490">
+    <meta name="application-name" content="{{ config('app.name', 'MephEd') }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'MephEd') }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('pwa/icons/apple-touch-icon.png') }}">
 
     <title>{{ $title ?? 'MephEd' }}</title>
     <meta name="description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">
@@ -63,6 +71,7 @@
         </main>
         @include('layouts.footer')
     </div>
+    <x-pwa-install-button class="fixed bottom-4 right-4 z-[70] sm:hidden" />
     @livewireScripts
 </body>
 
