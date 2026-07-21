@@ -1,4 +1,4 @@
-<div class="space-y-0">
+<div wire:key="welcome-default" class="space-y-0">
     <livewire:hero-carousel />
 
     <main class="container mx-auto py-10 px-6 space-y-8">

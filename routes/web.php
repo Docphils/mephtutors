@@ -59,6 +59,7 @@ use App\Livewire\Requests\CrmRequestWizard;
 use App\Livewire\Requests\TutorRequestWizard;
 use App\Livewire\Testimonials\Testimonials;
 use App\Livewire\Testimonials\IndexTestimonials;
+use App\Livewire\Pages\BootcampEnrollmentSuccess;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\OnlineMeetingController;
 
@@ -92,6 +93,8 @@ Route::get('/about', AboutPage::class)->name('about');
 Route::get('/contact', ContactPage::class)->name('contact');
 
 Route::get('/bootcamp', EnrollmentForm::class)->name('bootcamp');
+Route::get('/bootcamp/enrollment/success/{enrollee}', BootcampEnrollmentSuccess::class)
+    ->name('bootcamp.enrollment.success');
 
 Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
 

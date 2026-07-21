@@ -1,4 +1,4 @@
-const SW_VERSION = 'mephed-pwa-v1';
+const SW_VERSION = 'mephed-pwa-v2';
 const STATIC_CACHE = `${SW_VERSION}-static`;
 const RUNTIME_CACHE = `${SW_VERSION}-runtime`;
 const IMAGE_CACHE = `${SW_VERSION}-images`;
@@ -76,20 +76,50 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE, 100));
 });
 
+const NEVER_CACHE_PATTERNS = [
+    /^\/login/,
+    /^\/register/,
+    /^\/password/,
+    /^\/dashboard/,
+    /^\/admin/,
+    /^\/client/,
+    /^\/tutor/,
+    /^\/profile/,
+    /^\/bootcamp/,
+    /^\/apply/,
+    /^\/paystack/,
+];
+
+function shouldSkipCache(pathname) {
+    return NEVER_CACHE_PATTERNS.some((pattern) => pattern.test(pathname));
+}
+
 async function handleNavigationRequest(event) {
+    const url = new URL(event.request.url);
+    const skipCache = shouldSkipCache(url.pathname);
+
     try {
         const preloadResponse = await event.preloadResponse;
         if (preloadResponse) {
-            const runtimeCache = await caches.open(RUNTIME_CACHE);
-            runtimeCache.put(event.request, preloadResponse.clone());
+            if (!skipCache) {
+                const runtimeCache = await caches.open(RUNTIME_CACHE);
+                runtimeCache.put(event.request, preloadResponse.clone());
+            }
             return preloadResponse;
         }
 
         const networkResponse = await fetch(event.request);
-        const runtimeCache = await caches.open(RUNTIME_CACHE);
-        runtimeCache.put(event.request, networkResponse.clone());
+        if (!skipCache) {
+            const runtimeCache = await caches.open(RUNTIME_CACHE);
+            runtimeCache.put(event.request, networkResponse.clone());
+        }
         return networkResponse;
     } catch (_error) {
+        if (skipCache) {
+            // Never serve a stale form/gated page - a fresh CSRF token matters more than an offline fallback here
+            return caches.match('/offline');
+        }
+
         const cachedResponse = await caches.match(event.request);
         if (cachedResponse) {
             return cachedResponse;

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Crm;
 use App\Models\ProgrammeEnquiry;
+use App\Models\Cohort;
+use App\Models\Enrollee;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -112,5 +114,47 @@ class PaystackService
         return Http::withToken(config('services.paystack.secret'))
             ->get("{$this->baseUrl}/transaction/verify/{$reference}")
             ->json();
+    }
+
+    //Bootcamp payment initialization
+    public function initializeEnrolleePayment(Enrollee $enrollee, Cohort $cohort): string
+    {
+        $fee = (float) ($cohort->fee ?? 0);
+
+        if ($fee <= 0) {
+            throw new \Exception('Cohort fee must be greater than zero.');
+        }
+
+        $meta = $enrollee->meta ?? [];
+        $reference = $meta['payment_reference'] ?? (string) Str::uuid();
+
+        $response = Http::withToken(config('services.paystack.secret'))
+            ->post("{$this->baseUrl}/transaction/initialize", [
+                'email' => $enrollee->email,
+                'amount' => (int) round($fee * 100),
+                'reference' => $reference,
+                'callback_url' => route('paystack.callback'),
+                'metadata' => [
+                    'app' => 'mephed',
+                    'payment_for' => 'bootcamp_enrollment',
+                    'enrollee_id' => $enrollee->id,
+                    'cohort_id' => $cohort->id,
+                    'cohort_code' => $cohort->code,
+                    'service_item_slug' => $cohort->serviceItem->slug ?? null,
+                ],
+            ])->json();
+
+        if (!($response['status'] ?? false)) {
+            throw new \Exception($response['message'] ?? 'Enrollment payment initialization failed.');
+        }
+
+        $enrollee->update([
+            'meta' => array_merge($meta, [
+                'payment_reference' => $reference,
+                'payment_status' => 'pending',
+            ]),
+        ]);
+
+        return $response['data']['authorization_url'];
     }
 }

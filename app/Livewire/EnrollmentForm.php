@@ -7,6 +7,8 @@ use App\Models\Cohort;
 use App\Models\Enrollee;
 use App\Models\Service;
 use App\Models\ServiceItem;
+use App\Services\PaystackService;
+use App\Mail\EnrolleeAcknowledgement;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BootcampSubmissionNotification;
 use Illuminate\Support\Facades\Log;
@@ -95,7 +97,8 @@ class EnrollmentForm extends Component
         'address' => 'required|string|max:255',
     ];
 
-    public function save()
+
+    public function save(PaystackService $paystack)
     {
         if (empty($this->bootcampServiceIds)) {
             session()->flash('error', 'Bootcamp is not configured yet. Please try again later.');
@@ -129,7 +132,7 @@ class EnrollmentForm extends Component
             'address' => $this->address,
         ];
 
-        Enrollee::create([
+        $enrollee = Enrollee::create([
             'cohort_id' => $cohort->id,
             'name' => $this->name,
             'email' => $this->email,
@@ -143,16 +146,38 @@ class EnrollmentForm extends Component
             ],
         ]);
 
+        // Ack email to the registrant, sent right away regardless of payment outcome
+        try {
+            Mail::to($enrollee->email)->send(new EnrolleeAcknowledgement($enrollee->load('cohort.service', 'cohort.serviceItem')));
+        } catch (\Exception $e) {
+            Log::error('Enrollee acknowledgement mail failed: ' . $e->getMessage());
+        }
+
+        // Internal admin notification (unchanged)
         try {
             Mail::to('admin@mephed.ng')->send(new BootcampSubmissionNotification($registrant));
         } catch (\Exception $e) {
             Log::error('Mail sending failed: ' . $e->getMessage());
         }
 
-        session()->flash('success', 'Registration received. Join our WhatsApp Community to stay updated.');
+        // Free cohort: skip Paystack entirely, confirm immediately
+        if ((float) ($cohort->fee ?? 0) <= 0) {
+            $enrollee->update(['status' => 'confirmed', 'confirmed_at' => now()]);
+            session()->flash('success', 'Registration received. We will be in touch with next steps.');
+            $this->reset(['name', 'email', 'phone', 'address', 'service_item_id', 'cohort_id']);
+            $this->availableCohorts = [];
+            return;
+        }
 
-        $this->reset(['name', 'email', 'phone', 'address', 'service_item_id', 'cohort_id']);
-        $this->availableCohorts = [];
+        try {
+            $paymentUrl = $paystack->initializeEnrolleePayment($enrollee, $cohort);
+        } catch (\Exception $e) {
+            Log::error('Enrollee payment init failed: ' . $e->getMessage());
+            session()->flash('error', 'We could not start your payment. Please try again or contact support.');
+            return;
+        }
+
+        return redirect()->away($paymentUrl);
     }
 
     public function render()

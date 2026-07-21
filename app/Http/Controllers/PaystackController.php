@@ -6,6 +6,9 @@ use App\Models\Booking;
 use App\Models\Crm;
 use App\Models\Payment;
 use App\Models\ProgrammeEnquiry;
+use App\Models\Enrollee;
+use App\Mail\EnrolleeConfirmation;
+use Illuminate\Support\Facades\Mail;
 use App\Services\PaystackService;
 use App\Support\InterventionStatusNotifier;
 use Illuminate\Support\Facades\Http;
@@ -35,6 +38,34 @@ class PaystackController extends Controller
                     ->with('success', 'Payment successful. Institution contract has been funded.');
             }
 
+            //Enrollment Callback
+            if (($metadata['payment_for'] ?? null) === 'bootcamp_enrollment') {
+                $enrollee = Enrollee::with('cohort.service', 'cohort.serviceItem')
+                    ->findOrFail($metadata['enrollee_id']);
+
+                if (($enrollee->meta['payment_status'] ?? null) !== 'paid') {
+                    $enrollee->update([
+                        'status' => 'confirmed',
+                        'confirmed_at' => now(),
+                        'meta' => array_merge($enrollee->meta ?? [], [
+                            'payment_status' => 'paid',
+                            'payment_reference' => $reference,
+                        ]),
+                    ]);
+
+                    try {
+                        Mail::to($enrollee->email)->send(new EnrolleeConfirmation($enrollee));
+                    } catch (\Exception $e) {
+                        Log::error('Enrollee confirmation mail failed: ' . $e->getMessage());
+                    }
+                }
+
+                return redirect()->route('bootcamp.enrollment.success', ['enrollee' => $enrollee->id])
+                    ->with('success', 'Payment successful. Your spot is confirmed.');
+            }
+
+
+            //Programme request callback
             if (($metadata['payment_for'] ?? null) === 'programme_request') {
                 $programmeEnquiry = ProgrammeEnquiry::findOrFail($metadata['programme_enquiry_id']);
                 $wasPaid = ($programmeEnquiry->payment_status ?? 'pending') === 'paid';
@@ -136,6 +167,29 @@ class PaystackController extends Controller
 
         if ($app === 'solar_sapient') {
             $this->forwardToSolarSapient($rawPayload, $signature);
+
+            return response()->json(['status' => 'ok']);
+        }
+
+        if ($app === 'mephed' && ($metadata['payment_for'] ?? null) === 'enrollment') {
+            $enrollee = Enrollee::find($metadata['enrollee_id'] ?? 0);
+
+            if ($enrollee && ($enrollee->meta['payment_status'] ?? null) !== 'paid') {
+                $enrollee->update([
+                    'status' => 'confirmed',
+                    'confirmed_at' => now(),
+                    'meta' => array_merge($enrollee->meta ?? [], [
+                        'payment_status' => 'paid',
+                        'payment_reference' => $data['reference'] ?? ($enrollee->meta['payment_reference'] ?? null),
+                    ]),
+                ]);
+
+                try {
+                    Mail::to($enrollee->email)->send(new EnrolleeConfirmation($enrollee->load('cohort.service', 'cohort.serviceItem')));
+                } catch (\Exception $e) {
+                    Log::error('Enrollee confirmation mail failed: ' . $e->getMessage());
+                }
+            }
 
             return response()->json(['status' => 'ok']);
         }

@@ -8,7 +8,7 @@
     };
 @endphp
 
-<div class="space-y-16 pb-20">
+<div wire:key="welcome-academic" class="space-y-16 pb-20">
     <section x-data="{
         index: 0,
         timer: null,
