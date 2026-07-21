@@ -98,6 +98,11 @@ Route::get('/bootcamp/enrollment/success/{enrollee}', BootcampEnrollmentSuccess:
 
 Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
 
+//Recipe Aid's Privacy Policy
+Route::get('/recipe-aid-privacy-policy', function () {
+    return view('recipe-aid-privacy-policy');
+})->name('recipe-aid-privacy-policy');
+
 Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
 Route::post('/paystack/webhook', [PaystackController::class, 'webhook']);
 
