@@ -171,7 +171,7 @@ class PaystackController extends Controller
             return response()->json(['status' => 'ok']);
         }
 
-        if ($app === 'mephed' && ($metadata['payment_for'] ?? null) === 'enrollment') {
+        if ($app === 'mephed' && ($metadata['payment_for'] ?? null) === 'bootcamp_enrollment') {
             $enrollee = Enrollee::find($metadata['enrollee_id'] ?? 0);
 
             if ($enrollee && ($enrollee->meta['payment_status'] ?? null) !== 'paid') {
