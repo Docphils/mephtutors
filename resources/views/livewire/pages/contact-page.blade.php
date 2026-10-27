@@ -26,7 +26,7 @@
                 <div class="mt-12 md:ml-6 border-l-8 border-cyan-500 p-6 bg-slate-800/70 shadow-sm w-full rounded-lg text-cyan-100">
                     <div class="mb-10">
                         <h4 class="text-white text-xl font-bold">Contact Address:</h4>
-                        <p>House 101, Zone D, Apo Resettlement, Abuja, Nigeria</p>
+                        <p>1, DIFF Road, Gudu, Abuja, Nigeria</p>
                     </div>
                     <div class="relative mb-10">
                         <h4 class="text-white text-xl font-bold">Contact Info:</h4>

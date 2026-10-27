@@ -9,6 +9,9 @@
                 <p class="text-sm opacity-80">Empowering education through technology.</p>
                 <div class="text-sm space-y-1">
                     <p class="flex items-center justify-center md:justify-start gap-2">
+                        <i class="fa-solid fa-map text-cyan-300"></i> 1, DIFF Road, Gudu, Abuja, Nigeria
+                    </p>
+                    <p class="flex items-center justify-center md:justify-start gap-2">
                         <i class="fa-solid fa-phone text-cyan-300"></i> 07062599737 | 08062869170
                     </p>
                     <p class="flex items-center justify-center md:justify-start gap-2">
