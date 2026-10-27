@@ -10,7 +10,7 @@ class JaasWebhookController extends Controller
 {
     public function __invoke(Request $request, ?string $token = null)
     {
-        $expected = (string) env('JITSI_JAAS_WEBHOOK_TOKEN', '');
+        $expected = (string) config('services.jitsi.jaas_webhook_token', '');
         if ($expected !== '' && $token !== $expected) {
             return response()->json(['ok' => false, 'message' => 'Unauthorized webhook token'], 401);
         }
@@ -63,7 +63,7 @@ class JaasWebhookController extends Controller
         $roomName = trim($roomName);
         $appId = (string) config('services.jitsi.jaas_app_id', '');
 
-        if ($appId !== '' && str_starts_with($roomName, $appId . '/')) {
+        if ($appId !== '' && str_starts_with($roomName, $appId.'/')) {
             return substr($roomName, strlen($appId) + 1);
         }
 

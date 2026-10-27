@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class ServiceItem extends Model
 {
@@ -32,8 +32,9 @@ class ServiceItem extends Model
         'has_subjects' => 'boolean',
         'requires_curriculum' => 'boolean',
         'is_active' => 'boolean',
-    ]; 
+    ];
 
+    /** @return BelongsTo<Service, $this> */
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
@@ -68,6 +69,6 @@ class ServiceItem extends Model
             return asset($normalized);
         }
 
-        return asset('storage/' . $normalized);
+        return asset('storage/'.$normalized);
     }
 }

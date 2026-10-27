@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OnlineMeetingAttendance extends Model
 {
@@ -24,12 +25,12 @@ class OnlineMeetingAttendance extends Model
         'left_at' => 'datetime',
     ];
 
-    public function meeting()
+    public function meeting(): BelongsTo
     {
         return $this->belongsTo(OnlineMeeting::class, 'online_meeting_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

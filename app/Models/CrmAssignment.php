@@ -23,16 +23,19 @@ class CrmAssignment extends Model
         'completed_at' => 'datetime',
     ];
 
+    /** @return BelongsTo<Crm, $this> */
     public function crm(): BelongsTo
     {
         return $this->belongsTo(Crm::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by');

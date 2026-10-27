@@ -12,15 +12,15 @@
     @foreach ($items as $index => $item)
         <div x-show="current === {{ $index }}" x-transition.opacity
             class="absolute inset-0 h-full bg-cover bg-center"
-            style="background-image: url('{{ asset('storage/' . $item->image_path ?? '/images/default.jpg') }}');">
+            style="background-image: url('{{ asset('storage/' . ($item['image_path'] ?? '/images/default.jpg')) }}');">
             <div class="h-full bg-black/45 flex flex-col items-center justify-center text-white px-4">
-                <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold">{{ $item->name ?? 'Our Service' }}</h2>
-                <p class="mt-3 text-sm sm:text-md md:text-xl text-cyan-100">{{ $item->description ?? '' }}</p>
-                <a href="{{ $item->target === 'bootcamp'
-                    ? route('apply.bootcamp', ['serviceItem' => $item->slug])
-                    : ($item->target === 'institutions'
-                        ? route('apply.crm', ['serviceItem' => $item->slug])
-                        : route('apply.tutor', ['serviceItem' => $item->slug])) }}"
+                <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold">{{ $item['name'] ?? 'Our Service' }}</h2>
+                <p class="mt-3 text-sm sm:text-md md:text-xl text-cyan-100">{{ $item['description'] ?? '' }}</p>
+                <a href="{{ $item['target'] === 'bootcamp'
+                    ? route('apply.bootcamp', ['serviceItem' => $item['slug']])
+                    : ($item['target'] === 'institutions'
+                        ? route('apply.crm', ['serviceItem' => $item['slug']])
+                        : route('apply.tutor', ['serviceItem' => $item['slug']])) }}"
                     class="z-20 mt-6 inline-flex rounded-lg bg-pink-600 px-4 py-2 text-base font-semibold text-white shadow hover:bg-pink-700">
                     Apply Now
                 </a>

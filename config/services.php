@@ -53,6 +53,7 @@ return [
         'jwt_iss' => env('JITSI_JWT_ISS'),
         'jwt_sub' => env('JITSI_JWT_SUB'),
         'jwt_aud' => env('JITSI_JWT_AUD', 'jitsi'),
+        'jaas_webhook_token' => env('JITSI_JAAS_WEBHOOK_TOKEN'),
     ],
 
 ];

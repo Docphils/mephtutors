@@ -15,6 +15,7 @@ class Service extends Model
         'is_active',
     ];
 
+    /** @return HasMany<ServiceItem, $this> */
     public function serviceItems(): HasMany
     {
         return $this->hasMany(ServiceItem::class);

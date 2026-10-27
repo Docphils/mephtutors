@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Client;
 
+use App\Models\Payment;
 use App\Models\ProgrammeEnquiry;
 use App\Models\ProgrammeEnquiryAssignment;
-use App\Models\Payment;
 use App\Services\PaystackService;
 use App\Support\InterventionStatusNotifier;
 use Illuminate\Support\Facades\Auth;
@@ -20,13 +20,21 @@ class ProgrammeRequestsManager extends Component
     use WithPagination;
 
     public string $statusFilter = '';
+
     public string $paymentFilter = '';
+
     public string $search = '';
+
     public ?ProgrammeEnquiry $selectedRequest = null;
+
     public bool $showDetails = false;
+
     public bool $showReviewModal = false;
+
     public bool $showAdjustmentModal = false;
+
     public string $clientReviewMessage = '';
+
     public string $clientAdjustmentMessage = '';
 
     public function payNow(int $id, PaystackService $paystack)
@@ -38,30 +46,36 @@ class ProgrammeRequestsManager extends Component
 
         if ($enquiry->payment_status === 'paid') {
             session()->flash('success', 'Payment has already been completed for this request.');
+
             return null;
         }
 
         if (in_array($enquiry->status, ['cancelled', 'completed'], true)) {
             session()->flash('error', 'Payment is not available for cancelled or closed requests.');
+
             return null;
         }
 
         if ($enquiry->status !== 'matched') {
             session()->flash('error', 'Payment is available only after admin matching and quote confirmation.');
+
             return null;
         }
 
         if (! $enquiry->activeAssignment) {
             session()->flash('error', 'No active tutor assignment is linked to this request yet.');
+
             return null;
         }
 
         if (! $enquiry->price_quote || (float) $enquiry->price_quote <= 0) {
             session()->flash('error', 'Admin quote is pending. Please request an adjustment if needed.');
+
             return null;
         }
 
         $redirectUrl = $paystack->initializeProgrammeEnquiryPayment($enquiry);
+
         return redirect()->away($redirectUrl);
     }
 
@@ -138,13 +152,15 @@ class ProgrammeRequestsManager extends Component
             ->with('activeAssignment')
             ->findOrFail($id);
 
-        if (!in_array($enquiry->status, ['new', 'pending', 'reviewing'], true)) {
+        if (! in_array($enquiry->status, ['new', 'pending', 'reviewing'], true)) {
             session()->flash('error', 'Only new, pending, or reviewing requests can be cancelled.');
+
             return;
         }
 
         if (($enquiry->payment_status ?? 'pending') === 'paid') {
             session()->flash('error', 'Paid requests cannot be cancelled from dashboard. Contact support for case review.');
+
             return;
         }
 
@@ -186,14 +202,16 @@ class ProgrammeRequestsManager extends Component
             ->findOrFail($id);
 
         $renewableStatuses = ['in_progress', 'pending_client_review', 'completed'];
-        if (!in_array((string) $enquiry->status, $renewableStatuses, true)) {
+        if (! in_array((string) $enquiry->status, $renewableStatuses, true)) {
             session()->flash('error', 'Renew/Rebook is available from in-progress stage onward.');
+
             return null;
         }
 
-        $programmeSlug = (string) ($enquiry->programme?->slug ?? '');
+        $programmeSlug = (string) ($enquiry->programme->slug ?? '');
         if ($programmeSlug === '') {
             session()->flash('error', 'Intervention programme could not be resolved for renewal.');
+
             return null;
         }
 
@@ -208,12 +226,12 @@ class ProgrammeRequestsManager extends Component
             'learner_name' => (string) ($enquiry->learner_name ?? ''),
             'class_level' => (string) ($enquiry->class_level ?? ''),
             'school_name' => (string) ($enquiry->school_name ?? ''),
-            'subjects' => is_array($enquiry->subjects) ? $enquiry->subjects : [],
+            'subjects' => $enquiry->subjects ?? [],
             'weak_areas' => (string) ($enquiry->weak_areas ?? ''),
             'lesson_mode' => (string) ($enquiry->lesson_mode ?? 'online'),
             'preferred_frequency' => (string) ($enquiry->preferred_frequency ?? ''),
             'preferred_duration' => (string) ($enquiry->preferred_duration ?? ''),
-            'preferred_days' => is_array($enquiry->preferred_days) ? $enquiry->preferred_days : [],
+            'preferred_days' => $enquiry->preferred_days ?? [],
             'preferred_time' => (string) $preferredTime,
             'preferred_start_date' => now()->toDateString(),
             'state' => (string) ($enquiry->state ?? ''),
@@ -221,13 +239,13 @@ class ProgrammeRequestsManager extends Component
             'address' => (string) ($enquiry->parent_address ?? ''),
             'use_existing_address' => false,
             'selected_existing_address' => '',
-            'parent_name' => (string) ($enquiry->parent_name ?: ($user?->name ?? '')),
-            'parent_phone' => (string) ($enquiry->parent_phone ?: ($user?->userProfile?->phone ?? '')),
-            'account_email' => (string) ($user?->email ?? Auth::user()?->email ?? ''),
+            'parent_name' => (string) ($enquiry->parent_name ?: ($user->name ?? '')),
+            'parent_phone' => (string) ($enquiry->parent_phone ?: ($user->userProfile->phone ?? '')),
+            'account_email' => (string) ($user->email ?? Auth::user()->email ?? ''),
         ];
 
-        session()->put('programme_enquiry_draft:' . $programmeSlug, $draft);
-        session()->forget('programme_enquiry_submitted:user:' . (string) Auth::id() . ':' . $programmeSlug);
+        session()->put('programme_enquiry_draft:'.$programmeSlug, $draft);
+        session()->forget('programme_enquiry_submitted:user:'.(string) Auth::id().':'.$programmeSlug);
         session()->flash('success', 'Renewal form prepared. Review and update details before submitting.');
 
         return $this->redirectRoute('client.interventions.create', ['programme' => $programmeSlug], navigate: true);
@@ -249,6 +267,7 @@ class ProgrammeRequestsManager extends Component
 
         if (! $assignment) {
             session()->flash('error', 'No pending review found.');
+
             return;
         }
 
@@ -294,6 +313,7 @@ class ProgrammeRequestsManager extends Component
 
         if (! $assignment) {
             session()->flash('error', 'No pending review found.');
+
             return;
         }
 
@@ -345,6 +365,7 @@ class ProgrammeRequestsManager extends Component
 
         if ($enquiry->status !== 'matched' || ($enquiry->payment_status ?? 'pending') === 'paid') {
             session()->flash('error', 'Adjustment can only be requested on matched requests before payment.');
+
             return;
         }
 
@@ -437,8 +458,8 @@ class ProgrammeRequestsManager extends Component
             ->when($this->paymentFilter, fn ($query) => $query->where('payment_status', $this->paymentFilter))
             ->when($this->search, function ($query) {
                 $query->where(function ($sub) {
-                    $sub->where('learner_name', 'like', '%' . $this->search . '%')
-                        ->orWhereHas('programme', fn ($p) => $p->where('name', 'like', '%' . $this->search . '%'));
+                    $sub->where('learner_name', 'like', '%'.$this->search.'%')
+                        ->orWhereHas('programme', fn ($p) => $p->where('name', 'like', '%'.$this->search.'%'));
                 });
             })
             ->latest()

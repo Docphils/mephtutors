@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Tutor;
 
-use Livewire\Component;
-use Illuminate\Support\Facades\Gate;
 use App\Models\Payment;
 use App\Support\InterventionStatusNotifier;
 use Illuminate\Support\Facades\Auth;
-use Livewire\WithPagination;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 #[Title('Manage Payments - MephEd Tutor')]
@@ -18,11 +18,14 @@ class Payments extends Component
     use WithPagination;
 
     public $activeTab = 'All Payments';
-    public $showModal = false; 
+
+    public $showModal = false;
+
     public $selectedPayment = null;
 
     // Dispute Form Fields
     public $showDisputeModal = false;
+
     public $disputeReason = '';
 
     protected $listeners = ['refreshList' => '$refresh'];
@@ -40,7 +43,7 @@ class Payments extends Component
             'booking.serviceItem',
             'programmeAssignment.programmeEnquiry.programme',
             'programmeAssignment.programmeEnquiry.user',
-        ])->findOrFail($id); 
+        ])->findOrFail($id);
         $this->showModal = true;
     }
 
@@ -63,11 +66,11 @@ class Payments extends Component
             'status' => 'Pending', // Pending, Resolved, Rejected
             'submitted_at' => now()->toDateTimeString(),
             'admin_response' => null,
-            'resolved_at' => null
+            'resolved_at' => null,
         ];
 
         $this->selectedPayment->update([
-            'dispute' => $disputeData
+            'dispute' => $disputeData,
         ]);
 
         $this->selectedPayment->loadMissing([
@@ -83,7 +86,7 @@ class Payments extends Component
                 [
                     'dispute_reason' => $this->disputeReason,
                     'payment_id' => $this->selectedPayment->id,
-                    'note' => 'Tutor ' . ($this->selectedPayment->tutor?->name ?? 'N/A') . ' submitted a dispute.',
+                    'note' => 'Tutor '.($this->selectedPayment->tutor->name ?? 'N/A').' submitted a dispute.',
                 ]
             );
         }

@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Crm extends Model
 {
@@ -46,15 +47,19 @@ class Crm extends Model
         'closed_at' => 'datetime',
     ];
 
-    public function user(){
-        return $this->belongsTo(User::class);   
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
-    public function serviceItem()
+    /** @return BelongsTo<ServiceItem, $this> */
+    public function serviceItem(): BelongsTo
     {
         return $this->belongsTo(ServiceItem::class);
     }
 
+    /** @return HasMany<CrmAssignment, $this> */
     public function assignments(): HasMany
     {
         return $this->hasMany(CrmAssignment::class);

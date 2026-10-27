@@ -4,9 +4,9 @@ namespace App\Mail;
 
 use App\Models\Booking;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -16,8 +16,11 @@ class LessonAssigned extends Mailable
     use Queueable, SerializesModels;
 
     private $newBooking;
+
     private $tutor;
+
     private $client;
+
     /**
      * Create a new message instance.
      */
@@ -35,7 +38,7 @@ class LessonAssigned extends Mailable
     public function envelope(): Envelope
     {
         $cc = [];
-        if (!empty($this->tutor?->email)) {
+        if (! empty($this->tutor->email)) {
             $cc[] = new Address($this->tutor->email, $this->tutor->name ?? 'Assigned Tutor');
         }
 
@@ -54,15 +57,15 @@ class LessonAssigned extends Mailable
         return new Content(
             view: 'emails.lesson-assigned',
             with: ['newBooking' => $this->newBooking,
-                    'tutor' => $this->tutor,
-                    'client' => $this->client]
+                'tutor' => $this->tutor,
+                'client' => $this->client]
         );
     }
 
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

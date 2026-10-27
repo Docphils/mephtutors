@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,11 +21,27 @@ class RegistrationTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'role' => 'client',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $response->assertRedirect(route('client.dashboard'));
+    }
+
+    public function test_public_registration_cannot_assign_an_admin_role(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Unauthorized Admin',
+            'email' => 'unauthorized-admin@example.com',
+            'role' => 'admin',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('role');
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'unauthorized-admin@example.com']);
     }
 }

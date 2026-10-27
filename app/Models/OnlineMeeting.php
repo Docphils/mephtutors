@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OnlineMeeting extends Model
 {
@@ -37,32 +39,38 @@ class OnlineMeeting extends Model
         'jitsi_options' => 'array',
     ];
 
-    public function booking()
+    /** @return BelongsTo<Booking, $this> */
+    public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
-    public function serviceItem()
+    /** @return BelongsTo<ServiceItem, $this> */
+    public function serviceItem(): BelongsTo
     {
         return $this->belongsTo(ServiceItem::class);
     }
 
-    public function scheduler()
+    /** @return BelongsTo<User, $this> */
+    public function scheduler(): BelongsTo
     {
         return $this->belongsTo(User::class, 'scheduled_by');
     }
 
-    public function client()
+    /** @return BelongsTo<User, $this> */
+    public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
     }
 
-    public function tutor()
+    /** @return BelongsTo<User, $this> */
+    public function tutor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tutor_id');
     }
 
-    public function attendances()
+    /** @return HasMany<OnlineMeetingAttendance, $this> */
+    public function attendances(): HasMany
     {
         return $this->hasMany(OnlineMeetingAttendance::class);
     }

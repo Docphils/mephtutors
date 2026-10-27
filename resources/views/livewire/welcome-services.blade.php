@@ -34,19 +34,19 @@
             @foreach ($items as $item)
                 <div
                     class="bg-white p-6 rounded-lg shadow hover:shadow-lg hover:scale-105 hover:bg-cyan-50 focus:bg-cyan-50 active:bg-cyan-50 focus:scale-105 active:scale-105 transition duration-300 group">
-                    <a href="{{ $item->target === 'bootcamp'
-                        ? route('apply.bootcamp', ['serviceItem' => $item->slug])
-                        : ($item->target === 'institutions'
-                            ? route('apply.crm', ['serviceItem' => $item->slug])
-                            : route('apply.tutor', ['serviceItem' => $item->slug])) }}"
+                    <a href="{{ $item['target'] === 'bootcamp'
+                        ? route('apply.bootcamp', ['serviceItem' => $item['slug']])
+                        : ($item['target'] === 'institutions'
+                            ? route('apply.crm', ['serviceItem' => $item['slug']])
+                            : route('apply.tutor', ['serviceItem' => $item['slug']])) }}"
                         class="block">
-                        <img src="{{ asset('storage/' . $item->image_path ?? '/images/default.jpg') }}"
-                            alt="{{ $item->name }}" class="w-full h-40 object-cover rounded">
+                        <img src="{{ asset('storage/' . ($item['image_path'] ?? '/images/default.jpg')) }}"
+                            alt="{{ $item['name'] }}" class="w-full h-40 object-cover rounded">
                         <h4
                             class="mt-4 font-bold text-lg group-hover:text-cyan-900 group-hover:underline group-active:text-cyan-900 group-active:underline group-focus:text-cyan-900 group-focus:underline">
-                            {{ $item->name }}</h4>
+                            {{ $item['name'] }}</h4>
                     </a>
-                    <p class="text-gray-600 mt-2">{{ \Illuminate\Support\Str::limit($item->description, 120) }}</p>
+                    <p class="text-gray-600 mt-2">{{ \Illuminate\Support\Str::limit($item['description'], 120) }}</p>
                 </div>
             @endforeach
         </div>

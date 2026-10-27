@@ -2,25 +2,32 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
+use App\Mail\ContactSubmissionNotification;
 use App\Models\Contact;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\ContactSubmissionNotification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Livewire\Component;
 
 class ContactForm extends Component
 {
-    public $name, $email, $phone, $message;
+    public $name;
+
+    public $email;
+
+    public $phone;
+
+    public $message;
 
     protected $rules = [
         'name' => 'required|string|min:3',
         'email' => 'required|email',
         'phone' => 'required|string|min:6|max:20',
-        'message' => 'required|string',  
+        'message' => 'required|string',
     ];
 
-    public function save(){
+    public function save()
+    {
         $this->validate();
 
         $contact = [
@@ -37,10 +44,12 @@ class ContactForm extends Component
 
         // Send email to each admin
         try {
-        Mail::to('support@mephed.ng')->send(new ContactSubmissionNotification($contact));
+            Mail::to('support@mephed.ng')->send(new ContactSubmissionNotification($contact));
         } catch (\Exception $e) {
-            Log::error('Mail sending failed: ' . $e->getMessage());
-            return session()->flash('success', 'Thank you for contacting MephEd. Our support team will be in touch with you shortly');
+            Log::error('Mail sending failed: '.$e->getMessage());
+            session()->flash('success', 'Thank you for contacting MephEd. Our support team will be in touch with you shortly');
+
+            return;
         }
 
         session()->flash('success', 'Thank you for contacting MephEd. Our support team will be in touch with you shortly');

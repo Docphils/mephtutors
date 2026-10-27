@@ -9,11 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ProgrammeEnquiryAssignment extends Model
 {
     public const STATUS_ASSIGNED = 'assigned';
+
     public const STATUS_ACCEPTED = 'accepted';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_DECLINED = 'declined';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_CLOSED = 'closed';
 
     public const VISIBLE_TO_TUTOR = [
@@ -28,6 +34,7 @@ class ProgrammeEnquiryAssignment extends Model
         self::STATUS_ACTIVE,
         self::STATUS_DECLINED,
     ];
+
     protected $fillable = [
         'programme_enquiry_id',
         'tutor_id',
@@ -50,21 +57,25 @@ class ProgrammeEnquiryAssignment extends Model
         'completed_at' => 'datetime',
     ];
 
+    /** @return BelongsTo<ProgrammeEnquiry, $this> */
     public function programmeEnquiry(): BelongsTo
     {
         return $this->belongsTo(ProgrammeEnquiry::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function tutor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tutor_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by');
     }
 
+    /** @return HasOne<Payment, $this> */
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class, 'programme_enquiry_assignment_id');

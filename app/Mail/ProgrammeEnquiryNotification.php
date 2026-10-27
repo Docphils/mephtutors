@@ -29,7 +29,7 @@ class ProgrammeEnquiryNotification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Programme Enquiry: ' . ($this->enquiry->programme?->name ?? 'General'),
+            subject: 'New Programme Enquiry: '.($this->enquiry->programme->name ?? 'General'),
             from: 'no-reply@mephed.ng'
         );
     }
@@ -52,4 +52,3 @@ class ProgrammeEnquiryNotification extends Mailable
         return [];
     }
 }
-

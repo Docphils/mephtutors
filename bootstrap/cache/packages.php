@@ -1,78 +1,85 @@
-<?php return array (
-  'laravel/breeze' => 
+﻿<?php return array (
+  'laravel/breeze' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Laravel\\Breeze\\BreezeServiceProvider',
     ),
   ),
-  'laravel/sail' => 
+  'laravel/sail' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Laravel\\Sail\\SailServiceProvider',
     ),
   ),
-  'laravel/sanctum' => 
+  'laravel/sanctum' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Laravel\\Sanctum\\SanctumServiceProvider',
     ),
   ),
-  'laravel/telescope' => 
+  'laravel/sentinel' =>
   array (
-    'providers' => 
+    'providers' =>
+    array (
+      0 => 'Laravel\\Sentinel\\SentinelServiceProvider',
+    ),
+  ),
+  'laravel/telescope' =>
+  array (
+    'providers' =>
     array (
       0 => 'Laravel\\Telescope\\TelescopeServiceProvider',
     ),
   ),
-  'laravel/tinker' => 
+  'laravel/tinker' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
     ),
   ),
-  'livewire/livewire' => 
+  'livewire/livewire' =>
   array (
-    'aliases' => 
+    'aliases' =>
     array (
       'Livewire' => 'Livewire\\Livewire',
     ),
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Livewire\\LivewireServiceProvider',
     ),
   ),
-  'nesbot/carbon' => 
+  'nesbot/carbon' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Carbon\\Laravel\\ServiceProvider',
     ),
   ),
-  'nunomaduro/collision' => 
+  'nunomaduro/collision' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
     ),
   ),
-  'nunomaduro/termwind' => 
+  'nunomaduro/termwind' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
-  'spatie/laravel-ignition' => 
+  'spatie/laravel-ignition' =>
   array (
-    'aliases' => 
+    'aliases' =>
     array (
       'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
     ),
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),

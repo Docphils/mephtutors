@@ -46,21 +46,25 @@ class ProgrammeEnquiry extends Model
         'price_breakdown' => 'array',
     ];
 
+    /** @return BelongsTo<AcademicProgramme, $this> */
     public function programme(): BelongsTo
     {
         return $this->belongsTo(AcademicProgramme::class, 'academic_programme_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<ProgrammeEnquiryAssignment, $this> */
     public function assignments(): HasMany
     {
         return $this->hasMany(ProgrammeEnquiryAssignment::class);
     }
 
+    /** @return HasOne<ProgrammeEnquiryAssignment, $this> */
     public function activeAssignment(): HasOne
     {
         return $this->hasOne(ProgrammeEnquiryAssignment::class)
@@ -71,6 +75,7 @@ class ProgrammeEnquiry extends Model
     /**
      * Return the latest assignment regardless of status (completed or otherwise).
      */
+    /** @return HasOne<ProgrammeEnquiryAssignment, $this> */
     public function latestAssignment(): HasOne
     {
         return $this->hasOne(ProgrammeEnquiryAssignment::class)

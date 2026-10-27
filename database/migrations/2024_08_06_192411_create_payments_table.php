@@ -16,11 +16,10 @@ return new class extends Migration
             $table->unsignedBigInteger('booking_id');
             $table->decimal('amount');
             $table->string('evidence')->nullable();
-            $table->enum('status', ['Pending','Earned', 'Paid']);
+            $table->enum('status', ['Pending', 'Earned', 'Paid', 'Cancelled']);
             $table->json('dispute')->nullable();
             $table->unsignedBigInteger('tutor_id');
             $table->timestamps();
-
 
             // Foreign key constraints linking to the users table
             $table->foreign('tutor_id')->references('id')->on('users');

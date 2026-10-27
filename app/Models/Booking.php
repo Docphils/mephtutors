@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'tutor_request_id',
         'user_id',
@@ -47,48 +50,59 @@ class Booking extends Model
         'completed_at' => 'datetime',
         'days_times' => 'array',
         'learners' => 'array',
+        'subjects' => 'array',
     ];
 
-    public function user(){
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
-    
-    public function tutor()
+
+    /** @return BelongsTo<User, $this> */
+    public function tutor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tutor_id');
     }
 
-    public function client()
+    /** @return BelongsTo<User, $this> */
+    public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
     }
 
-    public function payments()
+    /** @return HasOne<Payment, $this> */
+    public function payments(): HasOne
     {
         return $this->hasOne(Payment::class);
     }
 
-    public function tutorRequest()
+    /** @return BelongsTo<TutorRequest, $this> */
+    public function tutorRequest(): BelongsTo
     {
         return $this->belongsTo(TutorRequest::class, 'tutor_request_id');
     }
 
-    public function serviceItem()
+    /** @return BelongsTo<ServiceItem, $this> */
+    public function serviceItem(): BelongsTo
     {
         return $this->belongsTo(ServiceItem::class, 'service_item_id');
     }
 
-    public function level()
+    /** @return BelongsTo<Level, $this> */
+    public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class, 'level_id');
     }
 
-    public function examType()
+    /** @return BelongsTo<ExamType, $this> */
+    public function examType(): BelongsTo
     {
         return $this->belongsTo(ExamType::class, 'exam_type_id');
     }
 
-    public function onlineMeetings()
+    /** @return HasMany<OnlineMeeting, $this> */
+    public function onlineMeetings(): HasMany
     {
         return $this->hasMany(OnlineMeeting::class);
     }
@@ -110,23 +124,17 @@ class Booking extends Model
 
     public function getFormattedLearnersAttribute()
     {
-        return is_array($this->learners)
-            ? $this->learners
-            : (json_decode($this->learners, true) ?: []);
+        return $this->learners ?? [];
     }
 
     public function getFormattedSubjectsAttribute()
     {
-        return is_array($this->subjects)
-            ? $this->subjects
-            : (json_decode($this->subjects, true) ?: []);
+        return $this->subjects ?? [];
     }
 
     public function getFormattedDaysTimesAttribute()
     {
-        return is_array($this->days_times)
-            ? $this->days_times
-            : (json_decode($this->days_times, true) ?: []);
+        return $this->days_times ?? [];
     }
 
     public function getLearnersStringAttribute()
@@ -141,5 +149,4 @@ class Booking extends Model
     {
         return implode(', ', array_filter($this->formatted_subjects)) ?: 'No Subjects';
     }
-
 }

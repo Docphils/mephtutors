@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cohort extends Model
 {
@@ -29,19 +31,18 @@ class Cohort extends Model
         'end_date' => 'datetime',
     ];
 
-    public function service()
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }
 
-    public function serviceItem()
+    public function serviceItem(): BelongsTo
     {
         return $this->belongsTo(ServiceItem::class);
     }
 
-    public function enrollees()
+    public function enrollees(): HasMany
     {
         return $this->hasMany(Enrollee::class);
     }
-
 }

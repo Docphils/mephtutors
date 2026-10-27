@@ -8,6 +8,7 @@ use App\Models\ProgrammeEnquiry;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Services\PaystackService;
+use App\Support\InterventionStatusNotifier;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,39 +20,82 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use App\Support\InterventionStatusNotifier;
 
+/**
+ * @property-read array<int, string> $subjectOptions
+ * @property-read array<int, string> $frequencyOptions
+ * @property-read array<int, string> $durationOptions
+ * @property-read array<int, string> $modeOptions
+ * @property-read array<int, string> $modeValueOptions
+ * @property-read int $maxSelectableSubjects
+ * @property-read int $frequencyCount
+ * @property-read bool $isExamSpecificProgramme
+ * @property-read float $calculatedPrice
+ * @property-read array<string, mixed> $priceBreakdown
+ * @property-read bool $isHomeLessonMode
+ * @property-read bool $isAuthenticatedUser
+ * @property-read bool $needsContactStep
+ * @property-read bool $needsPhoneCapture
+ * @property-read int $reviewStepNumber
+ * @property-read bool $canUseExistingAddress
+ * @property-read bool $shouldUseExistingAddress
+ * @property-read array<int, int|string> $existingAddressIds
+ * @property-read array<string, mixed>|null $selectedExistingAddressOption
+ * @property-read array<int, string> $dayOptions
+ */
 #[Layout('layouts.visitor')]
 class ProgrammeEnquiryWizard extends Component
 {
     public AcademicProgramme $programme;
+
     public int $step = 1;
+
     public bool $submitted = false;
+
     public ?int $createdProgrammeRequestId = null;
+
     public ?float $submittedPrice = null;
 
     public string $learner_name = '';
+
     public string $class_level = '';
+
     public string $school_name = '';
+
     public array $subjects = [];
+
     public string $weak_areas = '';
 
     public string $lesson_mode = 'online';
+
     public string $preferred_frequency = '';
+
     public string $preferred_duration = '';
+
     public array $preferred_days = [];
+
     public string $preferred_time = '';
+
     public string $preferred_start_date = '';
+
     public string $state = '';
+
     public string $city_area = '';
+
     public string $address = '';
+
     public bool $use_existing_address = true;
+
     public string $selected_existing_address = '';
+
     public array $existing_addresses = [];
 
     public string $account_email = '';
+
     public string $parent_name = '';
+
     public string $parent_phone = '';
+
     public bool $existingAccountDetected = false;
 
     public function mount(AcademicProgramme $academicProgramme): void
@@ -69,6 +113,7 @@ class ProgrammeEnquiryWizard extends Component
                 $currentRouteName !== 'client.interventions.create'
             ) {
                 $this->redirectRoute('client.interventions.create', ['programme' => $academicProgramme->slug], navigate: true);
+
                 return;
             }
 
@@ -78,6 +123,7 @@ class ProgrammeEnquiryWizard extends Component
                 $currentRouteName !== 'admin.dashboard'
             ) {
                 $this->redirectRoute('admin.dashboard', navigate: true);
+
                 return;
             }
 
@@ -87,6 +133,7 @@ class ProgrammeEnquiryWizard extends Component
                 $currentRouteName !== 'tutor.dashboard'
             ) {
                 $this->redirectRoute('tutor.dashboard', navigate: true);
+
                 return;
             }
         }
@@ -118,11 +165,13 @@ class ProgrammeEnquiryWizard extends Component
     {
         if (in_array($subject, $this->subjects, true)) {
             $this->subjects = array_values(array_filter($this->subjects, fn ($item) => $item !== $subject));
+
             return;
         }
 
         if (count($this->subjects) >= $this->maxSelectableSubjects) {
             $this->addError('subjects', "You can select up to {$this->maxSelectableSubjects} subjects for this intervention.");
+
             return;
         }
 
@@ -137,9 +186,10 @@ class ProgrammeEnquiryWizard extends Component
         $this->validateForSubmission();
 
         $isAuthenticatedUser = $this->isAuthenticatedUser;
-        if (!$isAuthenticatedUser && $this->checkAccountEmailOwnership(strict: false)) {
+        if (! $isAuthenticatedUser && $this->checkAccountEmailOwnership(strict: false)) {
             $this->persistDraft();
             session(['url.intended' => request()->fullUrl()]);
+
             return;
         }
 
@@ -163,6 +213,7 @@ class ProgrammeEnquiryWizard extends Component
                 if ($this->checkAccountEmailOwnership(strict: false)) {
                     $this->persistDraft();
                     session(['url.intended' => request()->fullUrl()]);
+
                     return;
                 }
 
@@ -216,7 +267,7 @@ class ProgrammeEnquiryWizard extends Component
         ]);
 
         try {
-            if (!$isAuthenticatedUser) {
+            if (! $isAuthenticatedUser) {
                 $token = Password::broker()->createToken($user);
                 Mail::to($user->email)->send(new ProgrammeGuestAcknowledgement(
                     $user,
@@ -230,7 +281,7 @@ class ProgrammeEnquiryWizard extends Component
                 InterventionStatusNotifier::ADMIN_SUBMISSION_NOTIFICATION
             );
         } catch (\Throwable $e) {
-            logger()->warning('Intervention request acknowledgement email failed: ' . $e->getMessage());
+            logger()->warning('Intervention request acknowledgement email failed: '.$e->getMessage());
         }
 
         $this->clearDraft();
@@ -247,7 +298,7 @@ class ProgrammeEnquiryWizard extends Component
 
     public function startPayment(PaystackService $paystack)
     {
-        abort_unless($this->createdProgrammeRequestId, 404);
+        abort_unless($this->createdProgrammeRequestId !== null, 404);
 
         $programmeRequest = ProgrammeEnquiry::query()->with('user')->findOrFail($this->createdProgrammeRequestId);
         $redirectUrl = $paystack->initializeProgrammeEnquiryPayment($programmeRequest);
@@ -263,11 +314,11 @@ class ProgrammeEnquiryWizard extends Component
                 'school_name' => 'nullable|string|max:150',
             ];
 
-            if (!$this->isAuthenticatedUser) {
+            if (! $this->isAuthenticatedUser) {
                 $rules['account_email'] = 'required|email|max:120';
             }
 
-            if (!$this->isExamSpecificProgramme) {
+            if (! $this->isExamSpecificProgramme) {
                 $rules['class_level'] = 'required|string|min:2|max:120';
             } else {
                 $rules['class_level'] = 'nullable|string|max:120';
@@ -279,7 +330,7 @@ class ProgrammeEnquiryWizard extends Component
 
         if ($this->step === 2) {
             $this->validate([
-                'subjects' => ['required', 'array', 'min:1', 'max:' . $this->maxSelectableSubjects],
+                'subjects' => ['required', 'array', 'min:1', 'max:'.$this->maxSelectableSubjects],
                 'subjects.*' => ['string', Rule::in($this->subjectOptions)],
                 'weak_areas' => 'nullable|string|max:2000',
             ]);
@@ -290,7 +341,7 @@ class ProgrammeEnquiryWizard extends Component
                 'lesson_mode' => ['required', Rule::in($this->modeValueOptions)],
                 'preferred_frequency' => ['required', Rule::in($this->frequencyOptions)],
                 'preferred_duration' => ['required', Rule::in($this->durationOptions)],
-                'preferred_days' => ['required', 'array', 'size:' . $this->frequencyCount],
+                'preferred_days' => ['required', 'array', 'size:'.$this->frequencyCount],
                 'preferred_days.*' => ['required', 'string', 'distinct', Rule::in($this->dayOptions)],
                 'preferred_time' => 'required|date_format:H:i',
                 'preferred_start_date' => 'required|date',
@@ -322,7 +373,7 @@ class ProgrammeEnquiryWizard extends Component
                     : 'required|string|min:2|max:120',
             ];
 
-            if (!$this->isAuthenticatedUser || $this->needsPhoneCapture) {
+            if (! $this->isAuthenticatedUser || $this->needsPhoneCapture) {
                 $rules['parent_phone'] = 'required|string|min:7|max:30';
             } else {
                 $rules['parent_phone'] = 'nullable|string|min:7|max:30';
@@ -339,25 +390,25 @@ class ProgrammeEnquiryWizard extends Component
         $rules = [
             'learner_name' => 'required|string|min:2|max:120',
             'school_name' => 'nullable|string|max:150',
-            'subjects' => ['required', 'array', 'min:1', 'max:' . $this->maxSelectableSubjects],
+            'subjects' => ['required', 'array', 'min:1', 'max:'.$this->maxSelectableSubjects],
             'subjects.*' => ['string', Rule::in($this->subjectOptions)],
             'weak_areas' => 'nullable|string|max:2000',
             'lesson_mode' => ['required', Rule::in($this->modeValueOptions)],
             'preferred_frequency' => ['required', Rule::in($this->frequencyOptions)],
             'preferred_duration' => ['required', Rule::in($this->durationOptions)],
-            'preferred_days' => ['required', 'array', 'size:' . $this->frequencyCount],
+            'preferred_days' => ['required', 'array', 'size:'.$this->frequencyCount],
             'preferred_days.*' => ['required', 'string', 'distinct', Rule::in($this->dayOptions)],
             'preferred_time' => 'required|date_format:H:i',
             'preferred_start_date' => 'required|date',
             'parent_name' => $this->isAuthenticatedUser
                 ? 'nullable|string|min:2|max:120'
                 : 'required|string|min:2|max:120',
-            'parent_phone' => (!$this->isAuthenticatedUser || $this->needsPhoneCapture)
+            'parent_phone' => (! $this->isAuthenticatedUser || $this->needsPhoneCapture)
                 ? 'required|string|min:7|max:30'
                 : 'nullable|string|min:7|max:30',
         ];
 
-        if (!$this->isAuthenticatedUser) {
+        if (! $this->isAuthenticatedUser) {
             $rules['account_email'] = 'required|email|max:120';
         }
 
@@ -393,19 +444,22 @@ class ProgrammeEnquiryWizard extends Component
     {
         if ($this->isAuthenticatedUser) {
             $this->existingAccountDetected = false;
+
             return false;
         }
 
         $email = trim(strtolower($this->account_email));
         if ($email === '') {
             $this->existingAccountDetected = false;
+
             return false;
         }
 
         $exists = User::query()->whereRaw('LOWER(TRIM(email)) = ?', [$email])->exists();
-        if (!$exists) {
+        if (! $exists) {
             $this->existingAccountDetected = false;
             $this->resetErrorBag('account_email');
+
             return false;
         }
 
@@ -433,7 +487,7 @@ class ProgrammeEnquiryWizard extends Component
             return;
         }
 
-        if (!filter_var($this->account_email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($this->account_email, FILTER_VALIDATE_EMAIL)) {
             return;
         }
 
@@ -493,7 +547,7 @@ class ProgrammeEnquiryWizard extends Component
 
     public function updatedPreferredFrequency($value): void
     {
-        if (!in_array($value, $this->frequencyOptions, true)) {
+        if (! in_array($value, $this->frequencyOptions, true)) {
             return;
         }
 
@@ -526,12 +580,13 @@ class ProgrammeEnquiryWizard extends Component
     {
         $this->use_existing_address = (bool) $value;
 
-        if (!$this->isHomeLessonMode) {
+        if (! $this->isHomeLessonMode) {
             return;
         }
 
         if ($this->shouldUseExistingAddress) {
             $this->applySelectedExistingAddress();
+
             return;
         }
 
@@ -543,7 +598,7 @@ class ProgrammeEnquiryWizard extends Component
 
     public function updatedSelectedExistingAddress($value): void
     {
-        if (!$this->isHomeLessonMode) {
+        if (! $this->isHomeLessonMode) {
             return;
         }
 
@@ -553,13 +608,14 @@ class ProgrammeEnquiryWizard extends Component
 
     public function togglePreferredDay(string $day): void
     {
-        if (!in_array($day, $this->dayOptions, true)) {
+        if (! in_array($day, $this->dayOptions, true)) {
             return;
         }
 
         if (in_array($day, $this->preferred_days, true)) {
             $this->preferred_days = array_values(array_filter($this->preferred_days, fn ($d) => $d !== $day));
             $this->resetErrorBag('preferred_days');
+
             return;
         }
 
@@ -568,6 +624,7 @@ class ProgrammeEnquiryWizard extends Component
                 'preferred_days',
                 "You selected {$this->preferred_frequency}. Please choose exactly {$this->frequencyCount} day(s)."
             );
+
             return;
         }
 
@@ -631,7 +688,7 @@ class ProgrammeEnquiryWizard extends Component
 
     public function getNeedsContactStepProperty(): bool
     {
-        if (!$this->isAuthenticatedUser) {
+        if (! $this->isAuthenticatedUser) {
             return true;
         }
 
@@ -640,7 +697,7 @@ class ProgrammeEnquiryWizard extends Component
 
     public function getNeedsPhoneCaptureProperty(): bool
     {
-        if (!$this->isAuthenticatedUser) {
+        if (! $this->isAuthenticatedUser) {
             return true;
         }
 
@@ -715,7 +772,7 @@ class ProgrammeEnquiryWizard extends Component
 
     protected function hydrateAuthenticatedDefaults(): void
     {
-        if (!$this->isAuthenticatedUser) {
+        if (! $this->isAuthenticatedUser) {
             return;
         }
 
@@ -746,16 +803,17 @@ class ProgrammeEnquiryWizard extends Component
     protected function hydrateDraft(): void
     {
         $draft = session()->get($this->draftSessionKey());
-        if (!is_array($draft)) {
+        if (! is_array($draft)) {
             return;
         }
 
         if (
             $this->isAuthenticatedUser &&
-            !empty($draft['account_email']) &&
+            ! empty($draft['account_email']) &&
             strcasecmp((string) $draft['account_email'], (string) Auth::user()->email) !== 0
         ) {
             $this->clearDraft();
+
             return;
         }
 
@@ -831,19 +889,20 @@ class ProgrammeEnquiryWizard extends Component
 
     protected function draftSessionKey(): string
     {
-        return 'programme_enquiry_draft:' . $this->programme->slug;
+        return 'programme_enquiry_draft:'.$this->programme->slug;
     }
 
     protected function submissionSessionKey(): string
     {
-        $owner = $this->isAuthenticatedUser ? 'user:' . (string) Auth::id() : 'guest';
-        return 'programme_enquiry_submitted:' . $owner . ':' . $this->programme->slug;
+        $owner = $this->isAuthenticatedUser ? 'user:'.(string) Auth::id() : 'guest';
+
+        return 'programme_enquiry_submitted:'.$owner.':'.$this->programme->slug;
     }
 
     protected function hydrateSubmissionState(): void
     {
         $submissionState = session()->pull($this->submissionSessionKey());
-        if (!is_array($submissionState) || empty($submissionState['submitted'])) {
+        if (! is_array($submissionState) || empty($submissionState['submitted'])) {
             return;
         }
 
@@ -865,7 +924,7 @@ class ProgrammeEnquiryWizard extends Component
                 return;
             }
 
-            $key = strtolower($address . '|' . $city . '|' . $state);
+            $key = strtolower($address.'|'.$city.'|'.$state);
             if (isset($unique[$key])) {
                 return;
             }
@@ -915,17 +974,17 @@ class ProgrammeEnquiryWizard extends Component
 
     protected function applySelectedExistingAddress(): void
     {
-        if (!$this->shouldUseExistingAddress) {
+        if (! $this->shouldUseExistingAddress) {
             return;
         }
 
         $selected = $this->selectedExistingAddressOption;
-        if (!$selected && count($this->existing_addresses) > 0) {
+        if (! $selected && count($this->existing_addresses) > 0) {
             $this->selected_existing_address = (string) ($this->existing_addresses[0]['id'] ?? '');
             $selected = $this->selectedExistingAddressOption;
         }
 
-        if (!$selected) {
+        if (! $selected) {
             return;
         }
 
@@ -939,10 +998,10 @@ class ProgrammeEnquiryWizard extends Component
         return view('livewire.requests.programme-enquiry-wizard', [
             'dayOptions' => $this->dayOptions,
             'stateOptions' => [
-                'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta',
-                'Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi',
-                'Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto',
-                'Taraba','Yobe','Zamfara',
+                'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta',
+                'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi',
+                'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto',
+                'Taraba', 'Yobe', 'Zamfara',
             ],
         ]);
     }

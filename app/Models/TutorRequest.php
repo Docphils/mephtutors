@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TutorRequest extends Model
 {
@@ -54,40 +55,47 @@ class TutorRequest extends Model
     }
 
     // CLIENT
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // SERVICE
+    /** @return BelongsTo<ServiceItem, $this> */
     public function serviceItem(): BelongsTo
     {
         return $this->belongsTo(ServiceItem::class);
     }
 
+    /** @return BelongsTo<Level, $this> */
     public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class);
     }
 
+    /** @return BelongsTo<ExamType, $this> */
     public function examType(): BelongsTo
     {
         return $this->belongsTo(ExamType::class);
     }
 
     // MATCHING
+    /** @return HasMany<TutorMatch, $this> */
     public function tutorMatches(): HasMany
     {
         return $this->hasMany(TutorMatch::class);
     }
 
-    public function acceptedMatch()
+    /** @return HasOne<TutorMatch, $this> */
+    public function acceptedMatch(): HasOne
     {
         return $this->hasOne(TutorMatch::class)
             ->where('status', 'accepted');
     }
 
-    public function bookings()
+    /** @return HasMany<Booking, $this> */
+    public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
     }

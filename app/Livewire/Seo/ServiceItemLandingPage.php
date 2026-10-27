@@ -43,11 +43,11 @@ class ServiceItemLandingPage extends Component
         $title = sprintf(
             '%s in Nigeria | %s | MephEd',
             $this->serviceItem->name,
-            $this->serviceItem->service?->name ?? 'Education Services'
+            $this->serviceItem->service->name ?? 'Education Services'
         );
 
         $description = $this->serviceItem->description
-            ? trim($this->serviceItem->description) . ' Book with MephEd today.'
+            ? trim($this->serviceItem->description).' Book with MephEd today.'
             : 'Learn more about this MephEd service and get started today.';
 
         $structuredData = json_encode([

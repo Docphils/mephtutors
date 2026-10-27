@@ -48,6 +48,9 @@ return [
 
     'encrypt' => false,
 
+    // Use JSON serialization to avoid unsafe PHP object deserialization.
+    'serialization' => 'json',
+
     /*
     |--------------------------------------------------------------------------
     | Session File Location

@@ -4,21 +4,11 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\UserProfile;
-use App\Models\TutorProfile;
-use App\Models\Booking;
-use App\Models\TutorRequest;
-use App\Models\Crm;
-use App\Models\Payment;
-use App\Models\CrmAssignment;
-use App\Models\OnlineMeeting;
-use App\Models\OnlineMeetingAttendance;
-use App\Models\ProgrammeEnquiry;
-use App\Models\ProgrammeEnquiryAssignment;
-
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -27,7 +17,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'name',
@@ -40,7 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -57,82 +47,102 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
-
-    public function userProfile()
+    /** @return HasOne<UserProfile, $this> */
+    public function userProfile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
     }
 
-    public function tutorProfile(){
+    /** @return HasOne<TutorProfile, $this> */
+    public function tutorProfile(): HasOne
+    {
         return $this->hasOne(TutorProfile::class);
     }
 
-    public function tutorRequests(){
+    /** @return HasMany<TutorRequest, $this> */
+    public function tutorRequests(): HasMany
+    {
         return $this->hasMany(TutorRequest::class);
     }
 
-    public function bookings(){
+    /** @return HasMany<Booking, $this> */
+    public function bookings(): HasMany
+    {
         return $this->hasMany(Booking::class);
     }
 
-    public function crms(){
+    /** @return HasMany<Crm, $this> */
+    public function crms(): HasMany
+    {
         return $this->hasMany(Crm::class);
     }
 
-    public function payments(){
+    /** @return HasMany<Payment, $this> */
+    public function payments(): HasMany
+    {
         return $this->hasMany(Payment::class);
     }
 
-    public function testimonials(){
+    /** @return HasMany<Testimonial, $this> */
+    public function testimonials(): HasMany
+    {
         return $this->hasMany(Testimonial::class);
     }
 
     // TUTOR MATCHES
-    public function tutorMatches()
+    /** @return HasMany<TutorMatch, $this> */
+    public function tutorMatches(): HasMany
     {
         return $this->hasMany(TutorMatch::class, 'tutor_id');
     }
 
     // Accepted tutoring sessions
-    public function acceptedTutorMatches()
+    /** @return HasMany<TutorMatch, $this> */
+    public function acceptedTutorMatches(): HasMany
     {
         return $this->hasMany(TutorMatch::class, 'tutor_id')
             ->where('status', 'accepted');
     }
 
-    public function crmAssignments()
+    /** @return HasMany<CrmAssignment, $this> */
+    public function crmAssignments(): HasMany
     {
         return $this->hasMany(CrmAssignment::class, 'user_id');
     }
 
-    public function scheduledOnlineMeetings()
+    /** @return HasMany<OnlineMeeting, $this> */
+    public function scheduledOnlineMeetings(): HasMany
     {
         return $this->hasMany(OnlineMeeting::class, 'scheduled_by');
     }
 
-    public function onlineMeetingsAsClient()
+    /** @return HasMany<OnlineMeeting, $this> */
+    public function onlineMeetingsAsClient(): HasMany
     {
         return $this->hasMany(OnlineMeeting::class, 'client_id');
     }
 
-    public function onlineMeetingsAsTutor()
+    /** @return HasMany<OnlineMeeting, $this> */
+    public function onlineMeetingsAsTutor(): HasMany
     {
         return $this->hasMany(OnlineMeeting::class, 'tutor_id');
     }
 
-    public function onlineMeetingAttendances()
+    /** @return HasMany<OnlineMeetingAttendance, $this> */
+    public function onlineMeetingAttendances(): HasMany
     {
         return $this->hasMany(OnlineMeetingAttendance::class);
     }
 
-    public function programmeEnquiries()
+    /** @return HasMany<ProgrammeEnquiry, $this> */
+    public function programmeEnquiries(): HasMany
     {
         return $this->hasMany(ProgrammeEnquiry::class);
     }
 
-    public function programmeAssignmentsAsTutor()
+    /** @return HasMany<ProgrammeEnquiryAssignment, $this> */
+    public function programmeAssignmentsAsTutor(): HasMany
     {
         return $this->hasMany(ProgrammeEnquiryAssignment::class, 'tutor_id');
     }
-
 }

@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EnrolleeConfirmation;
 use App\Models\Booking;
 use App\Models\Crm;
+use App\Models\Enrollee;
 use App\Models\Payment;
 use App\Models\ProgrammeEnquiry;
-use App\Models\Enrollee;
-use App\Mail\EnrolleeConfirmation;
-use Illuminate\Support\Facades\Mail;
 use App\Services\PaystackService;
 use App\Support\InterventionStatusNotifier;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PaystackController extends Controller
 {
@@ -38,7 +38,7 @@ class PaystackController extends Controller
                     ->with('success', 'Payment successful. Institution contract has been funded.');
             }
 
-            //Enrollment Callback
+            // Enrollment Callback
             if (($metadata['payment_for'] ?? null) === 'bootcamp_enrollment') {
                 $enrollee = Enrollee::with('cohort.service', 'cohort.serviceItem')
                     ->findOrFail($metadata['enrollee_id']);
@@ -56,7 +56,7 @@ class PaystackController extends Controller
                     try {
                         Mail::to($enrollee->email)->send(new EnrolleeConfirmation($enrollee));
                     } catch (\Exception $e) {
-                        Log::error('Enrollee confirmation mail failed: ' . $e->getMessage());
+                        Log::error('Enrollee confirmation mail failed: '.$e->getMessage());
                     }
                 }
 
@@ -64,11 +64,9 @@ class PaystackController extends Controller
                     ->with('success', 'Payment successful. Your spot is confirmed.');
             }
 
-
-            //Programme request callback
+            // Programme request callback
             if (($metadata['payment_for'] ?? null) === 'programme_request') {
                 $programmeEnquiry = ProgrammeEnquiry::findOrFail($metadata['programme_enquiry_id']);
-                $wasPaid = ($programmeEnquiry->payment_status ?? 'pending') === 'paid';
                 $wasInProgress = ($programmeEnquiry->status ?? null) === 'in_progress';
                 $programmeEnquiry->update([
                     'payment_status' => 'paid',
@@ -77,7 +75,7 @@ class PaystackController extends Controller
                 ]);
 
                 // Activate any existing assignment so tutor can see the active request
-                $assignment = $programmeEnquiry->assignments()->whereIn('status', ['assigned','accepted'])->latest()->first();
+                $assignment = $programmeEnquiry->assignments()->whereIn('status', ['assigned', 'accepted'])->latest()->first();
                 if ($assignment) {
                     $assignment->update([
                         'status' => 'active',
@@ -95,7 +93,7 @@ class PaystackController extends Controller
                     );
                 }
 
-                if (! $wasPaid || ! $wasInProgress) {
+                if (! $wasInProgress) {
                     InterventionStatusNotifier::notifyClient(
                         $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
                         InterventionStatusNotifier::CLIENT_ACTIVATED,
@@ -187,7 +185,7 @@ class PaystackController extends Controller
                 try {
                     Mail::to($enrollee->email)->send(new EnrolleeConfirmation($enrollee->load('cohort.service', 'cohort.serviceItem')));
                 } catch (\Exception $e) {
-                    Log::error('Enrollee confirmation mail failed: ' . $e->getMessage());
+                    Log::error('Enrollee confirmation mail failed: '.$e->getMessage());
                 }
             }
 
@@ -213,15 +211,13 @@ class PaystackController extends Controller
             $programmeEnquiry = ProgrammeEnquiry::find($metadata['programme_enquiry_id'] ?? 0);
 
             if ($programmeEnquiry && $programmeEnquiry->payment_status !== 'paid') {
-                $wasPaid = ($programmeEnquiry->payment_status ?? 'pending') === 'paid';
-                $wasInProgress = ($programmeEnquiry->status ?? null) === 'in_progress';
                 $programmeEnquiry->update([
                     'payment_status' => 'paid',
                     'status' => 'in_progress',
                     'payment_reference' => $data['reference'] ?? $programmeEnquiry->payment_reference,
                 ]);
 
-                $assignment = $programmeEnquiry->assignments()->whereIn('status', ['assigned','accepted'])->latest()->first();
+                $assignment = $programmeEnquiry->assignments()->whereIn('status', ['assigned', 'accepted'])->latest()->first();
                 if ($assignment) {
                     $assignment->update([
                         'status' => 'active',
@@ -239,24 +235,22 @@ class PaystackController extends Controller
                     );
                 }
 
-                if (! $wasPaid || ! $wasInProgress) {
-                    InterventionStatusNotifier::notifyClient(
+                InterventionStatusNotifier::notifyClient(
+                    $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
+                    InterventionStatusNotifier::CLIENT_ACTIVATED,
+                    ['note' => 'Your payment was confirmed successfully.']
+                );
+                if ($assignment) {
+                    $assignment->loadMissing(['tutor.tutorProfile', 'tutor.userProfile']);
+                    InterventionStatusNotifier::notifyTutor(
                         $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
-                        InterventionStatusNotifier::CLIENT_ACTIVATED,
-                        ['note' => 'Your payment was confirmed successfully.']
+                        $assignment->tutor,
+                        InterventionStatusNotifier::TUTOR_ASSIGNED,
+                        [
+                            'note' => 'Client payment has been confirmed and this intervention is now active.',
+                            'payment_status' => 'pending',
+                        ]
                     );
-                    if ($assignment) {
-                        $assignment->loadMissing(['tutor.tutorProfile', 'tutor.userProfile']);
-                        InterventionStatusNotifier::notifyTutor(
-                            $programmeEnquiry->loadMissing(['programme', 'user.userProfile']),
-                            $assignment->tutor,
-                            InterventionStatusNotifier::TUTOR_ASSIGNED,
-                            [
-                                'note' => 'Client payment has been confirmed and this intervention is now active.',
-                                'payment_status' => 'pending',
-                            ]
-                        );
-                    }
                 }
             }
 

@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
 use App\Models\Testimonial;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 #[Title('Manage testimonials - MephEd Admin')]
@@ -16,12 +16,18 @@ class AdminIndexTestimonials extends Component
 {
     use WithPagination;
 
-    public $status, $openModal, $statusUpdate, $testimonialId;
- 
+    public $status;
 
-    public function mount(){
+    public $openModal;
+
+    public $statusUpdate;
+
+    public $testimonialId;
+
+    public function mount()
+    {
         Gate::authorize('Admin');
-  
+
     }
 
     public function updatedStatus()
@@ -30,20 +36,16 @@ class AdminIndexTestimonials extends Component
         $this->resetPage();
     }
 
-    public function edit($id){
+    public function edit($id)
+    {
         $testimonial = Testimonial::findOrFail($id);
-
-        if(!$testimonial){
-            return session()->flash('error', 'This testimonial could not be found.');
-        }else{
-            $this->openModal = true;
-            $this->testimonialId = $id;
-            $this->statusUpdate = $testimonial->status;
-        }
-       
+        $this->openModal = true;
+        $this->testimonialId = $id;
+        $this->statusUpdate = $testimonial->status;
     }
 
-    public function update($id){
+    public function update($id)
+    {
         $testimonial = Testimonial::findOrFail($this->testimonialId);
 
         $validated = $this->validate([
@@ -58,7 +60,7 @@ class AdminIndexTestimonials extends Component
             session()->flash('success', 'Testimonial updated successfully');
 
         } catch (\Throwable $e) {
-            Log::error('Failed to update testimonial ' . $e->getMessage());
+            Log::error('Failed to update testimonial '.$e->getMessage());
             session()->flash('error', 'Failed to update testimonial');
         }
 
@@ -66,10 +68,10 @@ class AdminIndexTestimonials extends Component
         $this->openModal = false;
         $this->testimonialId = null;
 
-
     }
 
-    public function delete($id){
+    public function delete($id)
+    {
         $testimonial = Testimonial::findOrFail($id);
 
         $testimonial->delete();

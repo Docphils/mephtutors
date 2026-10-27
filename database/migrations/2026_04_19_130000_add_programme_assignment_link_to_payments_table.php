@@ -20,7 +20,9 @@ return new class extends Migration
             }
         });
 
-        DB::statement('ALTER TABLE payments MODIFY booking_id BIGINT UNSIGNED NULL');
+        Schema::table('payments', function (Blueprint $table): void {
+            $table->unsignedBigInteger('booking_id')->nullable()->change();
+        });
 
         Schema::table('payments', function (Blueprint $table): void {
             $table->foreign('booking_id')->references('id')->on('bookings')->nullOnDelete();
@@ -49,7 +51,9 @@ return new class extends Migration
             $table->dropForeign(['booking_id']);
         });
 
-        DB::statement('ALTER TABLE payments MODIFY booking_id BIGINT UNSIGNED NOT NULL');
+        Schema::table('payments', function (Blueprint $table): void {
+            $table->unsignedBigInteger('booking_id')->nullable(false)->change();
+        });
 
         Schema::table('payments', function (Blueprint $table): void {
             $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');

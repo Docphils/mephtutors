@@ -28,9 +28,21 @@ class ChurchLead extends Model
         'follow_up_at' => 'date', 'archived_at' => 'datetime',
     ];
 
-    public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
-    public function duplicateOf(): BelongsTo { return $this->belongsTo(self::class, 'duplicate_of_id'); }
-    public function activities(): HasMany { return $this->hasMany(ChurchLeadActivity::class)->latest(); }
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /** @return BelongsTo<ChurchLead, $this> */
+    public function duplicateOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'duplicate_of_id');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ChurchLeadActivity::class)->latest();
+    }
 
     public function log(string $type, ?string $description = null, array $properties = [], ?int $userId = null): void
     {

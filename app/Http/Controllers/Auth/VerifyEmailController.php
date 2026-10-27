@@ -31,15 +31,13 @@ class VerifyEmailController extends Controller
      */
     protected function redirectBasedOnRole($user, $query = ''): RedirectResponse
     {
-        switch ($user->role) {
-            case 'admin':
-                return redirect()->route('admin.dashboard', $query);
-            case 'tutor':
-                return redirect()->route('tutor.dashboard', $query);
-            case 'client':
-                return redirect()->route('client.dashboard', $query);
-            default:
-                return redirect(RouteServiceProvider::HOME . $query);
-        }
+        $url = match ($user->role) {
+            'admin' => route('admin.dashboard'),
+            'tutor' => route('tutor.dashboard'),
+            'client' => route('client.dashboard'),
+            default => RouteServiceProvider::HOME,
+        };
+
+        return redirect()->to($url.$query);
     }
 }

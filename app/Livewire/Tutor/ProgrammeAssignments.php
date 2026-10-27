@@ -17,13 +17,21 @@ class ProgrammeAssignments extends Component
     use WithPagination;
 
     public string $statusFilter = '';
+
     public string $search = '';
+
     public ?ProgrammeEnquiryAssignment $selectedAssignment = null;
+
     public bool $showDetailsModal = false;
+
     public bool $showCompletedModal = false;
+
     public ?int $completionAssignmentId = null;
+
     public string $completionRemark = '';
+
     public array $visibleStatuses = ProgrammeEnquiryAssignment::VISIBLE_TO_TUTOR;
+
     public array $canBeMarkedComplete = ProgrammeEnquiryAssignment::CAN_BE_MARKED_COMPLETE;
 
     public function complete(int $id): void
@@ -41,7 +49,7 @@ class ProgrammeAssignments extends Component
             'completionRemark' => ['required', 'string', 'min:10', 'max:4000'],
         ]);
 
-        abort_unless($this->completionAssignmentId, 404);
+        abort_unless($this->completionAssignmentId !== null, 404);
         $assignment = $this->findTutorAssignment($this->completionAssignmentId);
         abort_unless(in_array($assignment->status, ProgrammeEnquiryAssignment::canBeMarkedCompleteStatuses(), true), 403);
 
@@ -63,7 +71,7 @@ class ProgrammeAssignments extends Component
             $assignment->programmeEnquiry,
             InterventionStatusNotifier::CLIENT_COMPLETED_REVIEW_REQUIRED,
             [
-                'tutor_name' => $assignment->tutor?->tutorProfile?->fullName ?? $assignment->tutor?->name ?? 'Assigned tutor',
+                'tutor_name' => $assignment->tutor->tutorProfile->fullName ?? $assignment->tutor->name ?? 'Assigned tutor',
                 'review_deadline' => optional($assignment->completed_at?->copy()->addDay())->format('M d, Y h:i A'),
             ]
         );
@@ -165,12 +173,14 @@ class ProgrammeAssignments extends Component
                                     ->whereHas('programmeEnquiry', fn ($enquiry) => $enquiry->where('status', 'completed'));
                             });
                     });
+
                     return;
                 }
 
                 if ($this->statusFilter === 'completed') {
                     $query->where('status', ProgrammeEnquiryAssignment::STATUS_COMPLETED)
                         ->whereHas('programmeEnquiry', fn ($enquiry) => $enquiry->where('status', 'pending_client_review'));
+
                     return;
                 }
 
@@ -178,8 +188,8 @@ class ProgrammeAssignments extends Component
             })
             ->when($this->search, function ($query) {
                 $query->whereHas('programmeEnquiry', function ($sub) {
-                    $sub->where('learner_name', 'like', '%' . $this->search . '%')
-                        ->orWhereHas('programme', fn ($p) => $p->where('name', 'like', '%' . $this->search . '%'));
+                    $sub->where('learner_name', 'like', '%'.$this->search.'%')
+                        ->orWhereHas('programme', fn ($p) => $p->where('name', 'like', '%'.$this->search.'%'));
                 });
             })
             ->latest()
