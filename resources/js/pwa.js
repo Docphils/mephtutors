@@ -103,7 +103,11 @@ async function registerServiceWorker() {
     }
 
     try {
-        serviceWorkerRegistration = await window.navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        serviceWorkerRegistration = await window.navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+            // Fetch service worker updates without relying on the browser HTTP cache.
+            updateViaCache: 'none',
+        });
 
         if (serviceWorkerRegistration.waiting) {
             promptWaitingWorkerToActivate();

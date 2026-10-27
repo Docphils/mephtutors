@@ -10,8 +10,8 @@ class AboutPage extends Component
 {
     public function render()
     {
-        $title = 'About MephEd | Vision, Mission and Team';
-        $description = 'Learn about MephEd, our education vision, mission, commitments, and the team transforming learning outcomes.';
+        $title = 'About MephEd | Learning, Software and Publishing';
+        $description = 'Learn about MephEd, a Nigerian education, technology, and publishing company building learning services and practical digital products.';
 
         return view('livewire.pages.about-page')
             ->title($title)

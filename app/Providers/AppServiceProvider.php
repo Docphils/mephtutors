@@ -9,6 +9,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+use App\Models\ChurchLead;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('layouts.admin-sidebar', function ($view) {
+            $newChurchLeadCount = Schema::hasTable('church_leads')
+                ? ChurchLead::query()->where('status', 'new')->count()
+                : 0;
+
+            $view->with('newChurchLeadCount', $newChurchLeadCount);
+        });
+
         View::composer('*', function ($view) {
         $tutorProfile = auth()->user()?->tutorProfile;
         $userProfile = auth()->user()?->userProfile;

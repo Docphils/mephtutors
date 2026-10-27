@@ -1,10 +1,11 @@
-const SW_VERSION = 'mephed-pwa-v2';
+// Bump this whenever cache behavior changes. Activation clears all prior caches,
+// including cached HTML that may contain an expired Laravel CSRF token.
+const SW_VERSION = 'mephed-pwa-v3';
 const STATIC_CACHE = `${SW_VERSION}-static`;
 const RUNTIME_CACHE = `${SW_VERSION}-runtime`;
 const IMAGE_CACHE = `${SW_VERSION}-images`;
 
 const CORE_ASSETS = [
-    '/',
     '/offline',
     '/manifest.webmanifest',
     '/pwa/icons/apple-touch-icon.png',
@@ -68,63 +69,22 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (url.pathname.startsWith('/livewire')) {
-        event.respondWith(fetch(request));
-        return;
-    }
-
-    event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE, 100));
+    // Laravel pages, Livewire requests, and other data must always reach the
+    // server. Their responses can contain session-specific or private data.
+    event.respondWith(fetch(request));
 });
 
-const NEVER_CACHE_PATTERNS = [
-    /^\/login/,
-    /^\/register/,
-    /^\/password/,
-    /^\/dashboard/,
-    /^\/admin/,
-    /^\/client/,
-    /^\/tutor/,
-    /^\/profile/,
-    /^\/bootcamp/,
-    /^\/apply/,
-    /^\/paystack/,
-];
-
-function shouldSkipCache(pathname) {
-    return NEVER_CACHE_PATTERNS.some((pattern) => pattern.test(pathname));
-}
-
 async function handleNavigationRequest(event) {
-    const url = new URL(event.request.url);
-    const skipCache = shouldSkipCache(url.pathname);
-
     try {
         const preloadResponse = await event.preloadResponse;
         if (preloadResponse) {
-            if (!skipCache) {
-                const runtimeCache = await caches.open(RUNTIME_CACHE);
-                runtimeCache.put(event.request, preloadResponse.clone());
-            }
             return preloadResponse;
         }
 
-        const networkResponse = await fetch(event.request);
-        if (!skipCache) {
-            const runtimeCache = await caches.open(RUNTIME_CACHE);
-            runtimeCache.put(event.request, networkResponse.clone());
-        }
-        return networkResponse;
+        return await fetch(event.request);
     } catch (_error) {
-        if (skipCache) {
-            // Never serve a stale form/gated page - a fresh CSRF token matters more than an offline fallback here
-            return caches.match('/offline');
-        }
-
-        const cachedResponse = await caches.match(event.request);
-        if (cachedResponse) {
-            return cachedResponse;
-        }
-
+        // Do not serve a cached Laravel page here: it can contain an expired
+        // CSRF token and may expose user-specific data.
         return caches.match('/offline');
     }
 }
@@ -135,8 +95,10 @@ async function staleWhileRevalidate(request, cacheName, maxEntries) {
 
     const fetchPromise = fetch(request)
         .then((networkResponse) => {
-            cache.put(request, networkResponse.clone());
-            trimCache(cacheName, maxEntries);
+            if (networkResponse.ok) {
+                cache.put(request, networkResponse.clone());
+                trimCache(cacheName, maxEntries);
+            }
             return networkResponse;
         })
         .catch(() => cachedResponse);
@@ -153,8 +115,10 @@ async function cacheFirst(request, cacheName, maxEntries) {
 
     try {
         const networkResponse = await fetch(request);
-        cache.put(request, networkResponse.clone());
-        trimCache(cacheName, maxEntries);
+        if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+            trimCache(cacheName, maxEntries);
+        }
         return networkResponse;
     } catch (_error) {
         return caches.match('/images/MephEd.png');

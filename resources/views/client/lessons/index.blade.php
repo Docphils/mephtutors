@@ -10,7 +10,7 @@
             <a wire:navigate href="{{ route('client.dashboard') }}" class="mx-6 text-cyan-900 bg-cyan-500 p-2 rounded-lg font-semibold shadow-lg shadow-cyan-600 hover:bg-cyan-400">Dashboard</a>
         </div>
 
-       <livewire:client.lessons lazy="on-load">
+       <livewire:client.lessons lazy="on-load" />
     </div>
     @include('layouts.footer')
 </x-app-layout>

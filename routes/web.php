@@ -38,10 +38,14 @@ use App\Livewire\Pages\AboutPage;
 use App\Livewire\Pages\ContactPage;
 use App\Livewire\EnrollmentForm;
 use App\Livewire\Pages\PrivacyPolicyPage;
+use App\Livewire\Pages\ChurchLeadForm;
+use App\Livewire\Pages\ProductsPage;
 use App\Livewire\Requests\ProgrammeEnquiryWizard;
 use App\Livewire\Requests\ProgrammeConsultationForm;
 use App\Livewire\Admin\ProgrammeSettingsManager;
 use App\Livewire\Admin\ProgrammeEnquiriesManager;
+use App\Livewire\Admin\ChurchLeadsManager;
+use App\Livewire\Admin\ProductsManager;
 
 use Illuminate\Http\Request;
 use App\Models\AcademicProgramme;
@@ -87,6 +91,7 @@ Route::get('/programmes/{academicProgramme:slug}', ProgrammePage::class)->name('
 
 Route::get('/services', ServiceCatalogPage::class)->name('services');
 Route::get('/services/{serviceItem:slug}', ServiceItemLandingPage::class)->name('services.show');
+Route::get('/products', ProductsPage::class)->name('products.index');
 
 Route::get('/about', AboutPage::class)->name('about');
 
@@ -97,6 +102,7 @@ Route::get('/bootcamp/enrollment/success/{enrollee}', BootcampEnrollmentSuccess:
     ->name('bootcamp.enrollment.success');
 
 Route::get('/privacy-policy', PrivacyPolicyPage::class)->name('privacy-policy');
+Route::get('/church-management/enquiry', ChurchLeadForm::class)->name('church-leads.create');
 
 //Recipe Aid's Privacy Policy
 Route::get('/recipe-aid-privacy-policy', function () {
@@ -110,6 +116,7 @@ Route::get('/sitemap.xml', function () {
     $pages = [
         ['loc' => route('welcome'), 'changefreq' => 'daily', 'priority' => '1.0', 'lastmod' => now()->toDateString()],
         ['loc' => route('services'), 'changefreq' => 'daily', 'priority' => '0.9', 'lastmod' => now()->toDateString()],
+        ['loc' => route('products.index'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
         ['loc' => route('bootcamp'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
         ['loc' => route('about'), 'changefreq' => 'monthly', 'priority' => '0.7', 'lastmod' => now()->toDateString()],
         ['loc' => route('contact'), 'changefreq' => 'monthly', 'priority' => '0.6', 'lastmod' => now()->toDateString()],
@@ -170,11 +177,13 @@ Route::get('/llms.txt', function () {
     $lines = [
         '# MephEd',
         '',
-        '> Structured academic support platform for families, learners, schools, and tutors.',
+        '> Nigerian education, technology, and publishing company building learning services and practical digital products.',
         '',
         '## Canonical',
         '- Home: ' . route('welcome'),
         '- Services: ' . route('services'),
+        '- Products: ' . route('products.index'),
+        '- About MephEd: ' . route('about'),
         '- Interventions: ' . route('programmes.enquiry'),
         '- Contact: ' . route('contact'),
         '- Sitemap: ' . route('sitemap'),
@@ -207,6 +216,8 @@ Route::get('/llms-full.txt', function () {
         '# MephEd Full Context',
         '',
         'Homepage: ' . route('welcome'),
+        'Products: ' . route('products.index'),
+        'About MephEd: ' . route('about'),
         'Interventions: ' . route('programmes.enquiry'),
         '',
     ];
@@ -301,6 +312,8 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     Route::get('admin/service-catalog', ServiceCatalogManager::class)->name('admin.serviceCatalog');
     Route::get('admin/programme-settings', ProgrammeSettingsManager::class)->name('admin.programmeSettings');
     Route::get('admin/programme-enquiries', ProgrammeEnquiriesManager::class)->name('admin.programmeEnquiries');
+    Route::get('admin/church-leads', ChurchLeadsManager::class)->name('admin.churchLeads');
+    Route::get('admin/products', ProductsManager::class)->name('admin.products');
 
     //Crm Routes
     Route::get('admin/intitution-requests', InstitutionRequestManager::class)->name('admin.crm.index');

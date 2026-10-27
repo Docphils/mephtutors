@@ -73,59 +73,17 @@
             </div>
         </div> --}}
 
-        <div class="text-center mb-12">
-            <h3 class="text-3xl font-semibold text-slate-900">Our Products</h3>
-            <p class="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
-                Beyond tutoring and educational support, MephEd is also building practical digital solutions that
-                address real
-                needs in education and energy. Explore our growing platforms below.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full sm:w-3/4 lg:w-2/3 mx-auto mt-8">
-            <div class="relative text-center border-4 border-cyan-100 bg-white rounded-lg shadow-sm overflow-hidden"
-                style="box-shadow 0.3s ease;" onmouseover="this.style.boxShadow='0 10px 15px rgba(0,0,0,0.1)';"
-                onmouseout="this.style.boxShadow='none';">
-                <div class="relative w-full">
-                    <img src="{{ asset('images/zaramed.png') }}" class="object-cover w-full h-56 sm:h-64"
-                        style="transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';"
-                        onmouseout="this.style.transform='scale(1)';" alt="Zaramed">
-                </div>
-                <div class="bg-white px-5 py-6">
-                    <h4 class="text-xl font-bold text-slate-900">Zaramed</h4>
-                    <p class="mt-3 text-sm sm:text-base text-slate-600">
-                        A smart school management and CBT platform designed to help schools simplify administration,
-                        improve assessments, and strengthen communication across their operations.
-                    </p>
-
-                    <a href="https://www.zaramed.ng" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center justify-center mt-5 px-5 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 transition">
-                        Visit Zaramed
-                    </a>
-                </div>
+        <div class="overflow-hidden rounded-3xl bg-slate-950 px-6 py-10 text-white sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+            <div class="max-w-3xl">
+                <p class="text-sm font-bold uppercase tracking-[0.18em] text-cyan-300">Where we’re going</p>
+                <h3 class="mt-3 text-3xl font-black sm:text-4xl">Learning is our foundation. Building useful solutions is our next chapter.</h3>
+                <p class="mt-5 text-base leading-7 text-slate-300 sm:text-lg">
+                    MephEd began by helping learners connect with the right support. We are growing into a broader technology and publishing company, creating focused software and knowledge products for the needs people face every day.
+                </p>
             </div>
-
-            <div class="relative text-center border-4 border-cyan-100 bg-white rounded-lg shadow-sm overflow-hidden"
-                style="box-shadow 0.3s ease;" onmouseover="this.style.boxShadow='0 10px 15px rgba(0,0,0,0.1)';"
-                onmouseout="this.style.boxShadow='none';">
-                <div class="relative w-full">
-                    <img src="{{ asset('images/solar-sapient.png') }}" class="object-cover w-full h-56 sm:h-64"
-                        style="transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';"
-                        onmouseout="this.style.transform='scale(1)';" alt="Solar Sapient">
-                </div>
-                <div class="bg-white px-5 py-6">
-                    <h4 class="text-xl font-bold text-slate-900">Solar Sapient</h4>
-                    <p class="mt-3 text-sm sm:text-base text-slate-600">
-                        An intelligent solar education, advisory, and audit platform built to help users make better
-                        energy decisions with more clarity, confidence, and structure.
-                    </p>
-
-                    <a href="https://solar-sapient.mephed.ng" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center justify-center mt-5 px-5 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 transition">
-                        Visit Solar Sapient
-                    </a>
-                </div>
-            </div>
+            <a wire:navigate href="{{ route('products.index') }}" class="mt-7 inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 lg:mt-0">
+                Explore MephEd products <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
         </div>
     </div>
 </section>

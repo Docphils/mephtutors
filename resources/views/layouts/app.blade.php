@@ -49,7 +49,7 @@
         @endcan
 
         <!-- ===== MAIN CONTENT ===== -->
-        <div class="relative min-w-0 flex-1 flex flex-col min-h-screen">
+        <div class="relative min-w-0 min-h-0 flex-1 flex flex-col">
 
             <!-- Top Bar -->
             <header class="bg-white shadow-sm border-b">
