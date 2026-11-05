@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-slate-50/50" wire:poll.30s>
+<div class="min-h-screen bg-slate-50/50">
     <x-slot name="header">
         <div class="flex items-center justify-between w-full">
             <div>

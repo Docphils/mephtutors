@@ -26,6 +26,10 @@
                     Company</h4>
                 <a href="{{ url('/privacy-policy') }}" class="text-sm hover:text-cyan-300 transition-colors">Privacy
                     Policy</a>
+                <a href="{{ route('ebooks.policy', ['policy' => 'refund']) }}" class="text-sm hover:text-cyan-300 transition-colors">eBook Refund Policy</a>
+                <a href="{{ route('ebooks.policy', ['policy' => 'terms']) }}" class="text-sm hover:text-cyan-300 transition-colors">eBook Terms</a>
+                <a href="{{ route('ebooks.policy', ['policy' => 'privacy']) }}" class="text-sm hover:text-cyan-300 transition-colors">eBook Privacy</a>
+                <a href="{{ route('ebooks.index') }}" class="text-sm hover:text-cyan-300 transition-colors">eBooks</a>
                 <a href="{{ route('church-leads.create') }}" class="text-sm hover:text-cyan-300 transition-colors">Church Management System</a>
                 <a wire:navigate href="{{ route('terms.service') }}"
                     class="text-sm hover:text-cyan-300 transition-colors">Terms of Service</a>

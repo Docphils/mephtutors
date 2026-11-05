@@ -1,11 +1,12 @@
-<?php 
+<?php
 
 namespace App\Services;
 
-use App\Models\Crm;
-use App\Models\ProgrammeEnquiry;
 use App\Models\Cohort;
+use App\Models\Crm;
+use App\Models\EbookOrder;
 use App\Models\Enrollee;
+use App\Models\ProgrammeEnquiry;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -30,7 +31,7 @@ class PaystackService
                 ],
             ])->json();
 
-        if (!$response['status']) {
+        if (! $response['status']) {
             throw new \Exception('Payment initialization failed.');
         }
 
@@ -63,7 +64,7 @@ class PaystackService
                 ],
             ])->json();
 
-        if (!($response['status'] ?? false)) {
+        if (! ($response['status'] ?? false)) {
             throw new \Exception($response['message'] ?? 'CRM payment initialization failed.');
         }
 
@@ -97,7 +98,7 @@ class PaystackService
                 ],
             ])->json();
 
-        if (!($response['status'] ?? false)) {
+        if (! ($response['status'] ?? false)) {
             throw new \Exception($response['message'] ?? 'Programme payment initialization failed.');
         }
 
@@ -116,7 +117,44 @@ class PaystackService
             ->json();
     }
 
-    //Bootcamp payment initialization
+    public function initializeEbookPayment(EbookOrder $order): array
+    {
+        if (! config('services.paystack.secret')) {
+            throw new \RuntimeException('Paystack secret key is not configured.');
+        }
+
+        $response = Http::withToken(config('services.paystack.secret'))
+            ->connectTimeout(5)
+            ->timeout(15)
+            ->post("{$this->baseUrl}/transaction/initialize", [
+                'email' => $order->buyer_email,
+                'amount' => (string) $order->amount_kobo,
+                'currency' => $order->currency,
+                'reference' => $order->paystack_reference,
+                'callback_url' => route('paystack.callback'),
+                'metadata' => [
+                    'app' => 'mephed',
+                    'payment_for' => 'ebook',
+                    'order_reference' => $order->reference,
+                ],
+            ])->json();
+
+        if (! is_array($response)
+            || ! ($response['status'] ?? false)
+            || ! is_string($response['data']['access_code'] ?? null)
+            || ! is_string($response['data']['authorization_url'] ?? null)
+            || ($response['data']['reference'] ?? null) !== $order->paystack_reference) {
+            throw new \RuntimeException('eBook payment initialization failed.');
+        }
+
+        return [
+            'access_code' => $response['data']['access_code'],
+            'reference' => $order->paystack_reference,
+            'authorization_url' => $response['data']['authorization_url'],
+        ];
+    }
+
+    // Bootcamp payment initialization
     public function initializeEnrolleePayment(Enrollee $enrollee, Cohort $cohort): string
     {
         $fee = (float) ($cohort->fee ?? 0);
@@ -144,7 +182,7 @@ class PaystackService
                 ],
             ])->json();
 
-        if (!($response['status'] ?? false)) {
+        if (! ($response['status'] ?? false)) {
             throw new \Exception($response['message'] ?? 'Enrollment payment initialization failed.');
         }
 

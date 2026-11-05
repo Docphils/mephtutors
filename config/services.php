@@ -36,6 +36,19 @@ return [
         'secret' => env('PAYSTACK_SECRET_KEY'),
     ],
 
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+        'model' => env('GROQ_EBOOK_MODEL', 'qwen/qwen3.8-27b'),
+        'fallback_models' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('GROQ_EBOOK_FALLBACK_MODELS', 'qwen/qwen3.8-27b,openai/gpt-oss-20b,openai/gpt-oss-120b'))
+        ))),
+        'vision_models' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('GROQ_EBOOK_VISION_MODELS', 'qwen/qwen3.8-27b'))
+        ))),
+    ],
+
     'solar_sapient' => [
         'webhook_url' => env('SOLAR_SAPIENT_WEBHOOK_URL'),
     ],

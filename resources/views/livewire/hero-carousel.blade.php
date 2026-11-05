@@ -11,9 +11,9 @@
 
     @foreach ($items as $index => $item)
         <div x-show="current === {{ $index }}" x-transition.opacity
-            class="absolute inset-0 h-full bg-cover bg-center"
-            style="background-image: url('{{ asset('storage/' . ($item['image_path'] ?? '/images/default.jpg')) }}');">
-            <div class="h-full bg-black/45 flex flex-col items-center justify-center text-white px-4">
+            class="absolute inset-0 h-full overflow-hidden">
+            <img src="{{ $item['image_url'] }}" alt="" aria-hidden="true" fetchpriority="{{ $index === 0 ? 'high' : 'auto' }}" class="absolute inset-0 h-full w-full object-cover object-center">
+            <div class="relative z-10 h-full bg-black/45 flex flex-col items-center justify-center text-white px-4">
                 <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold">{{ $item['name'] ?? 'Our Service' }}</h2>
                 <p class="mt-3 text-sm sm:text-md md:text-xl text-cyan-100">{{ $item['description'] ?? '' }}</p>
                 <a href="{{ $item['target'] === 'bootcamp'
@@ -30,9 +30,9 @@
 
     <!-- Controls -->
     <div class="absolute inset-0 flex items-center justify-between px-4">
-        <button @click="prev()"
+        <button type="button" @click="prev()"
             class="bg-black/40 hover:bg-black/60 text-white rounded-full w-12 h-12 flex items-center justify-center">‹</button>
-        <button @click="next()"
+        <button type="button" @click="next()"
             class="bg-black/40 hover:bg-black/60 text-white rounded-full w-12 h-12 flex items-center justify-center">›</button>
     </div>
 

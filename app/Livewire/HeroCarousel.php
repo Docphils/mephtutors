@@ -12,7 +12,7 @@ class HeroCarousel extends Component
 
     public function mount()
     {
-        $this->items = Cache::remember('hero.service_items.arrays-v2', 3600, function () {
+        $this->items = Cache::remember('hero.service_items.arrays-v3', 3600, function () {
             $dbItems = ServiceItem::where('is_active', true)
                 ->where('display_position', '>', 0)
                 ->orderBy('display_position')
@@ -23,7 +23,7 @@ class HeroCarousel extends Component
                     return [
                         'name' => $item->name,
                         'slug' => $item->slug,
-                        'image_path' => $item->image_path,
+                        'image_url' => $this->imageUrl($item->image_path),
                         'description' => $item->description,
                         'target' => $item->target,
                     ];
@@ -31,7 +31,11 @@ class HeroCarousel extends Component
             }
 
             // fallback items
-            return [
+            return array_map(function (array $item): array {
+                $item['image_url'] = $this->imageUrl($item['image_path']);
+
+                return $item;
+            }, [
                 [
                     'name' => 'Home Tutoring',
                     'slug' => 'home-tutoring',
@@ -53,8 +57,26 @@ class HeroCarousel extends Component
                     'description' => 'Expert club instructors for coding, music, chess, etc.',
                     'target' => 'institutions',
                 ],
-            ];
+            ]);
         });
+    }
+
+    private function imageUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return asset('images/MephEd.png');
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL) && in_array(parse_url($path, PHP_URL_SCHEME), ['http', 'https'], true)) {
+            return $path;
+        }
+
+        $normalized = ltrim($path, '/');
+
+        return asset(str_starts_with($normalized, 'images/') || str_starts_with($normalized, 'storage/')
+            ? $normalized
+            : 'storage/'.$normalized);
     }
 
     public function render()

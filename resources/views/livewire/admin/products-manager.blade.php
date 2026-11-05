@@ -27,13 +27,46 @@
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="text-sm font-semibold text-slate-700">Product name<input wire:model="name" maxlength="140" class="mt-1 w-full rounded-xl border-slate-300">@error('name')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
                         <label class="text-sm font-semibold text-slate-700">URL slug<input wire:model="slug" maxlength="160" placeholder="Generated from product name" class="mt-1 w-full rounded-xl border-slate-300">@error('slug')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
-                        <label class="text-sm font-semibold text-slate-700">Product category<select wire:model="category" class="mt-1 w-full rounded-xl border-slate-300">@foreach($categories as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></label>
-                        <label class="text-sm font-semibold text-slate-700">Availability<select wire:model="releaseStatus" class="mt-1 w-full rounded-xl border-slate-300">@foreach($releaseStatuses as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></label>
+                        <label class="text-sm font-semibold text-slate-700">Product category<select wire:model="category" class="mt-1 w-full rounded-xl border-slate-300">@foreach($categories as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select>@error('category')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
+                        <label class="text-sm font-semibold text-slate-700">Availability<select wire:model="releaseStatus" class="mt-1 w-full rounded-xl border-slate-300">@foreach($releaseStatuses as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select>@error('releaseStatus')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
                     </div>
                     <label class="block text-sm font-semibold text-slate-700">Short description<textarea wire:model="summary" rows="3" maxlength="500" class="mt-1 w-full rounded-xl border-slate-300" placeholder="A concise factual description for the product card"></textarea>@error('summary')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
-                    <label class="block text-sm font-semibold text-slate-700">Additional details <span class="font-normal text-slate-400">(optional)</span><textarea wire:model="description" rows="4" maxlength="5000" class="mt-1 w-full rounded-xl border-slate-300"></textarea></label>
+                    <label class="block text-sm font-semibold text-slate-700">Additional details <span class="font-normal text-slate-400">(optional)</span><textarea wire:model="description" rows="4" maxlength="5000" class="mt-1 w-full rounded-xl border-slate-300"></textarea>@error('description')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
+                    <section class="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50 p-4">
+                        <div>
+                            <h3 class="font-bold text-cyan-950">AI writing assistant</h3>
+                            <p class="mt-1 text-sm text-cyan-900">Draft a short description and additional details from the product information you provide. This information is sent to the configured Groq model. Suggestions are not saved until you apply them, and should be reviewed for accuracy.</p>
+                        </div>
+                        <label class="block text-sm font-semibold text-cyan-950">Extra facts or guidance for AI <span class="font-normal text-slate-500">(optional)</span><textarea wire:model="aiNotes" rows="2" maxlength="3000" class="mt-1 w-full rounded-xl border border-cyan-200 bg-white" placeholder="Add verified features, audience, use cases, or wording to emphasize"></textarea>@error('aiNotes')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror</label>
+                        @if ($aiError)
+                            <p role="alert" class="text-sm text-rose-700">{{ $aiError }}</p>
+                        @endif
+                        <button type="button" wire:click="generateProductCopy" wire:loading.attr="disabled" wire:target="generateProductCopy" class="rounded-lg bg-cyan-800 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+                            <span wire:loading.remove wire:target="generateProductCopy">Generate copy suggestions</span>
+                            <span wire:loading wire:target="generateProductCopy">Generating…</span>
+                        </button>
+                        @if ($suggestedSummary !== null && $suggestedDescription !== null)
+                            <div class="space-y-3 rounded-lg border border-cyan-200 bg-white p-3 text-sm text-slate-700">
+                                <div><h4 class="font-bold text-slate-900">Suggested short description</h4><p class="mt-1 whitespace-pre-line">{{ $suggestedSummary }}</p></div>
+                                <div><h4 class="font-bold text-slate-900">Suggested additional details</h4><p class="mt-1 whitespace-pre-line">{{ $suggestedDescription }}</p></div>
+                                <button type="button" wire:click="applyProductCopySuggestions" class="rounded-lg bg-slate-900 px-4 py-2 font-bold text-white">Apply suggestions to form</button>
+                            </div>
+                        @endif
+                    </section>
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <label class="text-sm font-semibold text-slate-700">Product website<input type="url" wire:model="websiteUrl" maxlength="2048" placeholder="https://example.com" class="mt-1 w-full rounded-xl border-slate-300">@error('websiteUrl')<span class="text-xs text-rose-600">Enter a valid URL.</span>@enderror</label>
+                        <div class="space-y-3">
+                            <label class="block text-sm font-semibold text-slate-700">Link to a page on this website
+                                <select wire:model="internalLinkTarget" class="mt-1 w-full rounded-xl border-slate-300">
+                                    <option value="">No internal page selected</option>
+                                    <option value="/ebooks">eBook catalog (all published eBooks)</option>
+                                </select>
+                            </label>
+                            <label class="block text-sm font-semibold text-slate-700">Or enter an external product website
+                                <input type="text" wire:model="websiteUrl" maxlength="2048" placeholder="https://example.com" class="mt-1 w-full rounded-xl border-slate-300">
+                                <span class="mt-1 block text-xs font-normal text-slate-500">Selecting the eBook catalog fills the same-site link /ebooks, where visitors can choose an individual title. External links must use https:// or http://.</span>
+                                @error('websiteUrl')<span class="text-xs text-rose-600">{{ $message }}</span>@enderror
+                            </label>
+                        </div>
                         <label class="text-sm font-semibold text-slate-700">Button label<input wire:model="ctaLabel" maxlength="60" placeholder="Visit product" class="mt-1 w-full rounded-xl border-slate-300"></label>
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">

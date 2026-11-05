@@ -47,8 +47,8 @@
                                 @endif
                                 <div class="mt-auto pt-6">
                                     @if ($product->release_status === 'available' && $product->website_url)
-                                        <a href="{{ $product->website_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-cyan-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
-                                            {{ $product->cta_label ?: 'Visit ' . $product->name }}<i class="fas fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+                                        <a href="{{ $product->website_url }}" @if(! $product->hasInternalWebsiteUrl()) target="_blank" rel="noopener noreferrer" @endif class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-cyan-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
+                                            {{ $product->cta_label ?: 'Visit ' . $product->name }}@if(! $product->hasInternalWebsiteUrl())<i class="fas fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>@endif
                                         </a>
                                     @elseif ($product->release_status === 'available')
                                         <span class="inline-flex items-center rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-600">More information coming soon</span>

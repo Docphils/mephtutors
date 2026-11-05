@@ -44,4 +44,11 @@ class CompanyProduct extends Model
         if (Str::startsWith($this->image_path, ['images/', 'storage/'])) return asset($this->image_path);
         return asset('storage/' . ltrim($this->image_path, '/'));
     }
+
+    public function hasInternalWebsiteUrl(): bool
+    {
+        return is_string($this->website_url)
+            && str_starts_with($this->website_url, '/')
+            && ! str_starts_with($this->website_url, '//');
+    }
 }

@@ -1,5 +1,7 @@
 User-agent: *
 Disallow:
+Disallow: /ebooks/thank-you/
+Disallow: /ebooks/download/
 Sitemap: /sitemap.xml
 
 # LLM discovery endpoints

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Mail\EnrolleeConfirmation;
 use App\Models\Booking;
 use App\Models\Crm;
+use App\Models\EbookOrder;
 use App\Models\Enrollee;
 use App\Models\Payment;
 use App\Models\ProgrammeEnquiry;
+use App\Services\EbookPaymentService;
 use App\Services\PaystackService;
 use App\Support\InterventionStatusNotifier;
 use Illuminate\Http\Request;
@@ -17,9 +19,18 @@ use Illuminate\Support\Facades\Mail;
 
 class PaystackController extends Controller
 {
-    public function callback(Request $request, PaystackService $paystack)
-    {
+    public function callback(
+        Request $request,
+        PaystackService $paystack,
+        EbookPaymentController $ebookPaymentsController,
+        EbookPaymentService $ebookPayments,
+    ) {
         $reference = $request->reference;
+
+        if (is_string($reference)
+            && EbookOrder::query()->where('paystack_reference', $reference)->exists()) {
+            return $ebookPaymentsController->callback($request, $ebookPayments);
+        }
 
         $response = $paystack->verifyPayment($reference);
         $metadata = $response['data']['metadata'] ?? [];
@@ -139,19 +150,14 @@ class PaystackController extends Controller
         return redirect()->route('client.lessons')->with('error', 'Payment failed.');
     }
 
-    public function webhook(Request $request)
+    public function webhook(Request $request, EbookPaymentService $ebookPayments)
     {
         $signature = (string) $request->header('x-paystack-signature', '');
-
         $rawPayload = $request->getContent();
+        $secret = (string) config('services.paystack.secret', '');
+        $hash = $secret !== '' ? hash_hmac('sha512', $rawPayload, $secret) : '';
 
-        $hash = hash_hmac(
-            'sha512',
-            $rawPayload,
-            config('services.paystack.secret')
-        );
-
-        if (! hash_equals($hash, $signature)) {
+        if ($hash === '' || $signature === '' || ! hash_equals($hash, $signature)) {
             abort(403);
         }
 
@@ -162,6 +168,23 @@ class PaystackController extends Controller
         $data = (array) $request->input('data', []);
         $metadata = (array) ($data['metadata'] ?? []);
         $app = (string) ($metadata['app'] ?? 'mephed');
+
+        if ($app === 'mephed' && ($metadata['payment_for'] ?? null) === 'ebook') {
+            try {
+                $ebookPayments->processWebhook([
+                    'event' => 'charge.success',
+                    'data' => $data,
+                ]);
+            } catch (\Throwable $exception) {
+                Log::error('Signed Paystack eBook webhook could not be processed.', [
+                    'exception' => $exception,
+                ]);
+
+                return response()->json(['message' => 'Webhook processing failed.'], 500);
+            }
+
+            return response()->json(['status' => 'ok']);
+        }
 
         if ($app === 'solar_sapient') {
             $this->forwardToSolarSapient($rawPayload, $signature);

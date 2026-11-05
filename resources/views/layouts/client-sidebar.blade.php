@@ -30,7 +30,7 @@
 
     <!-- ===== Desktop Profile Section ===== -->
     <div class="block px-6 py-6 border-b border-cyan-600">
-        <livewire:user-profile lazy="on-load" />
+        <livewire:user-profile />
     </div>
 
     <!-- ===== Navigation ===== -->

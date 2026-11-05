@@ -28,6 +28,11 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('ebooks-downloads', function (Request $request) {
+            return Limit::perMinute(config('ebooks.download_attempts_per_minute', 12))
+                ->by((string) $request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

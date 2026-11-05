@@ -46,9 +46,21 @@ use App\Livewire\Admin\ProgrammeSettingsManager;
 use App\Livewire\Admin\ProgrammeEnquiriesManager;
 use App\Livewire\Admin\ChurchLeadsManager;
 use App\Livewire\Admin\ProductsManager;
+use App\Livewire\Admin\EbooksManager;
+use App\Livewire\Admin\EbookPoliciesManager;
+use App\Livewire\Admin\EbookOrdersManager;
+use App\Livewire\Admin\EbookOperationsDashboard;
+use App\Livewire\Ebooks\EbookLandingPage;
+use App\Livewire\Ebooks\EbookHubPage;
+use App\Livewire\Ebooks\FreeChapterPage;
+use App\Livewire\Ebooks\EbookThankYouPage;
+use App\Livewire\Ebooks\EbookDownloadExpiredPage;
+use App\Http\Controllers\EbookPaymentController;
+use App\Http\Controllers\EbookFulfillmentController;
 
 use Illuminate\Http\Request;
 use App\Models\AcademicProgramme;
+use App\Models\EbookPolicy;
 use App\Models\ServiceItem;
 use App\Models\User;
 
@@ -92,6 +104,27 @@ Route::get('/programmes/{academicProgramme:slug}', ProgrammePage::class)->name('
 Route::get('/services', ServiceCatalogPage::class)->name('services');
 Route::get('/services/{serviceItem:slug}', ServiceItemLandingPage::class)->name('services.show');
 Route::get('/products', ProductsPage::class)->name('products.index');
+Route::get('/ebooks', EbookHubPage::class)->name('ebooks.index');
+Route::get('/health', fn () => response()->json(['status' => 'ok'], 200)->header('Cache-Control', 'no-store'))->name('health');
+Route::get('/legal/{policy}', function (string $policy) {
+    $policy = EbookPolicy::query()
+        ->where('slug', $policy)
+        ->where('is_published', true)
+        ->firstOrFail();
+
+    return view('ebooks.policy', compact('policy'));
+})->whereIn('policy', EbookPolicy::REQUIRED_SLUGS)->name('ebooks.policy');
+Route::get('/ebooks/{slug}/free-chapter', FreeChapterPage::class)->name('ebooks.free-chapter');
+Route::get('/ebooks/{slug}/free-chapter.pdf', [EbookFulfillmentController::class, 'freeChapter'])->name('ebooks.free-chapter.pdf');
+Route::get('/ebooks/{slug}/cheat-sheet', [EbookFulfillmentController::class, 'cheatSheet'])->middleware('throttle:ebooks-downloads')->name('ebooks.cheat-sheet');
+Route::get('/ebooks/{slug}', EbookLandingPage::class)->name('ebooks.show');
+Route::get('/ebooks/thank-you/{reference}', EbookThankYouPage::class)->middleware(['signed', 'private.nostore'])->name('ebooks.thank-you');
+Route::get('/ebooks/thank-you/{reference}/download', [EbookFulfillmentController::class, 'thankYouDownload'])->middleware(['signed', 'private.nostore', 'throttle:ebooks-downloads'])->name('ebooks.thank-you.download');
+Route::post('/ebooks/thank-you/{reference}/resend', [EbookFulfillmentController::class, 'thankYouResend'])->middleware(['signed', 'private.nostore', 'throttle:5,1'])->name('ebooks.thank-you.resend');
+Route::get('/ebooks/download/{token}/expired', EbookDownloadExpiredPage::class)->middleware(['private.nostore', 'throttle:ebooks-downloads'])->name('ebooks.download.expired');
+Route::get('/ebooks/download/{token}', [EbookFulfillmentController::class, 'download'])->middleware(['private.nostore', 'throttle:ebooks-downloads'])->name('ebooks.download');
+Route::post('/ebooks/download/{token}/resend', [EbookFulfillmentController::class, 'resend'])->middleware('throttle:5,1')->name('ebooks.download.resend');
+Route::post('/ebooks/payments/verify', [EbookPaymentController::class, 'verify'])->middleware('throttle:10,1')->name('ebooks.payments.verify');
 
 Route::get('/about', AboutPage::class)->name('about');
 
@@ -110,13 +143,14 @@ Route::get('/recipe-aid-privacy-policy', function () {
 })->name('recipe-aid-privacy-policy');
 
 Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
-Route::post('/paystack/webhook', [PaystackController::class, 'webhook']);
+Route::post('/paystack/webhook', [PaystackController::class, 'webhook'])->name('paystack.webhook');
 
 Route::get('/sitemap.xml', function () {
     $pages = [
         ['loc' => route('welcome'), 'changefreq' => 'daily', 'priority' => '1.0', 'lastmod' => now()->toDateString()],
         ['loc' => route('services'), 'changefreq' => 'daily', 'priority' => '0.9', 'lastmod' => now()->toDateString()],
         ['loc' => route('products.index'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
+        ['loc' => route('ebooks.index'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
         ['loc' => route('bootcamp'), 'changefreq' => 'weekly', 'priority' => '0.8', 'lastmod' => now()->toDateString()],
         ['loc' => route('about'), 'changefreq' => 'monthly', 'priority' => '0.7', 'lastmod' => now()->toDateString()],
         ['loc' => route('contact'), 'changefreq' => 'monthly', 'priority' => '0.6', 'lastmod' => now()->toDateString()],
@@ -148,7 +182,32 @@ Route::get('/sitemap.xml', function () {
             'lastmod' => optional($programme->updated_at)->toDateString() ?? now()->toDateString(),
         ]);
 
-    $urls = collect($pages)->concat($serviceItems)->concat($programmes);
+    $ebookPages = \App\Models\Ebook::query()
+        ->where('status', \App\Enums\EbookStatus::Published)
+        ->orderBy('updated_at', 'desc')
+        ->get(['slug', 'updated_at', 'free_chapter_content', 'free_chapter_path'])
+        ->flatMap(function ($ebook) {
+            $lastmod = optional($ebook->updated_at)->toDateString() ?? now()->toDateString();
+            $urls = [[
+                'loc' => route('ebooks.show', ['slug' => $ebook->slug]),
+                'changefreq' => 'weekly',
+                'priority' => '0.8',
+                'lastmod' => $lastmod,
+            ]];
+
+            if ($ebook->free_chapter_content || $ebook->free_chapter_path) {
+                $urls[] = [
+                    'loc' => route('ebooks.free-chapter', ['slug' => $ebook->slug]),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.6',
+                    'lastmod' => $lastmod,
+                ];
+            }
+
+            return $urls;
+        });
+
+    $urls = collect($pages)->concat($serviceItems)->concat($programmes)->concat($ebookPages);
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
@@ -314,6 +373,10 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     Route::get('admin/programme-enquiries', ProgrammeEnquiriesManager::class)->name('admin.programmeEnquiries');
     Route::get('admin/church-leads', ChurchLeadsManager::class)->name('admin.churchLeads');
     Route::get('admin/products', ProductsManager::class)->name('admin.products');
+    Route::get('admin/ebooks', EbooksManager::class)->name('admin.ebooks.index');
+    Route::get('admin/ebooks/policies', EbookPoliciesManager::class)->name('admin.ebooks.policies');
+    Route::get('admin/ebook-orders', EbookOrdersManager::class)->name('admin.ebooks.orders');
+    Route::get('admin/ebooks/dashboard', EbookOperationsDashboard::class)->name('admin.ebooks.dashboard');
 
     //Crm Routes
     Route::get('admin/intitution-requests', InstitutionRequestManager::class)->name('admin.crm.index');
