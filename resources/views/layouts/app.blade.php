@@ -15,6 +15,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('pwa/icons/apple-touch-icon.png') }}">
 
     <title>{{ config('app.name', 'MephEd') }}</title>
+    @if (request()->routeIs('admin.blog.preview'))
+        <meta name="robots" content="noindex,nofollow">
+    @endif
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

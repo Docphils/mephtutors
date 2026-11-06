@@ -33,7 +33,7 @@
                 ],
                 [
                     'key' => 'portfolio', 'label' => 'Company Products', 'icon' => 'fa-cubes',
-                    'active' => request()->routeIs('admin.products', 'admin.ebooks.*'),
+                    'active' => request()->routeIs('admin.products', 'admin.ebooks.*', 'admin.blog.*'),
                 ],
                 [
                     'key' => 'business', 'label' => 'Finance & Communications', 'icon' => 'fa-chart-line',
@@ -92,6 +92,8 @@
                         <a wire:navigate href="{{ route('admin.testimonials') }}" class="{{ $navLink }} {{ request()->routeIs('admin.testimonials') ? $activeLink : '' }}"><i class="fas fa-comment w-5 text-cyan-300"></i><span>Manage Testimonials</span></a>
                     @else
                         <a wire:navigate href="{{ route('admin.products') }}" class="{{ $navLink }} {{ request()->routeIs('admin.products') ? $activeLink : '' }}"><i class="fas fa-cubes w-5 text-cyan-300"></i><span>Products Manager</span></a>
+                        <a wire:navigate href="{{ route('admin.blog.index') }}" class="{{ $navLink }} {{ request()->routeIs('admin.blog.*') ? $activeLink : '' }}"><i class="fas fa-newspaper w-5 text-cyan-300"></i><span>Blog Studio</span></a>
+                        <a wire:navigate href="{{ route('admin.blog.settings') }}" class="{{ $navLink }} {{ request()->routeIs('admin.blog.settings') ? $activeLink : '' }}"><i class="fas fa-sliders w-5 text-cyan-300"></i><span>Blog Settings</span></a>
                         <a wire:navigate href="{{ route('admin.ebooks.index') }}" class="{{ $navLink }} {{ request()->routeIs('admin.ebooks.index') ? $activeLink : '' }}"><i class="fas fa-book-open w-5 text-cyan-300"></i><span>eBook Catalog</span></a>
                         <a wire:navigate href="{{ route('admin.ebooks.policies') }}" class="{{ $navLink }} {{ request()->routeIs('admin.ebooks.policies') ? $activeLink : '' }}"><i class="fas fa-scale-balanced w-5 text-cyan-300"></i><span>eBook Legal Pages</span></a>
                         <a wire:navigate href="{{ route('admin.ebooks.orders') }}" class="{{ $navLink }} {{ request()->routeIs('admin.ebooks.orders') ? $activeLink : '' }}"><i class="fas fa-receipt w-5 text-cyan-300"></i><span>eBook Orders</span></a>

@@ -15,6 +15,9 @@
         ['label' => 'About', 'url' => route('about'), 'active' => request()->routeIs('about')],
         ['label' => 'Contact', 'url' => route('contact'), 'active' => request()->routeIs('contact')],
     ];
+    if (config('blog.public_enabled')) {
+        $primaryLinks[] = ['label' => 'Blog', 'url' => route('blog.index'), 'active' => request()->routeIs('blog.*')];
+    }
 
     $dashboard = match ($userRole) {
         'admin' => ['label' => 'Admin Dashboard', 'url' => route('admin.dashboard'), 'active' => request()->routeIs('admin.dashboard')],

@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Models\EbookTaskRun;
 use App\Models\User;
+use App\Services\BlogGenerationWorkflow;
 use App\Services\EbookAlertService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -20,6 +21,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('interventions:close-completed')->everyFiveMinutes();
         $schedule->command('sessions:close-completed')->everyFiveMinutes();
         $schedule->command('ebooks:reconcile-payments')->everyTenMinutes()->withoutOverlapping();
+        $schedule->call(fn () => app(BlogGenerationWorkflow::class)->dispatchScheduled())
+            ->everyMinute()
+            ->timezone(config('blog.timezone', 'Africa/Lagos'))
+            ->name('blog:daily-draft-dispatch');
         $schedule->call(function (): void {
             $threshold = now()->subMinutes(config('ebooks.reconciliation_minutes', 10) * 3);
             $last = EbookTaskRun::query()->where('task', 'reconciliation')->first();

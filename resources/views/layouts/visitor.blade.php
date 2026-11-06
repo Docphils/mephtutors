@@ -19,6 +19,9 @@
     <meta name="robots" content="{{ $metaRobots ?? 'index,follow' }}">
     <link rel="canonical" href="{{ $canonicalUrl ?? url()->current() }}">
     <link rel="alternate" type="text/plain" title="LLMs" href="{{ route('llms') }}">
+    @if (config('blog.public_enabled'))
+        <link rel="alternate" type="application/rss+xml" title="MephEd Blog" href="{{ route('blog.feed') }}">
+    @endif
 
     <meta property="og:title" content="{{ $title ?? 'MephEd' }}">
     <meta property="og:description" content="{{ $metaDescription ?? 'MephEd educational services.' }}">

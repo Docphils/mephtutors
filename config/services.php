@@ -39,6 +39,7 @@ return [
     'groq' => [
         'api_key' => env('GROQ_API_KEY'),
         'model' => env('GROQ_EBOOK_MODEL', 'qwen/qwen3.8-27b'),
+        'blog_model' => env('GROQ_BLOG_MODEL', 'qwen/qwen3.8-27b'),
         'fallback_models' => array_values(array_filter(array_map(
             'trim',
             explode(',', (string) env('GROQ_EBOOK_FALLBACK_MODELS', 'qwen/qwen3.8-27b,openai/gpt-oss-20b,openai/gpt-oss-120b'))
@@ -47,6 +48,17 @@ return [
             'trim',
             explode(',', (string) env('GROQ_EBOOK_VISION_MODELS', 'qwen/qwen3.8-27b'))
         ))),
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'blog_model' => env('GEMINI_BLOG_MODEL', 'gemini-2.5-flash'),
+    ],
+
+    'facebook' => [
+        'graph_api_version' => env('META_GRAPH_API_VERSION', 'v27.0'),
+        'page_id' => env('META_PAGE_ID'),
+        'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),
     ],
 
     'solar_sapient' => [

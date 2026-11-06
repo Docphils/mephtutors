@@ -1,262 +1,248 @@
-<div class="min-h-screen bg-slate-50/50">
+<div class="min-h-full bg-slate-50/70">
     <x-slot name="header">
-        <div class="flex items-center justify-between w-full">
-            <div>
-                <h2 class="font-black text-3xl text-slate-800 tracking-tight">
-                    Admin <span class="text-cyan-600"> Dashboard</span>
-                </h2>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Live System Updates</p>
-                </div>
-            </div>
+        <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-700">MephEd administration</p>
+            <h1 class="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Dashboard</h1>
         </div>
     </x-slot>
 
-    <div class="py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
+    <main class="mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
+        <section class="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950 to-cyan-800 px-5 py-7 text-white shadow-xl shadow-cyan-950/10 sm:px-8 sm:py-9">
+            <div class="absolute -right-12 -top-20 -z-10 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" aria-hidden="true"></div>
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-2xl">
+                    <p class="text-sm font-semibold text-cyan-200">{{ $dashboardDate }}</p>
+                    <h2 class="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Welcome back, {{ $greetingName }}.</h2>
+                    <p class="mt-2 max-w-xl text-sm leading-6 text-cyan-50/80 sm:text-base">Here’s your operational snapshot: {{ number_format($attentionCount) }} items need attention.</p>
+                </div>
+                <a wire:navigate href="{{ route('admin.contactMessages') }}" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-900 sm:w-auto">
+                    <i class="fas fa-inbox text-cyan-800" aria-hidden="true"></i> Review inbox
+                    @if ($stats['unread_messages'] > 0)
+                        <span class="rounded-full bg-cyan-100 px-2 py-0.5 text-xs text-cyan-900">{{ $stats['unread_messages'] }}</span>
+                    @endif
+                </a>
+            </div>
+        </section>
 
-            <div class="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-8 mb-10 shadow-sm">
-                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <section aria-label="Key metrics" class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h3 class="text-2xl font-bold text-slate-800">
-                            Welcome back, <span class="text-cyan-600">{{ explode(' ', $user->name)[0] }}</span>! 👋
-                        </h3>
-                        <p class="text-slate-500 mt-1">
-                            Current Snapshot: <span class="font-bold">{{ $stats['bootcamp_count'] }}</span> Bootcamp
-                            signups and
-                            <span class="text-cyan-600 font-bold">{{ $stats['unread_messages'] }}</span> unread
-                            messages.
-                        </p>
+                        <p class="text-sm font-semibold text-slate-500">Total users</p>
+                        <p class="mt-2 text-3xl font-black tracking-tight text-slate-950">{{ number_format($stats['total_users']) }}</p>
+                        <p class="mt-2 text-xs text-slate-500">{{ number_format($stats['new_users_week']) }} joined in the last 7 days</p>
                     </div>
-                    <div class="flex gap-3">
-                        <a wire:navigate href="{{ route('admin.payments.index') }}"
-                            class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition">View
-                            Finances</a>
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-800"><i class="fas fa-users" aria-hidden="true"></i></span>
+                </div>
+                <div class="mt-4 flex gap-3 border-t border-slate-100 pt-3 text-xs font-medium text-slate-600">
+                    <span>{{ number_format($stats['total_clients']) }} learners</span><span aria-hidden="true">·</span><span>{{ number_format($stats['total_tutors']) }} tutors</span>
+                </div>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Earned payments</p>
+                        <p class="mt-2 text-3xl font-black tracking-tight text-slate-950">₦{{ number_format((float) $stats['earned_payments']) }}</p>
+                        <p class="mt-2 text-xs text-slate-500">₦{{ number_format((float) $stats['earned_payments_month']) }} earned this month</p>
+                    </div>
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+                </div>
+                <a wire:navigate href="{{ route('admin.payments.index') }}" class="mt-4 inline-flex items-center gap-1 border-t border-slate-100 pt-3 text-xs font-bold text-cyan-800 hover:text-cyan-950">View payment records <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i></a>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Needs attention</p>
+                        <p class="mt-2 text-3xl font-black tracking-tight text-slate-950">{{ number_format($attentionCount) }}</p>
+                        <p class="mt-2 text-xs text-slate-500">Requests, tutor reviews and unread messages</p>
+                    </div>
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-700"><i class="fas fa-bell" aria-hidden="true"></i></span>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-x-3 gap-y-1 border-t border-slate-100 pt-3 text-xs font-medium text-slate-600">
+                    <span>{{ $stats['pending_tutors'] }} tutor reviews</span><span>{{ $pendingRequestCount }} requests</span><span>{{ $stats['unread_messages'] }} messages</span>
+                </div>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Learning sessions</p>
+                        <p class="mt-2 text-3xl font-black tracking-tight text-slate-950">{{ number_format($stats['active_bookings']) }}</p>
+                        <p class="mt-2 text-xs text-slate-500">Active bookings · {{ $stats['new_bookings_week'] }} new this week</p>
+                    </div>
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700"><i class="fas fa-book-open" aria-hidden="true"></i></span>
+                </div>
+                <div class="mt-4 flex gap-3 border-t border-slate-100 pt-3 text-xs font-medium text-slate-600">
+                    <span>{{ $stats['scheduled_meetings'] }} scheduled meetings</span><span aria-hidden="true">·</span><span>{{ $stats['completed_bookings'] }} completed bookings</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="grid gap-6 xl:grid-cols-3">
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 xl:col-span-2">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-900">Signups & bookings</h2>
+                        <p class="mt-1 text-sm text-slate-500">Daily activity over the last seven days</p>
+                    </div>
+                    <div class="flex flex-wrap gap-4 text-xs font-semibold text-slate-600" aria-label="Chart legend">
+                        <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-cyan-600"></span>New users</span>
+                        <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Bookings</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div
-                    class="bg-gradient-to-br from-cyan-600 to-cyan-800 p-6 rounded-[2rem] text-white shadow-lg shadow-cyan-200">
-                    <p class="text-cyan-100 text-xs font-bold uppercase tracking-widest mb-1">Total Revenue</p>
-                    <h3 class="text-3xl font-black">₦{{ number_format($stats['earned_payments']) }}</h3>
-                    <p class="mt-2 text-xs opacity-80">{{ $stats['campaigns_sent'] }} Newsletter Campaigns Sent</p>
+                <div class="mt-5 overflow-hidden" role="img" aria-label="Line chart showing daily new users and bookings for the last seven days">
+                    <svg viewBox="0 0 {{ $chart['width'] }} {{ $chart['height'] }}" class="h-56 w-full overflow-visible sm:h-64" preserveAspectRatio="none" aria-hidden="true">
+                        @foreach ($chart['gridLines'] as $gridLine)
+                            <line x1="{{ $chart['padding'] }}" y1="{{ $gridLine }}" x2="{{ $chart['width'] - $chart['padding'] }}" y2="{{ $gridLine }}" stroke="#e2e8f0" stroke-dasharray="3 5" />
+                        @endforeach
+                        <polyline points="{{ $chart['userPolyline'] }}" fill="none" stroke="#0891b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                        <polyline points="{{ $chart['bookingPolyline'] }}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                        @foreach ($chart['userPoints'] as $point)
+                            <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="4" fill="#0891b2" vector-effect="non-scaling-stroke"><title>{{ $point['date'] }}: {{ $point['value'] }} new users</title></circle>
+                        @endforeach
+                        @foreach ($chart['bookingPoints'] as $point)
+                            <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="4" fill="#10b981" vector-effect="non-scaling-stroke"><title>{{ $point['date'] }}: {{ $point['value'] }} bookings</title></circle>
+                        @endforeach
+                    </svg>
                 </div>
-
-                <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Pending Items</p>
-                            <h3 class="text-3xl font-black text-slate-800">
-                                {{ $stats['pending_tutors'] + $stats['pending_requests'] + $stats['pending_interventions'] }}</h3>
-                        </div>
-                        <div class="bg-orange-100 text-orange-600 p-3 rounded-2xl">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                    </div>
-                    <p class="text-orange-600 text-xs font-bold mt-2">Tutors, Private Requests & Interventions</p>
+                <div class="mt-2 grid grid-cols-7 text-center text-[11px] font-medium text-slate-500 sm:text-xs">
+                    @foreach ($chartData['labels'] as $index => $label)
+                        <span>{{ $label }}<span class="hidden sm:inline">, {{ $chartData['dates'][$index] }}</span></span>
+                    @endforeach
                 </div>
+            </article>
 
-                <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Bootcamp</p>
-                            <h3 class="text-3xl font-black text-slate-800">{{ $stats['bootcamp_count'] }}</h3>
-                        </div>
-                        <div class="bg-emerald-100 text-emerald-600 p-3 rounded-2xl">
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-900">Operational pipeline</h2>
+                        <p class="mt-1 text-sm text-slate-500">Items awaiting action</p>
                     </div>
-                    <p class="text-emerald-600 text-xs font-bold mt-2">Total Participants</p>
+                    <span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-700"><i class="fas fa-list-check" aria-hidden="true"></i></span>
                 </div>
-
-                <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Online Sessions</p>
-                            <h3 class="text-3xl font-black text-slate-800">{{ $stats['scheduled_meetings'] }}</h3>
-                        </div>
-                        <div class="bg-emerald-100 text-emerald-600 p-3 rounded-2xl">
-                            <i class="fas fa-video"></i>
-                        </div>
-                    </div>
-                    <p class="text-emerald-600 text-xs font-bold mt-2">{{ $stats['completed_meetings'] }} completed</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h4 class="font-bold text-slate-800">Growth Analytics</h4>
-                            <p class="text-xs text-slate-400">Comparing Users, Bookings, and Revenue</p>
-                        </div>
-                        <div id="chartLegend" class="flex gap-4"></div>
-                    </div>
-                    <div class="h-[350px]" wire:ignore>
-                        <canvas id="growthChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
-                    <h4 class="font-bold text-slate-800 mb-8">Requests Distribution</h4>
-                    <div class="h-[250px]" wire:ignore>
-                        <canvas id="distributionChart"></canvas>
-                    </div>
-                    <div class="mt-8 space-y-4">
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-cyan-600"></span>
-                                <span class="text-sm font-medium text-slate-600">Institutions</span>
-                            </div>
-                            <span class="font-bold text-slate-800">{{ $stats['new_crm'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-                                <span class="text-sm font-medium text-slate-600">Private Tutors</span>
-                            </div>
-                            <span class="font-bold text-slate-800">{{ $stats['tutor_requests'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-violet-500"></span>
-                                <span class="text-sm font-medium text-slate-600">Interventions</span>
-                            </div>
-                            <span class="font-bold text-slate-800">{{ $stats['intervention_requests'] }}</span>
-                        </div>
-                        <a wire:navigate href="{{ route('admin.online-meetings') }}"
-                            class="flex items-center justify-between p-3 bg-cyan-50 rounded-2xl border border-cyan-100">
-                            <span class="text-sm font-bold text-cyan-700">Open Online Sessions</span>
-                            <i class="fas fa-arrow-right text-cyan-700"></i>
+                <div class="mt-5 space-y-4">
+                    @foreach ([
+                        ['Tutoring requests', $stats['pending_requests'], 'admin.lessons', 'text-amber-700', 'bg-amber-500'],
+                        ['Tutor applications', $stats['pending_tutors'], 'admin.tutorProfile', 'text-cyan-800', 'bg-cyan-600'],
+                        ['Programme enquiries', $stats['pending_interventions'], 'admin.programmeEnquiries', 'text-violet-700', 'bg-violet-500'],
+                        ['Institution leads', $stats['new_crm'], 'admin.crm.index', 'text-emerald-700', 'bg-emerald-500'],
+                    ] as [$label, $count, $route, $textClass, $barClass])
+                        <a wire:navigate href="{{ route($route) }}" class="group block rounded-xl p-2 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600">
+                            <span class="flex items-center justify-between gap-3 text-sm">
+                                <span class="font-semibold text-slate-700 group-hover:text-slate-950">{{ $label }}</span>
+                                <span class="font-black {{ $textClass }}">{{ number_format($count) }}</span>
+                            </span>
+                            <span class="mt-2 block h-1.5 overflow-hidden rounded-full bg-slate-100"><span class="block h-full rounded-full {{ $barClass }}" style="width: {{ min(100, max(8, $count * 8)) }}%"></span></span>
                         </a>
-                    </div>
+                    @endforeach
+                </div>
+                <a wire:navigate href="{{ route('admin.programmeEnquiries') }}" class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600">View all requests <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i></a>
+            </article>
+        </section>
+
+        <section aria-labelledby="quick-links-heading">
+            <div class="mb-4 flex items-end justify-between gap-3">
+                <div>
+                    <h2 id="quick-links-heading" class="text-lg font-black text-slate-900">Quick links</h2>
+                    <p class="mt-1 text-sm text-slate-500">Jump straight to frequently used admin tools</p>
                 </div>
             </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                @foreach ([
+                    ['Users', 'Manage user accounts', 'admin.users', 'fa-users', 'bg-cyan-50 text-cyan-800'],
+                    ['Tutor profiles', 'Review tutor applications', 'admin.tutorProfile', 'fa-chalkboard-user', 'bg-violet-50 text-violet-700'],
+                    ['Payments', 'Review payment records', 'admin.payments.index', 'fa-credit-card', 'bg-emerald-50 text-emerald-700'],
+                    ['Programme enquiries', 'Manage learner enquiries', 'admin.programmeEnquiries', 'fa-graduation-cap', 'bg-amber-50 text-amber-700'],
+                    ['Messages', 'Read contact submissions', 'admin.contactMessages', 'fa-envelope', 'bg-rose-50 text-rose-700'],
+                    ['Online meetings', 'Manage learning sessions', 'admin.online-meetings', 'fa-video', 'bg-sky-50 text-sky-700'],
+                    ['eBook orders', 'Review digital orders', 'admin.ebooks.orders', 'fa-book-open', 'bg-indigo-50 text-indigo-700'],
+                    ['Blog studio', 'Create and publish articles', 'admin.blog.index', 'fa-newspaper', 'bg-teal-50 text-teal-700'],
+                ] as [$label, $description, $route, $icon, $colorClass])
+                    <a wire:navigate href="{{ route($route) }}" class="group flex min-h-24 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 sm:min-h-28 sm:gap-4 sm:p-4">
+                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl {{ $colorClass }} sm:h-12 sm:w-12"><i class="fas {{ $icon }}" aria-hidden="true"></i></span>
+                        <span class="min-w-0">
+                            <span class="block truncate text-sm font-bold text-slate-900">{{ $label }}</span>
+                            <span class="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{{ $description }}</span>
+                        </span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
 
-            <div class="mt-8 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="font-bold text-slate-800">Upcoming Online Sessions</h4>
-                    <a wire:navigate href="{{ route('admin.online-meetings') }}" class="text-xs font-bold text-cyan-600">Manage</a>
+        <section class="grid gap-6 xl:grid-cols-2">
+            <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <div>
+                        <h2 class="font-black text-slate-900">Recent messages</h2>
+                        <p class="mt-1 text-xs text-slate-500">{{ $stats['unread_messages'] }} unread in your inbox</p>
+                    </div>
+                    <a wire:navigate href="{{ route('admin.contactMessages') }}" class="rounded-lg px-3 py-2 text-xs font-bold text-cyan-800 hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600">Open inbox <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i></a>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    @forelse($upcomingMeetings as $meeting)
-                        <div class="p-3 rounded-xl border border-slate-100 bg-slate-50">
-                            <p class="text-sm font-bold text-slate-800">{{ $meeting->title }}</p>
-                            <p class="text-xs text-slate-500">{{ $meeting->starts_at?->format('M d, Y h:i A') }}</p>
-                            <p class="text-xs text-cyan-700">{{ $meeting->client?->name ?? 'N/A' }} / {{ $meeting->tutor?->name ?? 'N/A' }}</p>
-                        </div>
+                <div class="divide-y divide-slate-100">
+                    @forelse ($recentMessages as $message)
+                        <a wire:navigate href="{{ route('admin.contactMessages') }}" class="flex gap-3 px-5 py-4 transition hover:bg-slate-50 sm:px-6">
+                            <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full {{ $message['is_read'] ? 'bg-slate-200' : 'bg-cyan-500' }}" aria-label="{{ $message['is_read'] ? 'Read' : 'Unread' }}"></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"><span class="truncate text-sm font-bold text-slate-900">{{ $message['name'] }}</span><time class="text-xs text-slate-400">{{ $message['created_label'] }}</time></span>
+                                <span class="mt-1 block truncate text-xs text-slate-500">{{ $message['email'] }} · {{ $message['message'] }}</span>
+                            </span>
+                        </a>
                     @empty
-                        <p class="text-sm text-slate-500">No upcoming online sessions.</p>
+                        <p class="px-5 py-8 text-center text-sm text-slate-500">No contact messages yet.</p>
                     @endforelse
                 </div>
+            </article>
+
+            <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <div>
+                        <h2 class="font-black text-slate-900">Upcoming online meetings</h2>
+                        <p class="mt-1 text-xs text-slate-500">{{ $stats['scheduled_meetings'] }} currently scheduled</p>
+                    </div>
+                    <a wire:navigate href="{{ route('admin.online-meetings') }}" class="rounded-lg px-3 py-2 text-xs font-bold text-cyan-800 hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600">Manage <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i></a>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    @forelse ($upcomingMeetings as $meeting)
+                        <div class="flex gap-4 px-5 py-4 sm:px-6">
+                            <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-cyan-50 text-center text-cyan-900">
+                                <span><span class="block text-[10px] font-bold uppercase">{{ $meeting['month'] }}</span><span class="block text-lg font-black leading-5">{{ $meeting['day'] }}</span></span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-bold text-slate-900">{{ $meeting['title'] }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ $meeting['starts_label'] }}</p>
+                                <p class="mt-1 truncate text-xs text-slate-500">{{ $meeting['client_name'] }} <span aria-hidden="true">·</span> {{ $meeting['tutor_name'] }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="px-5 py-8 text-center text-sm text-slate-500">No upcoming meetings scheduled.</p>
+                    @endforelse
+                </div>
+            </article>
+        </section>
+
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
+                <div>
+                    <h2 class="font-black text-slate-900">Latest registrations</h2>
+                    <p class="mt-1 text-xs text-slate-500">{{ $stats['new_users_today'] }} new users today</p>
+                </div>
+                <a wire:navigate href="{{ route('admin.users') }}" class="rounded-lg px-3 py-2 text-xs font-bold text-cyan-800 hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600">View users <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i></a>
             </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('livewire:navigated', () => {
-            const ctx = document.getElementById('growthChart');
-            const ctx2 = document.getElementById('distributionChart');
-
-            // 1. Growth Chart Implementation with Legend Hero
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: @json($chartData['labels']),
-                    datasets: [{
-                            label: 'New Users',
-                            data: @json($chartData['users']),
-                            borderColor: '#0891b2',
-                            backgroundColor: 'rgba(8, 145, 178, 0.05)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4
-                        },
-                        {
-                            label: 'Bookings',
-                            data: @json($chartData['bookings']),
-                            borderColor: '#10b981',
-                            borderDash: [5, 5],
-                            tension: 0.4,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Revenue (k)',
-                            data: @json($chartData['revenue']),
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'transparent',
-                            tension: 0.4,
-                            pointRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            align: 'end',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                    size: 12,
-                                    weight: '600'
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f1f5f9'
-                            },
-                            ticks: {
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 2. Distribution Chart Implementation
-            new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Institutions', 'Private Tutors', 'Interventions'],
-                    datasets: [{
-                        data: [{{ $stats['new_crm'] }}, {{ $stats['tutor_requests'] }}, {{ $stats['intervention_requests'] }}],
-                        backgroundColor: ['#0891b2', '#f59e0b', '#8b5cf6'],
-                        hoverOffset: 10,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    cutout: '75%',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        });
-    </script>
+            <div class="grid divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-5">
+                @forelse ($recentUsers as $registeredUser)
+                    <div class="flex min-w-0 items-center gap-3 px-5 py-4">
+                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-600">{{ $registeredUser['initial'] }}</span>
+                        <span class="min-w-0">
+                            <span class="block truncate text-sm font-bold text-slate-900">{{ $registeredUser['name'] }}</span>
+                            <span class="mt-0.5 block text-xs capitalize text-slate-500">{{ $registeredUser['role'] }} · {{ $registeredUser['created_label'] }}</span>
+                        </span>
+                    </div>
+                @empty
+                    <p class="px-5 py-8 text-sm text-slate-500">No registrations yet.</p>
+                @endforelse
+            </div>
+        </section>
+    </main>
 </div>

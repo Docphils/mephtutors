@@ -81,6 +81,15 @@ use App\Http\Controllers\OnlineMeetingController;
 
 use App\Livewire\Partials\UserProfileEditor;
 
+use App\Http\Controllers\BlogFeedController;
+use App\Livewire\Admin\BlogEditor;
+use App\Livewire\Admin\BlogPreview;
+use App\Livewire\Admin\BlogSettingsManager;
+use App\Livewire\Admin\BlogStudio;
+use App\Livewire\Blog\BlogArticle;
+use App\Livewire\Blog\BlogIndex;
+use App\Models\BlogPost;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -129,6 +138,12 @@ Route::post('/ebooks/payments/verify', [EbookPaymentController::class, 'verify']
 Route::get('/about', AboutPage::class)->name('about');
 
 Route::get('/contact', ContactPage::class)->name('contact');
+
+Route::get('/blog', BlogIndex::class)->name('blog.index');
+Route::get('/blog/rss.xml', BlogFeedController::class)->name('blog.feed');
+Route::get('/blog/category/{slug}', BlogIndex::class)->name('blog.category');
+Route::get('/blog/tag/{slug}', BlogIndex::class)->name('blog.tag');
+Route::get('/blog/{slug}', BlogArticle::class)->name('blog.show');
 
 Route::get('/bootcamp', EnrollmentForm::class)->name('bootcamp');
 Route::get('/bootcamp/enrollment/success/{enrollee}', BootcampEnrollmentSuccess::class)
@@ -208,6 +223,25 @@ Route::get('/sitemap.xml', function () {
         });
 
     $urls = collect($pages)->concat($serviceItems)->concat($programmes)->concat($ebookPages);
+    if (config('blog.public_enabled')) {
+        $blogPages = BlogPost::query()
+            ->published()
+            ->orderBy('updated_at', 'desc')
+            ->get(['slug', 'updated_at', 'canonical_url'])
+            ->map(fn ($post) => [
+                'loc' => $post->canonical_url ?: route('blog.show', $post->slug),
+                'changefreq' => 'monthly',
+                'priority' => '0.7',
+                'lastmod' => optional($post->updated_at)->toDateString() ?? now()->toDateString(),
+            ]);
+
+        $urls = $urls->concat([[
+            'loc' => route('blog.index'),
+            'changefreq' => 'daily',
+            'priority' => '0.7',
+            'lastmod' => now()->toDateString(),
+        ]])->concat($blogPages);
+    }
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
@@ -360,6 +394,15 @@ Route::middleware(['auth', 'can:Tutor', 'verified'])->group(function () {
 Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
     // Admin Dashboard
     Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');    
+    Route::get('/admin/blog', BlogStudio::class)->name('admin.blog.index');
+    Route::get('/admin/blog/create', BlogEditor::class)->name('admin.blog.create');
+    Route::get('/admin/blog/{postId}/edit', BlogEditor::class)->whereNumber('postId')->name('admin.blog.edit');
+    Route::get('/admin/blog/{postId}/preview', BlogPreview::class)->whereNumber('postId')->middleware('private.nostore')->name('admin.blog.preview');
+    Route::get('/admin/blog/{postId}/review', BlogPreview::class)
+        ->whereNumber('postId')
+        ->middleware(['signed', 'private.nostore'])
+        ->name('admin.blog.review');
+    Route::get('/admin/blog/settings', BlogSettingsManager::class)->name('admin.blog.settings');
     //Tutor Request Routes
     Route::get('admin/tutor-requests', RequestManager::class)->name('tutorRequests.index');
     Route::get('admin/testimonials', AdminIndexTestimonials::class)->name('admin.testimonials');
