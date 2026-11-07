@@ -5,6 +5,9 @@ namespace App\Livewire\Admin;
 use App\Models\BlogFacebookShare;
 use App\Models\BlogGenerationRun;
 use App\Models\BlogPost;
+use App\Models\BlogSetting;
+use App\Models\BlogTopic;
+use App\Models\BlogTopicSuggestionBatch;
 use App\Services\BlogFacebookWorkflow;
 use App\Services\BlogGenerationWorkflow;
 use Illuminate\Database\QueryException;
@@ -32,9 +35,12 @@ class BlogStudio extends Component
 
     public string $statusHeading = 'Status update';
 
+    public string $wordTarget = '700';
+
     public function mount(): void
     {
         Gate::authorize('Admin');
+        $this->wordTarget = (string) BlogSetting::getValue('content_word_target', config('blog.default_content_word_target', 700));
     }
 
     public function publish(int $postId, BlogFacebookWorkflow $facebook): void
@@ -106,8 +112,12 @@ class BlogStudio extends Component
         $this->statusMessage = null;
 
         try {
-            $run = $workflow->dispatchManual();
-            $this->notify('success', 'Draft generation was queued. Run #'.$run->id.' will appear here as it progresses.', 'Draft generation queued');
+            $run = $workflow->dispatchManual((int) $this->wordTarget);
+            if ($run->status === BlogGenerationRun::STATUS_AWAITING_TOPIC) {
+                $this->notify('success', 'Run #'.$run->id.' is waiting for an administrator to approve a topic. It will start automatically after approval.', 'Waiting for an approved topic');
+            } else {
+                $this->notify('success', 'Draft generation was queued. Run #'.$run->id.' will appear here as it progresses.', 'Draft generation queued');
+            }
         } catch (QueryException $exception) {
             Log::error('A manual blog draft generation run could not be queued because of a database error.', [
                 'admin_id' => auth()->id(),
@@ -138,8 +148,135 @@ class BlogStudio extends Component
     public function retryGeneration(int $runId, BlogGenerationWorkflow $workflow): void
     {
         Gate::authorize('Admin');
-        $run = $workflow->retryFailed($runId);
-        $this->notify('success', 'Generation run #'.$run->id.' was queued for retry.', 'Generation retry queued');
+        try {
+            $run = $workflow->retryFailed($runId);
+            $this->notify('success', 'Generation run #'.$run->id.' was queued for retry.', 'Generation retry queued');
+        } catch (QueryException $exception) {
+            Log::error('A failed blog generation run could not be retried because of a database error.', [
+                'run_id' => $runId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The generation run could not be retried because of a database error. Check the Laravel log.', 'Generation retry failed');
+        } catch (RuntimeException $exception) {
+            $this->notify('error', $exception->getMessage(), 'Generation retry failed');
+        } catch (Throwable $exception) {
+            Log::error('A failed blog generation run could not be retried.', [
+                'run_id' => $runId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The generation run could not be retried because of an unexpected server error. Check the Laravel log.', 'Generation retry failed');
+        }
+    }
+
+    public function generateTopicSuggestions(BlogGenerationWorkflow $workflow): void
+    {
+        Gate::authorize('Admin');
+        try {
+            $batch = $workflow->requestTopicSuggestions();
+            $this->notify(
+                'success',
+                $batch?->status === BlogTopicSuggestionBatch::STATUS_QUEUED || $batch?->status === BlogTopicSuggestionBatch::STATUS_RUNNING
+                    ? 'Topic suggestions are being generated. They will appear as pending for your approval.'
+                    : 'Review pending suggestions before requesting another batch.',
+                'Topic suggestions requested',
+            );
+        } catch (QueryException $exception) {
+            Log::error('A blog topic suggestion batch could not be queued because of a database error.', [
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'Topic suggestions could not be queued because of a database error. Check the Laravel log.', 'Topic suggestions are unavailable');
+        } catch (RuntimeException $exception) {
+            $this->notify('error', $exception->getMessage(), 'Topic suggestions are unavailable');
+        } catch (Throwable $exception) {
+            Log::error('A blog topic suggestion request failed unexpectedly.', [
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'Topic suggestions could not be queued because of an unexpected server error. Check the Laravel log.', 'Topic suggestions are unavailable');
+        }
+    }
+
+    public function approveTopic(int $topicId, BlogGenerationWorkflow $workflow): void
+    {
+        Gate::authorize('Admin');
+        $this->resetPage('topicsPage');
+        try {
+            $workflow->approveTopic($topicId);
+            $message = config('blog.generation_enabled')
+                ? 'The topic was approved. Any draft waiting for a topic has now been queued.'
+                : 'The topic was approved. Generation is disabled, so any waiting draft remains paused until it is enabled.';
+            $this->notify('success', $message, 'Topic approved');
+        } catch (QueryException $exception) {
+            Log::error('A blog topic could not be approved because of a database error.', [
+                'topic_id' => $topicId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The topic could not be approved because of a database error. Check the Laravel log.', 'Topic could not be approved');
+        } catch (RuntimeException $exception) {
+            $this->notify('error', $exception->getMessage(), 'Topic could not be approved');
+        } catch (Throwable $exception) {
+            Log::error('A blog topic could not be approved.', [
+                'topic_id' => $topicId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The topic could not be approved because of an unexpected server error. Check the Laravel log.', 'Topic could not be approved');
+        }
+    }
+
+    public function rejectTopic(int $topicId, BlogGenerationWorkflow $workflow): void
+    {
+        Gate::authorize('Admin');
+        $this->resetPage('topicsPage');
+        try {
+            $workflow->rejectTopic($topicId);
+            $this->notify('success', 'The topic was removed from the approval queue.', 'Topic rejected');
+        } catch (QueryException $exception) {
+            Log::error('A blog topic could not be rejected because of a database error.', [
+                'topic_id' => $topicId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The topic could not be rejected because of a database error. Check the Laravel log.', 'Topic could not be rejected');
+        } catch (RuntimeException $exception) {
+            $this->notify('error', $exception->getMessage(), 'Topic could not be rejected');
+        } catch (Throwable $exception) {
+            Log::error('A blog topic could not be rejected.', [
+                'topic_id' => $topicId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The topic could not be rejected because of an unexpected server error. Check the Laravel log.', 'Topic could not be rejected');
+        }
+    }
+
+    public function generateFromTopic(int $topicId, BlogGenerationWorkflow $workflow): void
+    {
+        Gate::authorize('Admin');
+        try {
+            $run = $workflow->dispatchManualForTopic($topicId, (int) $this->wordTarget);
+            $this->notify('success', 'A new draft for the approved topic was queued as run #'.$run->id.'.', 'Topic draft queued');
+        } catch (QueryException $exception) {
+            Log::error('A draft for an approved topic could not be queued because of a database error.', [
+                'topic_id' => $topicId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The topic draft could not be queued because of a database error. Check the Laravel log.', 'Topic draft could not be queued');
+        } catch (RuntimeException $exception) {
+            $this->notify('error', $exception->getMessage(), 'Topic draft could not be queued');
+        } catch (Throwable $exception) {
+            Log::error('A draft for an approved topic could not be queued.', [
+                'topic_id' => $topicId,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->notify('error', 'The topic draft could not be queued because of an unexpected server error. Check the Laravel log.', 'Topic draft could not be queued');
+        }
     }
 
     public function updatedStatusFilter(): void
@@ -188,7 +325,7 @@ class BlogStudio extends Component
             ->groupBy('status')
             ->pluck('total', 'status');
         $generationRuns = BlogGenerationRun::query()
-            ->with('post')
+            ->with(['post', 'topic'])
             ->latest('id')
             ->limit(8)
             ->get()
@@ -199,24 +336,55 @@ class BlogStudio extends Component
                     BlogGenerationRun::STATUS_QUEUED => 'Queued and waiting for the blog worker to start.',
                     BlogGenerationRun::STATUS_RUNNING => 'Generating draft…',
                     BlogGenerationRun::STATUS_COMPLETED => 'Draft generated. Review it before publishing.',
+                    BlogGenerationRun::STATUS_AWAITING_TOPIC => 'Waiting for an administrator to approve a topic.',
                     default => null,
                 },
                 'run_key' => $run->run_key,
                 'provider' => $run->provider,
+                'topic_title' => $run->topic?->title,
+                'word_target' => $run->word_target,
                 'post_title' => $run->post?->title,
                 'preview_url' => $run->post ? route('admin.blog.preview', $run->post->id) : null,
                 'notification_status' => $run->notification_status,
                 'error_message' => $run->error_message,
                 'notification_error' => $run->notification_error,
                 'can_retry' => config('blog.generation_enabled')
-                    && $run->status === BlogGenerationRun::STATUS_FAILED,
+                    && $run->status === BlogGenerationRun::STATUS_FAILED
+                    && $run->blog_topic_id !== null,
             ]);
+        $topics = BlogTopic::query()
+            ->with('relatedEbook')
+            ->withCount('generationRuns')
+            ->whereIn('status', [BlogTopic::STATUS_PENDING, BlogTopic::STATUS_APPROVED])
+            ->latest('created_at')
+            ->paginate(10, pageName: 'topicsPage')
+            ->through(fn (BlogTopic $topic): array => [
+                'id' => $topic->id,
+                'title' => $topic->title,
+                'type' => str($topic->topic_type)->replace('_', ' ')->title()->toString(),
+                'angle' => $topic->angle,
+                'status' => $topic->status,
+                'ebook_title' => $topic->relatedEbook?->title,
+                'uses' => $topic->generation_runs_count,
+                'uses_label' => str('time')->plural($topic->generation_runs_count)->toString(),
+            ]);
+        $topicCounts = [
+            'pending' => BlogTopic::query()->where('status', BlogTopic::STATUS_PENDING)->count(),
+            'available' => BlogTopic::query()
+                ->where('status', BlogTopic::STATUS_APPROVED)
+                ->whereDoesntHave('generationRuns')
+                ->count(),
+        ];
+        $topicSuggestionBatchStatus = BlogTopicSuggestionBatch::query()->latest('id')->value('status');
 
         return view('livewire.admin.blog.studio', [
             'posts' => $posts,
             'statusCounts' => $statusCounts,
             'generationRuns' => $generationRuns,
             'generationEnabled' => (bool) config('blog.generation_enabled'),
+            'topics' => $topics,
+            'topicCounts' => $topicCounts,
+            'topicSuggestionBatchStatus' => $topicSuggestionBatchStatus,
         ]);
     }
 

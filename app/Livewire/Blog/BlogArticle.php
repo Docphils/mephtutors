@@ -21,7 +21,7 @@ class BlogArticle extends Component
         abort_unless(config('blog.public_enabled'), 404);
         $post = BlogPost::query()
             ->published()
-            ->with(['category', 'tags'])
+            ->with(['author', 'category', 'tags'])
             ->where('slug', $slug)->first();
         if ($post === null) {
             $redirect = BlogSlugRedirect::query()->with('post')->where('old_slug', $slug)->first();
@@ -40,6 +40,11 @@ class BlogArticle extends Component
         $description = $this->post->meta_description
             ?: $this->post->excerpt
             ?: str($this->post->body)->stripTags()->limit(160);
+        $authorName = trim((string) $this->post->author?->name);
+        $companyName = trim((string) config('blog.author_byline'));
+        $authorByline = $authorName !== '' && $companyName !== ''
+            ? $authorName.' | '.$companyName
+            : ($authorName ?: $companyName);
         $canonical = $this->post->canonical_url ?: route('blog.show', $this->post->slug);
         $heroImageExtension = strtolower(pathinfo((string) $this->post->hero_image_path, PATHINFO_EXTENSION));
         $ogImage = $this->post->hero_image_path
@@ -64,7 +69,9 @@ class BlogArticle extends Component
             'description' => $description,
             'datePublished' => $this->post->published_at?->toAtomString(),
             'dateModified' => $this->post->updated_at?->toAtomString(),
-            'author' => ['@type' => 'Organization', 'name' => config('blog.author_byline')],
+            'author' => $authorName !== ''
+                ? ['@type' => 'Person', 'name' => $authorName]
+                : ['@type' => 'Organization', 'name' => $companyName],
             'publisher' => ['@type' => 'Organization', 'name' => 'MephEd'],
             'image' => $ogImage,
             'mainEntityOfPage' => $canonical,
@@ -72,6 +79,7 @@ class BlogArticle extends Component
 
         return view('livewire.blog.article', [
             'relatedPosts' => $relatedPosts,
+            'authorByline' => $authorByline,
         ])->title($this->post->meta_title ?: $this->post->title.' | MephEd Blog')->layoutData([
             'metaDescription' => $description,
             'canonicalUrl' => $canonical,

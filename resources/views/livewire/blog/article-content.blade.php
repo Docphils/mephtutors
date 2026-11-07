@@ -21,7 +21,7 @@
                     <p class="mt-5 text-lg leading-8 text-slate-600">{{ $post->excerpt }}</p>
                 @endif
                 <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
-                    <span class="font-semibold text-slate-700">{{ config('blog.author_byline') }}</span>
+                    <span class="font-semibold text-slate-700">{{ $authorByline }}</span>
                     @if ($post->published_at)
                         <span aria-hidden="true">·</span><time datetime="{{ $post->published_at->toAtomString() }}">{{ $post->published_at->format('F j, Y') }}</time>
                     @endif

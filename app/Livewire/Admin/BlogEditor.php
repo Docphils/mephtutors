@@ -7,6 +7,7 @@ use App\Models\BlogPost;
 use App\Models\BlogSlugRedirect;
 use App\Models\BlogTag;
 use App\Services\BlogContentSanitizer;
+use App\Services\BlogDraftWriter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +55,14 @@ class BlogEditor extends Component
 
     public string $canonicalUrl = '';
 
+    public string $aiAssistInstruction = '';
+
+    public ?string $aiSuggestionField = null;
+
+    public ?string $aiSuggestion = null;
+
+    public ?string $aiAssistError = null;
+
     public function mount(?int $postId = null): void
     {
         Gate::authorize('Admin');
@@ -79,6 +88,103 @@ class BlogEditor extends Component
     public function updatedHeroImage(): void
     {
         $this->removeHeroImage = false;
+    }
+
+    public function requestAiSuggestion(string $field, BlogDraftWriter $writer): void
+    {
+        Gate::authorize('Admin');
+
+        $fields = [
+            'title' => 'Headline',
+            'excerpt' => 'Article summary',
+            'body' => 'Article body',
+            'category' => 'Category',
+            'tags' => 'Tags',
+            'metaTitle' => 'SEO title',
+            'metaDescription' => 'SEO description',
+        ];
+        $properties = [
+            'title' => ['property' => 'title', 'limit' => 200],
+            'excerpt' => ['property' => 'excerpt', 'limit' => 500],
+            'body' => ['property' => 'body', 'limit' => 100000],
+            'category' => ['property' => 'category', 'limit' => 100],
+            'tags' => ['property' => 'tags', 'limit' => 500],
+            'metaTitle' => ['property' => 'metaTitle', 'limit' => 70],
+            'metaDescription' => ['property' => 'metaDescription', 'limit' => 320],
+        ];
+        if (! isset($fields[$field], $properties[$field])) {
+            throw new \InvalidArgumentException('AI assistance is not available for this editor field.');
+        }
+        if (mb_strlen($this->aiAssistInstruction) > 500) {
+            throw ValidationException::withMessages([
+                'aiAssistInstruction' => 'The AI instruction may not be longer than 500 characters.',
+            ]);
+        }
+
+        $this->aiAssistError = null;
+        $this->aiSuggestion = null;
+        $this->aiSuggestionField = $field;
+
+        try {
+            $spec = $properties[$field];
+            $this->aiSuggestion = $writer->suggestField(
+                $field,
+                (string) $this->{$spec['property']},
+                $this->aiAssistInstruction,
+                $fields,
+            );
+            if (mb_strlen($this->aiSuggestion) > $spec['limit']) {
+                $this->aiSuggestion = null;
+                $this->aiAssistError = 'The AI suggestion exceeded this field’s character limit. Try again.';
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('AI field assistance failed in the blog editor.', [
+                'field' => $field,
+                'admin_id' => auth()->id(),
+                'exception' => $exception,
+            ]);
+            $this->aiAssistError = 'The suggestion could not be generated. Check the configured AI provider and application log, then try again.';
+        }
+    }
+
+    public function applyAiSuggestion(BlogContentSanitizer $sanitizer): void
+    {
+        Gate::authorize('Admin');
+
+        $properties = [
+            'title' => ['property' => 'title', 'limit' => 200],
+            'excerpt' => ['property' => 'excerpt', 'limit' => 500],
+            'body' => ['property' => 'body', 'limit' => 100000],
+            'category' => ['property' => 'category', 'limit' => 100],
+            'tags' => ['property' => 'tags', 'limit' => 500],
+            'metaTitle' => ['property' => 'metaTitle', 'limit' => 70],
+            'metaDescription' => ['property' => 'metaDescription', 'limit' => 320],
+        ];
+        $field = $this->aiSuggestionField;
+        if ($field === null || $this->aiSuggestion === null || ! isset($properties[$field])) {
+            throw new \LogicException('There is no valid AI suggestion to apply.');
+        }
+
+        $value = $field === 'body' ? $sanitizer->sanitize($this->aiSuggestion) : trim($this->aiSuggestion);
+        if ($value === '' || mb_strlen($value) > $properties[$field]['limit']) {
+            throw ValidationException::withMessages([
+                'aiSuggestion' => 'The suggestion is empty or exceeds this field’s character limit.',
+            ]);
+        }
+
+        $this->{$properties[$field]['property']} = $value;
+        if ($field === 'body') {
+            $this->dispatch('blog-body-suggestion-applied', body: $value);
+        }
+        $this->dismissAiSuggestion();
+    }
+
+    public function dismissAiSuggestion(): void
+    {
+        Gate::authorize('Admin');
+        $this->aiSuggestionField = null;
+        $this->aiSuggestion = null;
+        $this->aiAssistError = null;
     }
 
     public function save(BlogContentSanitizer $sanitizer): void
@@ -227,6 +333,16 @@ class BlogEditor extends Component
         return view('livewire.admin.blog.editor', [
             'post' => $this->postId ? BlogPost::query()->findOrFail($this->postId) : null,
             'categories' => BlogCategory::query()->orderBy('name')->pluck('name'),
+            'aiSuggestionFieldLabel' => match ($this->aiSuggestionField) {
+                'title' => 'Headline',
+                'excerpt' => 'Article summary',
+                'body' => 'Article body',
+                'category' => 'Category',
+                'tags' => 'Tags',
+                'metaTitle' => 'SEO title',
+                'metaDescription' => 'SEO description',
+                default => null,
+            },
             'bodyForEditor' => $sanitizer->sanitize($this->body),
             'existingHeroImageUrl' => $this->existingHeroImagePath !== null
                 ? Storage::disk('public')->url($this->existingHeroImagePath)

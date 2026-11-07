@@ -84,6 +84,6 @@ class BlogDraftSimilarityGuard
         $intersection = count(array_intersect($left, $right));
         $union = count(array_unique([...$left, ...$right]));
 
-        return $union === 0 ? 0.0 : $intersection / $union;
+        return $intersection / $union;
     }
 }

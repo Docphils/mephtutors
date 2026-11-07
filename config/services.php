@@ -55,6 +55,10 @@ return [
         'blog_model' => env('GEMINI_BLOG_MODEL', 'gemini-2.5-flash'),
     ],
 
+    'tavily' => [
+        'api_key' => env('TAVILY_API_KEY'),
+    ],
+
     'facebook' => [
         'graph_api_version' => env('META_GRAPH_API_VERSION', 'v27.0'),
         'page_id' => env('META_PAGE_ID'),

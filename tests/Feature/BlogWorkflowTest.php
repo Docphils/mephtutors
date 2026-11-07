@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\EbookStatus;
 use App\Exceptions\BlogDraftRejectedException;
 use App\Jobs\GenerateBlogDraft;
+use App\Jobs\GenerateBlogTopicSuggestions;
 use App\Jobs\PublishBlogPostToFacebook;
 use App\Jobs\SendBlogDraftReviewEmail;
 use App\Livewire\Admin\BlogEditor;
@@ -15,6 +16,8 @@ use App\Models\BlogFacebookShare;
 use App\Models\BlogGenerationRun;
 use App\Models\BlogPost;
 use App\Models\BlogSetting;
+use App\Models\BlogTopic;
+use App\Models\BlogTopicSuggestionBatch;
 use App\Models\Ebook;
 use App\Models\User;
 use App\Services\BlogDraftPipeline;
@@ -22,7 +25,10 @@ use App\Services\BlogDraftWriter;
 use App\Services\BlogFacebookPublisher;
 use App\Services\BlogFacebookWorkflow;
 use App\Services\BlogGenerationWorkflow;
-use App\Services\BlogSourceFeedService;
+use App\Services\BlogResearchService;
+use App\Services\BlogTavilyCreditBudget;
+use App\Services\BlogTopicSuggestionService;
+use App\Services\BlogWebSearchService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -107,7 +113,7 @@ class BlogWorkflowTest extends TestCase
         config([
             'blog.public_enabled' => true,
             'blog.facebook_enabled' => false,
-            'blog.author_byline' => 'Author Name (MephEd)',
+            'blog.author_byline' => 'MephEd Educational Services',
         ]);
         $admin = User::factory()->create([
             'name' => 'Internal Admin',
@@ -153,8 +159,8 @@ class BlogWorkflowTest extends TestCase
         $this->get(route('blog.show', $post->slug))
             ->assertOk()
             ->assertSee('Learning that lasts')
-            ->assertSee('Author Name (MephEd)')
-            ->assertDontSee('Internal Admin')
+            ->assertSee('Internal Admin | MephEd Educational Services')
+            ->assertSee('"@type":"Person","name":"Internal Admin"', false)
             ->assertDontSee($admin->email)
             ->assertSee('name="robots" content="index,follow"', false)
             ->assertSee('BlogPosting', false)
@@ -254,26 +260,88 @@ class BlogWorkflowTest extends TestCase
         $this->assertDatabaseMissing('blog_posts', ['slug' => 'tag-limit-test']);
     }
 
-    public function test_blog_schedule_and_review_recipients_are_configurable_by_verified_admins(): void
+    public function test_ai_field_assistance_previews_before_applying_and_keeps_original_text_unchanged(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock): void {
+            $mock->shouldReceive('suggestField')
+                ->once()
+                ->with('title', 'Current headline', 'Write for parents', Mockery::on(fn (array $fields): bool => $fields['title'] === 'Headline'))
+                ->andReturn('A clearer headline for parents');
+        }));
+
+        Livewire::actingAs($admin)->test(BlogEditor::class)
+            ->set('title', 'Current headline')
+            ->set('aiAssistInstruction', 'Write for parents')
+            ->call('requestAiSuggestion', 'title')
+            ->assertHasNoErrors()
+            ->assertSet('title', 'Current headline')
+            ->assertSet('aiSuggestion', 'A clearer headline for parents')
+            ->assertSee('Your current field has not changed.')
+            ->call('applyAiSuggestion')
+            ->assertHasNoErrors()
+            ->assertSet('title', 'A clearer headline for parents')
+            ->assertSet('aiSuggestion', null);
+    }
+
+    public function test_ai_body_suggestions_are_sanitized_and_synchronized_with_the_rich_text_editor(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock): void {
+            $mock->shouldReceive('suggestField')->once()->andReturn('<p>Safe body</p><script>alert(1)</script>');
+        }));
+
+        Livewire::actingAs($admin)->test(BlogEditor::class)
+            ->set('body', '<p>Original body</p>')
+            ->call('requestAiSuggestion', 'body')
+            ->assertHasNoErrors()
+            ->assertSet('body', '<p>Original body</p>')
+            ->call('applyAiSuggestion')
+            ->assertHasNoErrors()
+            ->assertSet('body', '<p>Safe body</p>')
+            ->assertDispatched('blog-body-suggestion-applied', body: '<p>Safe body</p>');
+    }
+
+    public function test_blog_editorial_and_research_settings_persist_for_verified_admins(): void
     {
         $this->get(route('admin.blog.settings'))->assertRedirect(route('login'));
         $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
 
         Livewire::actingAs($admin)->test(BlogSettingsManager::class)
             ->assertSet('dailyTime', '04:00')
-            ->assertSet('sourceFeedUrls', implode("\n", config('blog.source_feed_urls')))
             ->set('dailyTime', '05:30')
             ->set('notificationEmails', "Editor@Example.com\nreviewer@example.com, editor@example.com")
-            ->set('approvedSourceDomains', "education.gov.ng\nwaecnigeria.org")
-            ->set('sourceFeedUrls', 'https://education.gov.ng/rss.xml')
+            ->set('contentWordTarget', '950')
+            ->set('topicBatchSize', '12')
+            ->set('topicLowWatermark', '4')
+            ->set('tavilyMonthlyCreditLimit', '1400')
+            ->set('tavilyMaxResults', '8')
+            ->set('tavilySearchDepth', 'advanced')
+            ->set('tavilyCurrentAffairsRange', 'week')
+            ->set('preferredResearchDomains', "education.gov.ng\nnuc.edu.ng")
+            ->set('defaultAuthorId', (string) $admin->id)
             ->call('save')
             ->assertHasNoErrors();
 
         $this->assertSame('05:30', BlogSetting::getValue('daily_time'));
         $this->assertSame('Africa/Lagos', BlogSetting::getValue('timezone'));
         $this->assertSame(['editor@example.com', 'reviewer@example.com'], BlogSetting::getValue('notification_emails'));
-        $this->assertSame(['education.gov.ng', 'waecnigeria.org'], BlogSetting::getValue('source_domains'));
-        $this->assertSame(['https://education.gov.ng/rss.xml'], BlogSetting::getValue('source_feed_urls'));
+        $this->assertSame(950, BlogSetting::getValue('content_word_target'));
+        $this->assertSame(12, BlogSetting::getValue('topic_batch_size'));
+        $this->assertSame(4, BlogSetting::getValue('topic_low_watermark'));
+        $this->assertSame(1400, BlogSetting::getValue('tavily_monthly_credit_limit'));
+        $this->assertSame(8, BlogSetting::getValue('tavily_max_results'));
+        $this->assertSame('advanced', BlogSetting::getValue('tavily_search_depth'));
+        $this->assertSame('week', BlogSetting::getValue('tavily_current_affairs_time_range'));
+        $this->assertSame(['education.gov.ng', 'nuc.edu.ng'], BlogSetting::getValue('preferred_research_domains'));
+        $this->assertSame($admin->id, BlogSetting::getValue('default_author_id'));
+        Livewire::actingAs($admin)->test(BlogSettingsManager::class)
+            ->assertSet('dailyTime', '05:30')
+            ->assertSet('notificationEmails', 'editor@example.com, reviewer@example.com')
+            ->assertSet('contentWordTarget', '950')
+            ->assertSet('topicBatchSize', '12')
+            ->assertSet('tavilySearchDepth', 'advanced')
+            ->assertSet('preferredResearchDomains', "education.gov.ng\nnuc.edu.ng");
 
         Livewire::actingAs($admin)->test(BlogSettingsManager::class)
             ->set('dailyTime', '25:30')
@@ -286,17 +354,126 @@ class BlogWorkflowTest extends TestCase
             ->call('save')
             ->assertHasErrors('notificationEmails');
         Livewire::actingAs($admin)->test(BlogSettingsManager::class)
-            ->set('approvedSourceDomains', 'education.gov.ng')
-            ->set('sourceFeedUrls', 'http://education.gov.ng/feed.xml')
+            ->set('preferredResearchDomains', 'https://*.example.com/feed.xml')
             ->call('save')
-            ->assertHasErrors('sourceFeedUrls');
-        Livewire::actingAs($admin)->test(BlogSettingsManager::class)
-            ->set('approvedSourceDomains', '*.example.com')
-            ->set('sourceFeedUrls', '')
-            ->call('save')
-            ->assertHasErrors('approvedSourceDomains');
+            ->assertHasErrors('preferredResearchDomains');
 
         $this->assertSame('05:30', BlogSetting::getValue('daily_time'));
+    }
+
+    public function test_tavily_search_supplies_results_from_unlisted_hosts_without_fetching_those_hosts(): void
+    {
+        config(['services.tavily.api_key' => 'test-tavily-key']);
+        BlogSetting::setValue('preferred_research_domains', ['education.gov.ng']);
+        $topic = $this->createTopic([
+            'title' => 'New education programme',
+            'topic_type' => BlogTopic::TYPE_CURRENT_AFFAIRS,
+            'angle' => 'What the change means for public schools.',
+        ]);
+        Http::fake([
+            'api.tavily.com/search' => Http::response([
+                'results' => [
+                    [
+                        'title' => 'New education programme',
+                        'url' => 'https://independent.example.org/news/programme',
+                        'content' => '<p>Details of the new programme.</p>',
+                        'published_date' => '2026-11-06',
+                    ],
+                    [
+                        'title' => 'Unsafe result',
+                        'url' => 'http://127.0.0.1/internal',
+                        'content' => 'This must not be used.',
+                    ],
+                    [
+                        'title' => 'Tokenized URL',
+                        'url' => 'https://independent.example.org/news?access_token=secret',
+                        'content' => 'This must not be used.',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $result = app(BlogWebSearchService::class)->fetch($topic);
+
+        $this->assertCount(1, $result['items']);
+        $this->assertSame('independent.example.org', $result['items'][0]['source_host']);
+        $this->assertSame('Details of the new programme.', $result['items'][0]['summary']);
+        $this->assertSame([], $result['errors']);
+        Http::assertSent(fn (Request $request) => $request->url() === 'https://api.tavily.com/search'
+            && $request->hasHeader('Authorization')
+            && str_contains($request['query'], 'New education programme')
+            && str_contains($request['query'], 'education.gov.ng')
+            && $request['search_depth'] === 'basic'
+            && $request['max_results'] === 10
+            && $request['topic'] === 'news'
+            && $request['time_range'] === 'month'
+            && $request['include_raw_content'] === false);
+        Http::assertSentCount(1);
+        $this->assertSame(1, app(BlogTavilyCreditBudget::class)->currentMonthUsage());
+    }
+
+    public function test_tavily_search_reports_missing_credentials_without_sending_a_request(): void
+    {
+        config(['services.tavily.api_key' => null]);
+        Http::fake();
+
+        $result = app(BlogWebSearchService::class)->fetch($this->createTopic());
+
+        $this->assertSame([], $result['items']);
+        $this->assertStringContainsString('TAVILY_API_KEY', $result['errors'][0]);
+        Http::assertNothingSent();
+    }
+
+    public function test_tavily_uses_general_research_for_evergreen_topics_and_honors_the_credit_cap(): void
+    {
+        config(['services.tavily.api_key' => 'test-tavily-key']);
+        $topic = $this->createTopic(['topic_type' => BlogTopic::TYPE_PRACTICAL]);
+        Http::fake([
+            'api.tavily.com/search' => Http::response([
+                'results' => [[
+                    'title' => 'A practical education guide',
+                    'url' => 'https://education.example.org/guide',
+                    'content' => 'Evidence and useful ideas.',
+                ]],
+            ]),
+        ]);
+
+        $result = app(BlogWebSearchService::class)->fetch($topic);
+
+        $this->assertCount(1, $result['items']);
+        Http::assertSent(fn (Request $request) => $request['topic'] === 'general'
+            && ! array_key_exists('time_range', $request->data()));
+
+        BlogSetting::setValue('tavily_search_depth', 'advanced');
+        BlogSetting::setValue('tavily_monthly_credit_limit', 1);
+        Http::fake();
+        $blocked = app(BlogWebSearchService::class)->fetch($topic);
+
+        $this->assertSame([], $blocked['items']);
+        $this->assertStringContainsString('monthly Tavily credit limit', $blocked['errors'][0]);
+        $this->assertSame(1, app(BlogTavilyCreditBudget::class)->currentMonthUsage());
+        Http::assertNothingSent();
+    }
+
+    public function test_research_service_searches_for_the_selected_topic_without_rss_feeds(): void
+    {
+        $searchItem = [
+            'title' => 'Education update',
+            'summary' => 'Search summary.',
+            'url' => 'https://news.example.org/story',
+            'published_at' => null,
+            'source_host' => 'news.example.org',
+        ];
+        $topic = $this->createTopic();
+        $this->instance(BlogWebSearchService::class, Mockery::mock(BlogWebSearchService::class, function ($mock) use ($searchItem, $topic): void {
+            $mock->shouldReceive('fetch')->once()->with(Mockery::on(fn (BlogTopic $value): bool => $value->is($topic)))
+                ->andReturn(['items' => [$searchItem], 'errors' => []]);
+        }));
+
+        $result = app(BlogResearchService::class)->fetch($topic);
+
+        $this->assertCount(1, $result['items']);
+        $this->assertSame('Search summary.', $result['items'][0]['summary']);
     }
 
     public function test_daily_blog_dispatch_is_idempotent_and_respects_the_opt_in_flag(): void
@@ -308,6 +485,9 @@ class BlogWorkflowTest extends TestCase
         $this->assertDatabaseCount('blog_generation_runs', 0);
 
         config(['blog.generation_enabled' => true]);
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        BlogSetting::setValue('default_author_id', $admin->id);
+        $this->createTopic(['status' => BlogTopic::STATUS_APPROVED, 'approved_by' => $admin->id, 'approved_at' => now()]);
         BlogSetting::setValue('daily_time', '04:00');
         Carbon::setTestNow(Carbon::parse('2026-11-06 04:01:00', 'Africa/Lagos'));
 
@@ -321,6 +501,8 @@ class BlogWorkflowTest extends TestCase
         $this->assertNotNull($firstRun);
         $this->assertSame($firstRun->id, $secondRun?->id);
         $this->assertDatabaseCount('blog_generation_runs', 1);
+        $this->assertNotNull($firstRun->blog_topic_id);
+        $this->assertSame($admin->id, $firstRun->author_id);
         Queue::assertPushedOn('blog', GenerateBlogDraft::class);
         Queue::assertPushedTimes(GenerateBlogDraft::class, 1);
     }
@@ -329,21 +511,25 @@ class BlogWorkflowTest extends TestCase
     {
         Queue::fake();
         config(['blog.generation_enabled' => true]);
-        Log::shouldReceive('info')->once()->with(
-            'A manual blog draft generation run was queued.',
-            Mockery::on(fn (array $context): bool => $context['run_id'] > 0 && $context['queue'] === 'blog'),
-        );
+        Log::spy();
         $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $this->createTopic(['status' => BlogTopic::STATUS_APPROVED, 'approved_by' => $admin->id, 'approved_at' => now()]);
 
         Livewire::actingAs($admin)->test(BlogStudio::class)
+            ->set('wordTarget', '1100')
             ->call('generateNow')
             ->assertHasNoErrors()
             ->assertSee('Draft generation was queued.')
-            ->assertSee('Each request queues a separate draft.')
             ->assertSee('Queued and waiting for the blog worker to start.');
 
+        Log::shouldHaveReceived('info')->with(
+            'A manual blog draft generation run was queued.',
+            Mockery::on(fn (array $context): bool => $context['run_id'] > 0 && $context['queue'] === 'blog'),
+        )->once();
         $run = BlogGenerationRun::query()->where('run_key', 'like', 'manual:%')->firstOrFail();
         $this->assertSame(BlogGenerationRun::STATUS_QUEUED, $run->status);
+        $this->assertSame($admin->id, $run->author_id);
+        $this->assertSame(1100, $run->word_target);
         Queue::assertPushedOn('blog', GenerateBlogDraft::class, fn (GenerateBlogDraft $job) => $job->runId === $run->id);
     }
 
@@ -361,14 +547,119 @@ class BlogWorkflowTest extends TestCase
         $this->assertDatabaseCount('blog_generation_runs', 0);
     }
 
+    public function test_manual_generation_waits_for_an_approved_topic_and_requests_suggestions(): void
+    {
+        Queue::fake();
+        config(['blog.generation_enabled' => true]);
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+
+        Livewire::actingAs($admin)->test(BlogStudio::class)
+            ->call('generateNow')
+            ->assertHasNoErrors()
+            ->assertSee('waiting for an administrator to approve a topic');
+
+        $run = BlogGenerationRun::query()->firstOrFail();
+        $batch = BlogTopicSuggestionBatch::query()->firstOrFail();
+        $this->assertSame(BlogGenerationRun::STATUS_AWAITING_TOPIC, $run->status);
+        $this->assertNull($run->blog_topic_id);
+        Queue::assertPushedOn('blog', GenerateBlogTopicSuggestions::class, fn ($job) => $job->batchId === $batch->id);
+        Queue::assertNotPushed(GenerateBlogDraft::class);
+    }
+
+    public function test_approving_a_topic_releases_the_oldest_generation_run_waiting_for_approval(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $topic = $this->createTopic(['status' => BlogTopic::STATUS_PENDING, 'approved_at' => null]);
+        $run = BlogGenerationRun::query()->create([
+            'run_key' => 'manual:awaiting-topic',
+            'status' => BlogGenerationRun::STATUS_AWAITING_TOPIC,
+            'author_id' => $admin->id,
+            'word_target' => 850,
+        ]);
+
+        Livewire::actingAs($admin)->test(BlogStudio::class)
+            ->assertSee($topic->title)
+            ->call('approveTopic', $topic->id)
+            ->assertHasNoErrors()
+            ->assertSee('Topic approved');
+
+        $this->assertSame(BlogTopic::STATUS_APPROVED, $topic->fresh()->status);
+        $this->assertSame(BlogGenerationRun::STATUS_QUEUED, $run->fresh()->status);
+        $this->assertSame($topic->id, $run->fresh()->blog_topic_id);
+        Queue::assertPushedOn('blog', GenerateBlogDraft::class, fn (GenerateBlogDraft $job) => $job->runId === $run->id);
+    }
+
+    public function test_an_approved_topic_can_be_reused_for_an_explicit_regeneration(): void
+    {
+        Queue::fake();
+        config(['blog.generation_enabled' => true]);
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $this->actingAs($admin);
+        $topic = $this->createTopic();
+        $workflow = app(BlogGenerationWorkflow::class);
+
+        $first = $workflow->dispatchManualForTopic($topic->id, 900);
+        $second = $workflow->dispatchManualForTopic($topic->id, 1100);
+
+        $this->assertSame($topic->id, $first->blog_topic_id);
+        $this->assertSame($topic->id, $second->blog_topic_id);
+        $this->assertSame(900, $first->word_target);
+        $this->assertSame(1100, $second->word_target);
+        Queue::assertPushedTimes(GenerateBlogDraft::class, 2);
+    }
+
+    public function test_ai_topic_suggestions_use_published_ebooks_and_enter_the_bank_as_pending(): void
+    {
+        config(['services.groq.api_key' => 'test-key', 'services.groq.blog_model' => 'test-model']);
+        $ebook = Ebook::query()->create([
+            'slug' => 'learning-guide',
+            'title' => 'Learning Guide',
+            'author_name' => 'MephEd',
+            'publisher_name' => 'MephEd',
+            'price_kobo' => 100000,
+            'currency' => 'NGN',
+            'description' => 'A guide to effective learning.',
+            'status' => EbookStatus::Published,
+        ]);
+        $batch = BlogTopicSuggestionBatch::query()->create([
+            'batch_key' => 'manual:test-topics',
+            'status' => BlogTopicSuggestionBatch::STATUS_QUEUED,
+            'requested_count' => 1,
+        ]);
+        Http::fake([
+            'api.groq.com/openai/v1/chat/completions' => Http::response([
+                'choices' => [['message' => ['content' => json_encode([
+                    'topics' => [[
+                        'title' => 'Building better study habits',
+                        'topic_type' => BlogTopic::TYPE_EBOOK_INSPIRED,
+                        'angle' => 'Connect ideas from the learning guide with realistic study routines.',
+                        'related_ebook_id' => $ebook->id,
+                    ]],
+                ], JSON_THROW_ON_ERROR)]]],
+            ]),
+        ]);
+
+        app(BlogTopicSuggestionService::class)->generate($batch->id);
+
+        $topic = BlogTopic::query()->sole();
+        $this->assertSame(BlogTopic::STATUS_PENDING, $topic->status);
+        $this->assertSame($ebook->id, $topic->related_ebook_id);
+        $this->assertSame(BlogTopicSuggestionBatch::STATUS_COMPLETED, $batch->fresh()->status);
+        Http::assertSent(fn (Request $request) => str_contains($request['messages'][1]['content'], 'Learning Guide')
+            && str_contains($request['messages'][1]['content'], 'Treat supplied eBook descriptions'));
+    }
+
     public function test_failed_blog_generation_can_be_retried_without_creating_a_second_run(): void
     {
         Queue::fake();
         config(['blog.generation_enabled' => true]);
+        $topic = $this->createTopic(['status' => BlogTopic::STATUS_APPROVED, 'approved_at' => now()]);
         $run = BlogGenerationRun::query()->create([
             'run_key' => 'daily:2026-11-06',
             'scheduled_for' => '2026-11-06',
             'status' => BlogGenerationRun::STATUS_FAILED,
+            'blog_topic_id' => $topic->id,
             'error_message' => 'Provider temporarily unavailable.',
         ]);
 
@@ -382,36 +673,6 @@ class BlogWorkflowTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         app(BlogGenerationWorkflow::class)->retryFailed($run->id);
-    }
-
-    public function test_source_fetcher_refuses_unapproved_hosts_before_making_a_request(): void
-    {
-        Http::fake();
-        BlogSetting::setValue('source_domains', ['education.gov.ng']);
-        BlogSetting::setValue('source_feed_urls', ['https://unapproved.example/rss.xml']);
-
-        $result = app(BlogSourceFeedService::class)->fetch();
-
-        $this->assertSame([], $result['items']);
-        $this->assertCount(1, $result['errors']);
-        Http::assertNothingSent();
-    }
-
-    public function test_source_fetcher_requires_exact_host_approval_and_rejects_trailing_dot_hosts(): void
-    {
-        Http::fake();
-        BlogSetting::setValue('source_domains', ['education.gov.ng']);
-        BlogSetting::setValue('source_feed_urls', [
-            'https://www.education.gov.ng/rss.xml',
-            'https://education.gov.ng./rss.xml',
-            'https://education.gov.ng/feed.xml?access_token=must-not-leak',
-        ]);
-
-        $result = app(BlogSourceFeedService::class)->fetch();
-
-        $this->assertSame([], $result['items']);
-        $this->assertCount(3, $result['errors']);
-        Http::assertNothingSent();
     }
 
     public function test_groq_blog_writer_uses_json_mode_and_returns_a_structured_draft(): void
@@ -429,13 +690,16 @@ class BlogWorkflowTest extends TestCase
             'published_at' => null,
             'source_host' => 'education.gov.ng',
         ]];
+        $topic = $this->createTopic(['title' => 'A focused learning topic']);
 
-        $draft = app(BlogDraftWriter::class)->write($sources);
+        $draft = app(BlogDraftWriter::class)->write($sources, [], [], null, $topic, 1200);
 
         $this->assertSame('A useful article', $draft['title']);
         Http::assertSent(fn (Request $request) => $request->url() === 'https://api.groq.com/openai/v1/chat/completions'
             && $request['response_format']['type'] === 'json_object'
-            && str_contains($request['messages'][0]['content'], 'untrusted data'));
+            && str_contains($request['messages'][0]['content'], 'untrusted data')
+            && str_contains($request['messages'][1]['content'], 'Target approximately 1200 words')
+            && str_contains($request['messages'][1]['content'], 'A focused learning topic'));
     }
 
     public function test_gemini_blog_writer_keeps_api_credentials_out_of_the_url(): void
@@ -493,6 +757,7 @@ class BlogWorkflowTest extends TestCase
         $run = BlogGenerationRun::query()->create([
             'run_key' => 'manual:test-pipeline',
             'status' => BlogGenerationRun::STATUS_QUEUED,
+            'blog_topic_id' => $this->createTopic()->id,
             'provider' => 'groq',
         ]);
         $sources = [[
@@ -502,7 +767,7 @@ class BlogWorkflowTest extends TestCase
             'published_at' => null,
             'source_host' => 'education.gov.ng',
         ]];
-        $this->instance(BlogSourceFeedService::class, Mockery::mock(BlogSourceFeedService::class, function ($mock) use ($sources): void {
+        $this->instance(BlogResearchService::class, Mockery::mock(BlogResearchService::class, function ($mock) use ($sources): void {
             $mock->shouldReceive('fetch')->once()->andReturn(['items' => $sources, 'errors' => []]);
         }));
         $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock): void {
@@ -543,6 +808,7 @@ class BlogWorkflowTest extends TestCase
         $run = BlogGenerationRun::query()->create([
             'run_key' => 'manual:field-revision',
             'status' => BlogGenerationRun::STATUS_QUEUED,
+            'blog_topic_id' => $this->createTopic()->id,
             'provider' => 'groq',
         ]);
         $sources = [[
@@ -552,7 +818,7 @@ class BlogWorkflowTest extends TestCase
             'published_at' => null,
             'source_host' => 'education.gov.ng',
         ]];
-        $this->instance(BlogSourceFeedService::class, Mockery::mock(BlogSourceFeedService::class, function ($mock) use ($sources): void {
+        $this->instance(BlogResearchService::class, Mockery::mock(BlogResearchService::class, function ($mock) use ($sources): void {
             $mock->shouldReceive('fetch')->once()->andReturn(['items' => $sources, 'errors' => []]);
         }));
 
@@ -592,6 +858,7 @@ class BlogWorkflowTest extends TestCase
         $run = BlogGenerationRun::query()->create([
             'run_key' => 'manual:similarity-revision',
             'status' => BlogGenerationRun::STATUS_QUEUED,
+            'blog_topic_id' => $this->createTopic()->id,
             'provider' => 'groq',
         ]);
         $sources = [[
@@ -601,7 +868,7 @@ class BlogWorkflowTest extends TestCase
             'published_at' => null,
             'source_host' => 'education.gov.ng',
         ]];
-        $this->instance(BlogSourceFeedService::class, Mockery::mock(BlogSourceFeedService::class, function ($mock) use ($sources): void {
+        $this->instance(BlogResearchService::class, Mockery::mock(BlogResearchService::class, function ($mock) use ($sources): void {
             $mock->shouldReceive('fetch')->once()->andReturn(['items' => $sources, 'errors' => []]);
         }));
         $duplicate = [
@@ -646,6 +913,7 @@ class BlogWorkflowTest extends TestCase
         $run = BlogGenerationRun::query()->create([
             'run_key' => 'manual:invalid-citation',
             'status' => BlogGenerationRun::STATUS_QUEUED,
+            'blog_topic_id' => $this->createTopic()->id,
         ]);
         $sources = [[
             'title' => 'Verified update',
@@ -654,7 +922,7 @@ class BlogWorkflowTest extends TestCase
             'published_at' => null,
             'source_host' => 'education.gov.ng',
         ]];
-        $this->instance(BlogSourceFeedService::class, Mockery::mock(BlogSourceFeedService::class, function ($mock) use ($sources): void {
+        $this->instance(BlogResearchService::class, Mockery::mock(BlogResearchService::class, function ($mock) use ($sources): void {
             $mock->shouldReceive('fetch')->once()->andReturn(['items' => $sources, 'errors' => []]);
         }));
         $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock): void {
@@ -853,6 +1121,17 @@ class BlogWorkflowTest extends TestCase
             'status' => BlogPost::STATUS_DRAFT,
             'author_id' => $author->id,
             'editor_id' => $author->id,
+        ], $attributes));
+    }
+
+    private function createTopic(array $attributes = []): BlogTopic
+    {
+        return BlogTopic::query()->create(array_merge([
+            'title' => 'Practical learning for Nigerian schools',
+            'topic_type' => BlogTopic::TYPE_PRACTICAL,
+            'angle' => 'Explain how educators can apply evidence in a classroom.',
+            'status' => BlogTopic::STATUS_APPROVED,
+            'approved_at' => now(),
         ], $attributes));
     }
 }

@@ -36,20 +36,75 @@
         </div>
         <div class="space-y-6 border-t border-slate-200 p-6 sm:p-8">
             <div>
-                <p class="text-xs font-extrabold uppercase tracking-widest text-cyan-800">Research sources</p>
-                <h2 class="mt-2 text-xl font-black text-[#0B2A47]">Approved domains & feeds</h2>
-                <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">The approved-domain list is a security allowlist: it permits feed fetches only from these exact hosts; it does not discover feeds automatically. Two verified feeds are included by default (Federal Ministry of Education and National Universities Commission). Add a feed URL below for any other approved source; requests reject redirects and private-network IPs.</p>
+                <p class="text-xs font-extrabold uppercase tracking-widest text-cyan-800">Editorial defaults</p>
+                <h2 class="mt-2 text-xl font-black text-[#0B2A47]">Topics, content & author</h2>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">AI suggestions enter the topic bank as pending and require approval. Draft generation uses an approved topic; the same approved topic can be selected again to regenerate a fresh draft.</p>
             </div>
-            <label class="block text-sm font-bold text-slate-700">Approved source domains
-                <textarea wire:model="approvedSourceDomains" rows="8" maxlength="5000" class="mt-1.5 w-full rounded-xl border-slate-300 font-mono text-sm" placeholder="education.gov.ng&#10;waecnigeria.org&#10;unesco.org"></textarea>
-                <span class="mt-1 block text-xs font-normal text-slate-500">One exact hostname per line; add www or a feed subdomain separately. No scheme, path, wildcard, or IP address. State ministries and other sources can be added here.</span>
-                @error('approvedSourceDomains')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+            <div class="grid gap-5 sm:grid-cols-2">
+                <label class="block text-sm font-bold text-slate-700">Default article length (words)
+                    <input wire:model="contentWordTarget" type="number" min="300" max="2000" required class="mt-1.5 block w-full rounded-xl border-slate-300">
+                    <span class="mt-1 block text-xs font-normal text-slate-500">Target for scheduled drafts and AI topic-batch drafts. You can override it for each manual generation.</span>
+                    @error('contentWordTarget')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block text-sm font-bold text-slate-700">Default author for scheduled drafts
+                    <select wire:model="defaultAuthorId" required class="mt-1.5 block w-full rounded-xl border-slate-300">
+                        @foreach ($authors as $author)
+                            <option value="{{ $author['id'] }}">{{ $author['label'] }}</option>
+                        @endforeach
+                    </select>
+                    <span class="mt-1 block text-xs font-normal text-slate-500">Manual drafts use the admin who requested them. Scheduled drafts use this verified admin account.</span>
+                    @error('defaultAuthorId')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block text-sm font-bold text-slate-700">AI topic suggestions per batch
+                    <input wire:model="topicBatchSize" type="number" min="3" max="20" required class="mt-1.5 block w-full rounded-xl border-slate-300">
+                    <span class="mt-1 block text-xs font-normal text-slate-500">Each suggestion is saved pending review; this does not create or publish an article.</span>
+                    @error('topicBatchSize')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block text-sm font-bold text-slate-700">Suggest more when approved topics reach
+                    <input wire:model="topicLowWatermark" type="number" min="0" max="10" required class="mt-1.5 block w-full rounded-xl border-slate-300">
+                    <span class="mt-1 block text-xs font-normal text-slate-500">A pending batch is queued automatically at this level. Set to 0 to disable the low-watermark trigger.</span>
+                    @error('topicLowWatermark')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+            </div>
+            <div>
+                <p class="text-xs font-extrabold uppercase tracking-widest text-cyan-800">Flexible web research</p>
+                <h2 class="mt-2 text-xl font-black text-[#0B2A47]">Tavily Search (RSS not used)</h2>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Current-affairs topics use time-filtered news search. Other topics use general search for supporting evidence and ideas, including eBook-related context. Preferred domains guide ranking but never restrict results. The app uses search snippets/citations only and does not fetch arbitrary result pages.</p>
+                <p class="mt-2 text-sm text-slate-700">API key: <strong class="font-bold {{ config('services.tavily.api_key') ? 'text-emerald-700' : 'text-amber-700' }}">{{ config('services.tavily.api_key') ? 'configured' : 'not configured' }}</strong>. Monthly credits reserved: <strong>{{ number_format($tavilyCreditsUsed) }}</strong>.</p>
+            </div>
+            <label class="block text-sm font-bold text-slate-700">Preferred source domains <span class="font-normal text-slate-500">(optional, not restrictive)</span>
+                <textarea wire:model="preferredResearchDomains" rows="4" maxlength="5000" class="mt-1.5 w-full rounded-xl border-slate-300 font-mono text-sm" placeholder="education.gov.ng&#10;unesco.org&#10;unicef.org&#10;waecnigeria.org"></textarea>
+                <span class="mt-1 block text-xs font-normal text-slate-500">Up to 30 domain names, one per line. Search can and should include other credible publishers when useful.</span>
+                @error('preferredResearchDomains')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
             </label>
-            <label class="block text-sm font-bold text-slate-700">RSS / Atom feed URLs
-                <textarea wire:model="sourceFeedUrls" rows="6" maxlength="10000" class="mt-1.5 w-full rounded-xl border-slate-300 font-mono text-sm" placeholder="https://education.gov.ng/feed/"></textarea>
-                <span class="mt-1 block text-xs font-normal text-slate-500">Add up to 15 HTTPS URLs, one per line. Use feeds from approved institutions; entries from other hosts are ignored. X is not scraped; it requires a separately configured official API integration.</span>
-                @error('sourceFeedUrls')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
-            </label>
+            <div class="grid gap-5 sm:grid-cols-2">
+                <label class="block text-sm font-bold text-slate-700">Monthly Tavily credit cap
+                    <input wire:model="tavilyMonthlyCreditLimit" type="number" min="1" max="1500" required class="mt-1.5 block w-full rounded-xl border-slate-300">
+                    <span class="mt-1 block text-xs font-normal text-slate-500">Basic search costs 1 credit; advanced search costs 2. A search is counted before sending to avoid exceeding your quota on concurrent retries.</span>
+                    @error('tavilyMonthlyCreditLimit')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block text-sm font-bold text-slate-700">Search depth
+                    <select wire:model="tavilySearchDepth" class="mt-1.5 block w-full rounded-xl border-slate-300">
+                        <option value="basic">Basic — 1 credit per search</option>
+                        <option value="advanced">Advanced — 2 credits per search</option>
+                    </select>
+                    @error('tavilySearchDepth')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block text-sm font-bold text-slate-700">Maximum results per search
+                    <input wire:model="tavilyMaxResults" type="number" min="1" max="20" required class="mt-1.5 block w-full rounded-xl border-slate-300">
+                    <span class="mt-1 block text-xs font-normal text-slate-500">More results add breadth but can increase the context sent to the writing model.</span>
+                    @error('tavilyMaxResults')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block text-sm font-bold text-slate-700">Current-affairs recency
+                    <select wire:model="tavilyCurrentAffairsRange" class="mt-1.5 block w-full rounded-xl border-slate-300">
+                        <option value="day">Past day</option>
+                        <option value="week">Past week</option>
+                        <option value="month">Past month</option>
+                        <option value="year">Past year</option>
+                    </select>
+                    @error('tavilyCurrentAffairsRange')<span class="mt-1 block text-xs font-semibold text-rose-700">{{ $message }}</span>@enderror
+                </label>
+            </div>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:px-8">
             <p class="text-xs text-slate-500"><span wire:loading.remove wire:target="save">Settings are saved securely in the blog configuration store.</span><span wire:loading wire:target="save">Saving settings…</span></p>

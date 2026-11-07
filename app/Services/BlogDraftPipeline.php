@@ -10,6 +10,7 @@ use App\Models\BlogGenerationRun;
 use App\Models\BlogPost;
 use App\Models\BlogSetting;
 use App\Models\BlogTag;
+use App\Models\BlogTopic;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +20,7 @@ use Throwable;
 class BlogDraftPipeline
 {
     public function __construct(
-        private readonly BlogSourceFeedService $feeds,
+        private readonly BlogResearchService $research,
         private readonly BlogDraftWriter $writer,
         private readonly BlogEditorialContext $editorialContext,
         private readonly BlogContentSanitizer $sanitizer,
@@ -45,10 +46,15 @@ class BlogDraftPipeline
         ]);
 
         try {
-            $feedResult = $this->feeds->fetch();
-            if ($feedResult['items'] === []) {
-                $detail = $feedResult['errors'] !== [] ? ' '.implode(' ', array_slice($feedResult['errors'], 0, 3)) : '';
-                throw new \RuntimeException('No usable items were found in configured approved feeds.'.$detail);
+            $topic = $run->topic()->with('relatedEbook')->first();
+            if ($topic === null || $topic->status !== BlogTopic::STATUS_APPROVED) {
+                throw new \RuntimeException('This run has no approved topic assigned. Approve a topic in the Blog Studio before retrying it.');
+            }
+
+            $researchResult = $this->research->fetch($topic);
+            if ($researchResult['items'] === []) {
+                $detail = $researchResult['errors'] !== [] ? ' '.implode(' ', array_slice($researchResult['errors'], 0, 3)) : '';
+                throw new \RuntimeException('No usable web research items were found for the approved topic.'.$detail);
             }
 
             $resources = $this->editorialContext->internalResources();
@@ -70,10 +76,17 @@ class BlogDraftPipeline
 
             $revisionInstruction = null;
             $draft = null;
-            for ($attempt = 1; $attempt <= 2; $attempt++) {
-                $response = $this->writer->write($feedResult['items'], $resources, $recentTopics, $revisionInstruction);
+            foreach ([1, 2] as $attempt) {
+                $response = $this->writer->write(
+                    $researchResult['items'],
+                    $resources,
+                    $recentTopics,
+                    $revisionInstruction,
+                    $topic,
+                    (int) ($run->word_target ?: BlogSetting::getValue('content_word_target', config('blog.default_content_word_target', 700))),
+                );
                 try {
-                    $candidate = $this->validateDraft($response, $feedResult['items'], $resources);
+                    $candidate = $this->validateDraft($response, $researchResult['items'], $resources);
                 } catch (BlogDraftFieldLimitException $exception) {
                     if ($attempt === 2) {
                         throw $exception;
@@ -105,11 +118,7 @@ class BlogDraftPipeline
                 ]);
             }
 
-            if ($draft === null) {
-                throw new BlogDraftRejectedException('The blog writer could not produce an editorially distinct draft after one revision.');
-            }
-
-            $post = $this->saveDraft($run, $draft, $feedResult);
+            $post = $this->saveDraft($run, $draft, $researchResult);
             $this->queueReviewEmailIfNeeded($run->fresh());
             Log::info('A blog draft was generated for editorial review.', [
                 'run_id' => $run->id,
@@ -265,9 +274,9 @@ class BlogDraftPipeline
 
     /**
      * @param  array<string, mixed>  $draft
-     * @param  array{items: list<array{title: string, summary: string, url: string, published_at: ?string, source_host: string}>, errors: list<string>}  $feedResult
+     * @param  array{items: list<array{title: string, summary: string, url: string, published_at: ?string, source_host: string}>, errors: list<string>}  $researchResult
      */
-    private function saveDraft(BlogGenerationRun $run, array $draft, array $feedResult): BlogPost
+    private function saveDraft(BlogGenerationRun $run, array $draft, array $researchResult): BlogPost
     {
         $existing = $run->fresh()->post;
         if ($existing !== null) {
@@ -281,7 +290,7 @@ class BlogDraftPipeline
         $artworkPath = $this->artwork->store($draft['title'], $draft['category'], $run->id);
 
         try {
-            return DB::transaction(function () use ($run, $draft, $feedResult, $artworkPath): BlogPost {
+            return DB::transaction(function () use ($run, $draft, $researchResult, $artworkPath): BlogPost {
                 $lockedRun = BlogGenerationRun::query()->lockForUpdate()->findOrFail($run->id);
                 if ($lockedRun->blog_post_id !== null) {
                     return BlogPost::query()->findOrFail($lockedRun->blog_post_id);
@@ -297,6 +306,7 @@ class BlogDraftPipeline
                     'excerpt' => $draft['excerpt'],
                     'body' => $draft['body'],
                     'status' => BlogPost::STATUS_DRAFT,
+                    'author_id' => $run->author_id,
                     'category_id' => $category->id,
                     'meta_title' => $draft['meta_title'],
                     'meta_description' => $draft['meta_description'],
@@ -318,7 +328,7 @@ class BlogDraftPipeline
                     'metadata' => [
                         'sources' => $draft['sources'],
                         'internal_links' => $draft['internal_links'],
-                        'feed_errors' => $feedResult['errors'],
+                        'source_errors' => $researchResult['errors'],
                         'word_count' => $draft['word_count'],
                     ],
                     'notification_status' => $hasRecipients ? 'queued' : 'skipped',

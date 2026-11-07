@@ -15,24 +15,53 @@
             <ul class="mt-2 list-inside list-disc text-sm">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
         </div>
     @endif
+    @if ($aiSuggestionField)
+        <section class="rounded-xl border border-violet-200 bg-violet-50 p-4" aria-live="polite">
+            @if ($aiAssistError)
+                <p role="alert" class="text-sm font-semibold text-rose-800">{{ $aiAssistError }}</p>
+            @elseif ($aiSuggestion)
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0">
+                        <h2 class="text-sm font-black text-violet-950">AI suggestion preview: {{ $aiSuggestionFieldLabel }}</h2>
+                        <p class="mt-2 max-h-72 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-violet-100 bg-white p-3 text-sm leading-6 text-slate-800">{{ $aiSuggestion }}</p>
+                        <p class="mt-2 text-xs text-violet-900">Your current field has not changed. Apply only if this suggestion looks right.</p>
+                    </div>
+                    <div class="flex shrink-0 gap-2">
+                        <button type="button" wire:click="applyAiSuggestion" class="rounded-lg bg-violet-800 px-3 py-2 text-xs font-bold text-white hover:bg-violet-900">Apply suggestion</button>
+                        <button type="button" wire:click="dismissAiSuggestion" class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100">Dismiss</button>
+                    </div>
+                </div>
+            @endif
+        </section>
+    @endif
 
     <form wire:submit="save" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <section class="space-y-5" aria-labelledby="article-content-heading">
-            <div><h2 id="article-content-heading" class="text-lg font-black text-slate-900">Article content</h2><p class="mt-1 text-sm text-slate-500">Write for readers first. Your draft is private until you publish it.</p></div>
-            <label class="block text-sm font-bold text-slate-700">Headline
-                <input wire:model="title" maxlength="200" required class="mt-1.5 w-full rounded-xl border-slate-300 text-lg font-semibold" placeholder="A clear, useful article title">
+            <div>
+                <h2 id="article-content-heading" class="text-lg font-black text-slate-900">Article content</h2>
+                <p class="mt-1 text-sm text-slate-500">Write for readers first. Your draft is private until you publish it.</p>
+                <label for="blog-ai-instruction" class="mt-3 block text-xs font-semibold text-slate-600">Optional instruction for AI assistance
+                    <input id="blog-ai-instruction" wire:model="aiAssistInstruction" maxlength="500" class="mt-1 w-full rounded-lg border-slate-300 text-sm font-normal" placeholder="e.g. Make this clearer for parents of primary-school learners">
+                </label>
+                @error('aiAssistInstruction')<span class="text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                <p wire:loading wire:target="requestAiSuggestion" role="status" class="mt-2 text-xs font-semibold text-violet-800">Preparing a preview. Your current field will not change.</p>
+            </div>
+            <div>
+                <div class="flex items-center justify-between gap-2"><label for="blog-title" class="text-sm font-bold text-slate-700">Headline</label><button type="button" wire:click="requestAiSuggestion('title')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                <input id="blog-title" wire:model="title" maxlength="200" required class="mt-1.5 w-full rounded-xl border-slate-300 text-lg font-semibold" placeholder="A clear, useful article title">
                 @error('title')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
-            </label>
+            </div>
             <label class="block text-sm font-bold text-slate-700">URL slug
                 <input wire:model="slug" maxlength="180" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Generated from the headline if left blank">
                 <span class="mt-1 block text-xs font-normal text-slate-500">Changing a published article’s slug automatically creates a redirect.</span>
                 @error('slug')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
             </label>
-            <label class="block text-sm font-bold text-slate-700">Article summary
-                <textarea wire:model="excerpt" rows="3" maxlength="500" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="A short overview for the blog index and search results"></textarea>
+            <div>
+                <div class="flex items-center justify-between gap-2"><label for="blog-excerpt" class="text-sm font-bold text-slate-700">Article summary</label><button type="button" wire:click="requestAiSuggestion('excerpt')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                <textarea id="blog-excerpt" wire:model="excerpt" rows="3" maxlength="500" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="A short overview for the blog index and search results"></textarea>
                 <span class="mt-1 block text-right text-xs font-normal text-slate-500">{{ mb_strlen($excerpt) }}/500</span>
                 @error('excerpt')<span class="text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
-            </label>
+            </div>
 
             <section aria-labelledby="featured-image-heading" class="space-y-3">
                 <div>
@@ -64,11 +93,12 @@
             </section>
 
             <div class="block text-sm font-bold text-slate-700">
-                <span>Article body</span>
+                <div class="flex items-center justify-between gap-2"><span>Article body</span><button type="button" wire:click="requestAiSuggestion('body')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
                 <div wire:ignore wire:key="blog-body-trix-{{ $postId ?? 'new' }}" class="blog-editor-richtext mt-1.5">
                     <input id="blog-body-editor" type="hidden" value="{{ $bodyForEditor }}">
                     <trix-editor input="blog-body-editor" role="textbox" aria-label="Article body" aria-multiline="true"
                         x-data x-on:trix-change="$wire.set('body', $event.target.value)"
+                        x-on:blog-body-suggestion-applied.window="$el.editor.loadHTML($event.detail.body)"
                         x-on:trix-file-accept.prevent
                         class="trix-content blog-rich-text-editor w-full rounded-xl border border-slate-300 bg-white p-3 text-sm leading-7 focus:border-cyan-700 focus:ring-2 focus:ring-cyan-100">
                     </trix-editor>
@@ -77,29 +107,33 @@
                 @error('body')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
             </div>
             <div class="grid gap-5 sm:grid-cols-2">
-                <label class="block text-sm font-bold text-slate-700">Category
-                    <input wire:model="category" list="blog-categories" maxlength="100" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="e.g. Teaching">
+                <div class="block text-sm font-bold text-slate-700">
+                    <div class="flex items-center justify-between gap-2"><label for="blog-category">Category</label><button type="button" wire:click="requestAiSuggestion('category')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                    <input id="blog-category" wire:model="category" list="blog-categories" maxlength="100" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="e.g. Teaching">
                     <datalist id="blog-categories">@foreach ($categories as $category)<option value="{{ $category }}">@endforeach</datalist>
                     @error('category')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
-                </label>
-                <label class="block text-sm font-bold text-slate-700">Tags
-                    <input wire:model="tags" maxlength="500" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Learning, study skills">
+                </div>
+                <div class="block text-sm font-bold text-slate-700">
+                    <div class="flex items-center justify-between gap-2"><label for="blog-tags">Tags</label><button type="button" wire:click="requestAiSuggestion('tags')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                    <input id="blog-tags" wire:model="tags" maxlength="500" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Learning, study skills">
                     <span class="mt-1 block text-xs font-normal text-slate-500">Separate up to 10 tags with commas.</span>
                     @error('tags')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
-                </label>
+                </div>
             </div>
         </section>
 
         <details class="group rounded-xl border border-slate-200">
             <summary class="cursor-pointer list-none p-4 font-bold text-slate-900"><span class="flex items-center justify-between">Search and sharing metadata <span class="text-xs font-semibold text-slate-500 group-open:hidden">Optional</span><span class="hidden text-slate-500 group-open:inline">−</span></span></summary>
             <div class="space-y-4 border-t border-slate-200 p-4">
-                <label class="block text-sm font-bold text-slate-700">SEO title
-                    <input wire:model="metaTitle" maxlength="70" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the headline">
+                <div class="block text-sm font-bold text-slate-700">
+                    <div class="flex items-center justify-between gap-2"><label for="blog-meta-title">SEO title</label><button type="button" wire:click="requestAiSuggestion('metaTitle')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                    <input id="blog-meta-title" wire:model="metaTitle" maxlength="70" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the headline">
                     <span class="mt-1 block text-right text-xs font-normal text-slate-500">{{ mb_strlen($metaTitle) }}/70</span>
-                </label>
-                <label class="block text-sm font-bold text-slate-700">SEO description
-                    <textarea wire:model="metaDescription" rows="2" maxlength="320" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the summary"></textarea>
-                </label>
+                </div>
+                <div class="block text-sm font-bold text-slate-700">
+                    <div class="flex items-center justify-between gap-2"><label for="blog-meta-description">SEO description</label><button type="button" wire:click="requestAiSuggestion('metaDescription')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                    <textarea id="blog-meta-description" wire:model="metaDescription" rows="2" maxlength="320" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the summary"></textarea>
+                </div>
                 <label class="block text-sm font-bold text-slate-700">Canonical URL override
                     <input wire:model="canonicalUrl" type="url" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Leave blank to use this article’s URL">
                     @error('canonicalUrl')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror

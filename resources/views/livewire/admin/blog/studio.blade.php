@@ -10,7 +10,7 @@
     <section aria-label="Blog Studio actions" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-5">
         <div class="mb-4 sm:mb-0">
             <p class="text-sm font-bold text-slate-900">Quick actions</p>
-            <p class="mt-1 text-xs leading-5 text-slate-500">Create an article or start an unpublished AI draft.</p>
+            <p class="mt-1 text-xs leading-5 text-slate-500">Approve a topic before creating a research-backed, unpublished draft.</p>
         </div>
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
             @if ($generationEnabled)
@@ -26,11 +26,30 @@
             <a wire:navigate href="{{ route('admin.blog.settings') }}" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2 sm:order-1 sm:px-4">
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>Settings</span>
             </a>
+            @if ($generationEnabled)
+                <button type="button" wire:click="generateTopicSuggestions" wire:loading.attr="disabled" wire:target="generateTopicSuggestions" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 py-3 text-center text-sm font-bold text-violet-900 transition hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 disabled:opacity-60 sm:order-2">
+                    <span wire:loading.remove wire:target="generateTopicSuggestions"><i class="fas fa-lightbulb mr-1" aria-hidden="true"></i>Suggest topics</span>
+                    <span wire:loading wire:target="generateTopicSuggestions" role="status"><i class="fas fa-spinner animate-spin" aria-hidden="true"></i> Queueing…</span>
+                </button>
+            @endif
             <a wire:navigate href="{{ route('admin.blog.create') }}" class="order-first col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cyan-800 px-4 py-3 text-center text-sm font-bold text-white shadow-sm transition hover:bg-cyan-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2 sm:order-3 sm:px-5">
                 <i class="fas fa-pen-to-square" aria-hidden="true"></i><span>Write an article</span>
             </a>
         </div>
     </section>
+
+    @if ($generationEnabled)
+        <div class="grid gap-3 sm:grid-cols-3">
+            <label class="block rounded-xl border border-slate-200 bg-white p-3 text-xs font-bold text-slate-600">Target article length
+                <div class="mt-1 flex items-center gap-2">
+                    <input wire:model="wordTarget" type="number" min="300" max="2000" class="w-28 rounded-lg border-slate-300 text-sm font-semibold text-slate-900">
+                    <span>words for this draft</span>
+                </div>
+            </label>
+            <div class="rounded-xl border border-slate-200 bg-white p-3 text-xs font-bold text-slate-600"><span class="block">Approved topics available</span><strong class="mt-1 block text-2xl text-[#0B2A47]">{{ $topicCounts['available'] }}</strong></div>
+            <div class="rounded-xl border border-slate-200 bg-white p-3 text-xs font-bold text-slate-600"><span class="block">Pending topic review</span><strong class="mt-1 block text-2xl text-[#0B2A47]">{{ $topicCounts['pending'] }}</strong></div>
+        </div>
+    @endif
 
     @if ($statusMessage)
         <div @class(['flex items-start gap-3 rounded-2xl border p-4 shadow-sm', 'border-emerald-200 bg-emerald-50 text-emerald-950' => $statusType === 'success', 'border-rose-200 bg-rose-50 text-rose-950' => $statusType === 'error']) role="{{ $statusType === 'error' ? 'alert' : 'status' }}" aria-live="polite">
@@ -55,7 +74,7 @@
             <p class="mt-1 text-sm text-slate-500">Each request queues a separate draft.</p>
         </div>
         @if ($generationRuns->isEmpty())
-            <p class="p-5 text-sm text-slate-500">No generation runs yet. Configure approved feeds and recipients in Blog Settings.</p>
+            <p class="p-5 text-sm text-slate-500">No generation runs yet. Add and approve topics in the Topic bank, then configure search and review options in Blog Settings.</p>
         @else
             <div class="divide-y divide-slate-100">
                 @foreach ($generationRuns as $run)
@@ -66,6 +85,10 @@
                                 <span class="text-xs text-slate-500">{{ $run['run_key'] }}</span>
                                 @if ($run['provider'])<span class="text-xs text-slate-500">Provider: {{ $run['provider'] }}</span>@endif
                             </div>
+                            <p class="text-xs font-semibold text-slate-500">Run #{{ $run['id'] }} · {{ $run['provider'] }}{{ $run['word_target'] ? ' · '.$run['word_target'].' words' : '' }}</p>
+                            @if ($run['topic_title'])
+                                <p class="mt-1 text-sm font-semibold text-slate-700">Topic: {{ $run['topic_title'] }}</p>
+                            @endif
                             @if ($run['status_message'])
                                 <p @class(['mt-2 text-sm', 'text-emerald-800' => $run['status'] === 'completed', 'text-cyan-800' => $run['status'] !== 'completed']) role="status" aria-live="polite">
                                     @if ($run['status'] === 'running')<i class="fas fa-spinner animate-spin" aria-hidden="true"></i> @endif{{ $run['status_message'] }}
@@ -87,6 +110,47 @@
                         @elseif ($run['can_retry'])
                             <button type="button" wire:click="retryGeneration({{ $run['id'] }})" wire:confirm="Retry this failed generation run?" wire:loading.attr="disabled" class="shrink-0 rounded-lg border border-amber-300 px-3 py-2 text-sm font-bold text-amber-900 hover:bg-amber-50">Retry generation</button>
                         @endif
+                    </article>
+                @endforeach
+            </div>
+            <div class="border-t border-slate-200 px-5 py-3">{{ $topics->links() }}</div>
+        @endif
+    </section>
+
+    <section wire:poll.20s class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-lg font-black text-slate-900">Topic bank</h2>
+                <p class="mt-1 text-sm text-slate-500">AI suggestions stay pending until approved. Approved topics are drafted once automatically; use “Draft again” to reuse a topic deliberately.</p>
+            </div>
+            @if ($topicSuggestionBatchStatus)
+                <span class="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-bold capitalize text-slate-700">Latest suggestions: {{ $topicSuggestionBatchStatus }}</span>
+            @endif
+        </div>
+        @if ($topics->isEmpty())
+            <div class="p-5 text-sm text-slate-500">No topics yet. Generate suggestions or add topics by approving an AI batch.</div>
+        @else
+            <div class="divide-y divide-slate-100">
+                @foreach ($topics as $topic)
+                    <article wire:key="blog-topic-{{ $topic['id'] }}" class="flex flex-col gap-3 p-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-bold capitalize {{ $topic['status'] === 'pending' ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-800' }}">{{ $topic['status'] }}</span>
+                                <span class="text-xs font-bold uppercase tracking-wide text-cyan-800">{{ $topic['type'] }}</span>
+                                @if ($topic['uses'] > 0)<span class="text-xs text-slate-500">Used {{ $topic['uses'] }} {{ $topic['uses_label'] }}</span>@endif
+                            </div>
+                            <h3 class="mt-2 font-bold text-slate-900">{{ $topic['title'] }}</h3>
+                            <p class="mt-1 text-sm leading-6 text-slate-600">{{ $topic['angle'] }}</p>
+                            @if ($topic['ebook_title'])<p class="mt-2 text-xs font-semibold text-violet-800">Inspired by: {{ $topic['ebook_title'] }}</p>@endif
+                        </div>
+                        <div class="flex shrink-0 flex-wrap gap-2">
+                            @if ($topic['status'] === 'pending')
+                                <button type="button" wire:click="approveTopic({{ $topic['id'] }})" wire:loading.attr="disabled" class="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 disabled:opacity-60">Approve</button>
+                                <button type="button" wire:click="rejectTopic({{ $topic['id'] }})" wire:loading.attr="disabled" class="rounded-lg border border-rose-200 px-3 py-2 text-xs font-bold text-rose-800 hover:bg-rose-50 disabled:opacity-60">Reject</button>
+                            @elseif ($generationEnabled)
+                                <button type="button" wire:click="generateFromTopic({{ $topic['id'] }})" wire:loading.attr="disabled" wire:target="generateFromTopic" class="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-900 hover:bg-cyan-100 disabled:opacity-60">Draft again</button>
+                            @endif
+                        </div>
                     </article>
                 @endforeach
             </div>
