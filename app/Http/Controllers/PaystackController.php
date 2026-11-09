@@ -10,6 +10,7 @@ use App\Models\Enrollee;
 use App\Models\Payment;
 use App\Models\ProgrammeEnquiry;
 use App\Services\EbookPaymentService;
+use App\Services\IncomeLedger;
 use App\Services\PaystackService;
 use App\Support\InterventionStatusNotifier;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class PaystackController extends Controller
         PaystackService $paystack,
         EbookPaymentController $ebookPaymentsController,
         EbookPaymentService $ebookPayments,
+        IncomeLedger $incomeLedger,
     ) {
         $reference = $request->reference;
 
@@ -36,6 +38,8 @@ class PaystackController extends Controller
         $metadata = $response['data']['metadata'] ?? [];
 
         if (($response['data']['status'] ?? null) === 'success') {
+            $this->recordIncomingIncome($response['data'], $metadata, $incomeLedger);
+
             if (($metadata['payment_for'] ?? null) === 'crm') {
                 $crm = Crm::findOrFail($metadata['crm_id']);
 
@@ -150,7 +154,7 @@ class PaystackController extends Controller
         return redirect()->route('client.lessons')->with('error', 'Payment failed.');
     }
 
-    public function webhook(Request $request, EbookPaymentService $ebookPayments)
+    public function webhook(Request $request, EbookPaymentService $ebookPayments, IncomeLedger $incomeLedger)
     {
         $signature = (string) $request->header('x-paystack-signature', '');
         $rawPayload = $request->getContent();
@@ -190,6 +194,10 @@ class PaystackController extends Controller
             $this->forwardToSolarSapient($rawPayload, $signature);
 
             return response()->json(['status' => 'ok']);
+        }
+
+        if ($app === 'mephed') {
+            $this->recordIncomingIncome($data, $metadata, $incomeLedger);
         }
 
         if ($app === 'mephed' && ($metadata['payment_for'] ?? null) === 'bootcamp_enrollment') {
@@ -295,6 +303,54 @@ class PaystackController extends Controller
         }
 
         return response()->json(['status' => 'ok']);
+    }
+
+    private function recordIncomingIncome(array $transaction, array $metadata, IncomeLedger $incomeLedger): void
+    {
+        if (($metadata['app'] ?? 'mephed') !== 'mephed') {
+            return;
+        }
+
+        [$sourceType, $sourceIdKey, $description] = match ($metadata['payment_for'] ?? null) {
+            'booking' => ['booking', 'booking_id', 'Booking payment'],
+            'crm' => ['crm', 'crm_id', 'Institution payment'],
+            'programme_request' => ['programme_enquiry', 'programme_enquiry_id', 'Programme payment'],
+            'bootcamp_enrollment' => ['enrollee', 'enrollee_id', 'Bootcamp enrollment'],
+            default => [null, null, null],
+        };
+
+        if (! is_string($sourceType) || ! is_string($sourceIdKey) || ! is_string($description)) {
+            return;
+        }
+
+        $sourceId = filter_var($metadata[$sourceIdKey] ?? null, FILTER_VALIDATE_INT);
+        if ($sourceId === false || $sourceId < 1) {
+            Log::warning('Paystack income could not be linked to a source record.', [
+                'payment_for' => $metadata['payment_for'] ?? null,
+                'reference' => $transaction['reference'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $sourceExists = match ($sourceType) {
+            'booking' => Booking::query()->whereKey($sourceId)->exists(),
+            'crm' => Crm::query()->whereKey($sourceId)->exists(),
+            'programme_enquiry' => ProgrammeEnquiry::query()->whereKey($sourceId)->exists(),
+            'enrollee' => Enrollee::query()->whereKey($sourceId)->exists(),
+        };
+
+        if (! $sourceExists) {
+            Log::warning('Paystack income references a missing source record.', [
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+                'reference' => $transaction['reference'] ?? null,
+            ]);
+
+            return;
+        }
+
+        $incomeLedger->recordPaystack($transaction, $sourceType, $sourceId, $description.' #'.$sourceId);
     }
 
     protected function forwardToSolarSapient(string $rawPayload, string $signature): void

@@ -10,6 +10,7 @@ use App\Models\Ebook;
 use App\Models\EbookEvent;
 use App\Models\EbookOrder;
 use App\Models\EbookPolicy;
+use App\Models\IncomeTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -138,6 +139,9 @@ class EbookPaymentTest extends TestCase
 
         $this->assertSame(EbookOrderStatus::Paid, $order->fresh()->status);
         $this->assertNotNull($order->fresh()->paid_at);
+        $this->assertSame(1, IncomeTransaction::query()
+            ->where('gateway_reference', $order->paystack_reference)
+            ->count());
         $this->assertSame(1, EbookEvent::query()->where('type', 'payment_succeeded')->where('order_id', $order->id)->count());
         $this->assertSame(2, EbookEvent::query()->where('type', 'webhook_received')->where('order_id', $order->id)->count());
         Queue::assertPushed(FulfillEbookOrder::class, 1);

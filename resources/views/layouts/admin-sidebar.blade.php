@@ -37,7 +37,7 @@
                 ],
                 [
                     'key' => 'business', 'label' => 'Finance & Communications', 'icon' => 'fa-chart-line',
-                    'active' => request()->routeIs('admin.payments.index', 'admin.newsletter', 'admin.testimonials'),
+                    'active' => request()->routeIs('admin.payments.index', 'admin.income.index', 'admin.newsletter', 'admin.testimonials'),
                 ],
             ];
         @endphp
@@ -87,7 +87,8 @@
                         <a wire:navigate href="{{ route('admin.programmeEnquiries') }}" class="{{ $navLink }} {{ request()->routeIs('admin.programmeEnquiries') ? $activeLink : '' }}"><i class="fas fa-envelope-open-text w-5 text-cyan-300"></i><span>Intervention Enquiries</span></a>
                         <a wire:navigate href="{{ route('admin.crm.index') }}" class="{{ $navLink }} {{ request()->routeIs('admin.crm.index') ? $activeLink : '' }}"><i class="fas fa-school w-5 text-cyan-300"></i><span>Manage Org. Requests</span></a>
                     @elseif ($group['key'] === 'business')
-                        <a wire:navigate href="{{ route('admin.payments.index') }}" class="{{ $navLink }} {{ request()->routeIs('admin.payments.index') ? $activeLink : '' }}"><i class="fas fa-bank w-5 text-cyan-300"></i><span>Manage Payments</span></a>
+                        <a wire:navigate href="{{ route('admin.income.index') }}" class="{{ $navLink }} {{ request()->routeIs('admin.income.index') ? $activeLink : '' }}"><i class="fas fa-arrow-trend-up w-5 text-emerald-300"></i><span>Income</span></a>
+                        <a wire:navigate href="{{ route('admin.payments.index') }}" class="{{ $navLink }} {{ request()->routeIs('admin.payments.index') ? $activeLink : '' }}"><i class="fas fa-arrow-trend-down w-5 text-cyan-300"></i><span>Tutor Payouts</span></a>
                         <a wire:navigate href="{{ route('admin.newsletter') }}" class="{{ $navLink }} {{ request()->routeIs('admin.newsletter') ? $activeLink : '' }}"><i class="fas fa-file w-5 text-cyan-300"></i><span>Manage Newsletters</span></a>
                         <a wire:navigate href="{{ route('admin.testimonials') }}" class="{{ $navLink }} {{ request()->routeIs('admin.testimonials') ? $activeLink : '' }}"><i class="fas fa-comment w-5 text-cyan-300"></i><span>Manage Testimonials</span></a>
                     @else

@@ -20,6 +20,7 @@ class EbookPaymentService
         private readonly PaystackService $paystack,
         private readonly EbookOrderLifecycle $lifecycle,
         private readonly EbookAlertService $alerts,
+        private readonly IncomeLedger $incomeLedger,
     ) {}
 
     public function startCheckout(Ebook $ebook, array $buyer, array $attribution = []): array
@@ -173,7 +174,7 @@ class EbookPaymentService
 
         $status = $transaction['status'] ?? null;
         if ($status === 'success') {
-            return DB::transaction(function () use ($order, $source): array {
+            return DB::transaction(function () use ($order, $source, $transaction): array {
                 $locked = EbookOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
                 if ($locked->status === EbookOrderStatus::Pending) {
                     $this->lifecycle->transition($locked, EbookOrderStatus::Paid);
@@ -190,6 +191,13 @@ class EbookPaymentService
                         DB::afterCommit(fn () => $this->alerts->sendOnce('missed-webhook-'.$locked->id, 'Missed Paystack webhook recovered', "Reconciliation verified payment for order {$orderReference}; the order has been queued for fulfillment."));
                     }
                 }
+
+                $this->incomeLedger->recordPaystack(
+                    $transaction,
+                    'ebook_order',
+                    $locked->id,
+                    'eBook order '.$locked->reference,
+                );
 
                 return ['paid' => $locked->fresh()->status === EbookOrderStatus::Paid, 'status' => $locked->fresh()->status->value];
             });

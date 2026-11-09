@@ -16,6 +16,7 @@ use App\Livewire\Admin\RequestManager;
 use App\Livewire\Admin\ClientManager;
 use App\Livewire\Admin\ContactMessages;
 use App\Livewire\Admin\UserManager;
+use App\Livewire\Admin\IncomeManager;
 use App\Livewire\Admin\InstitutionRequestManager;
 use App\Livewire\Admin\PaymentsManager;
 use App\Livewire\Admin\TutorProfileView;
@@ -426,6 +427,7 @@ Route::middleware(['auth', 'can:Admin', 'verified'])->group(function () {
 
     //Payments Routes
     Route::get('admin/payments', PaymentsManager::class)->name('admin.payments.index');
+    Route::get('admin/income', IncomeManager::class)->name('admin.income.index');
 
     //Users Management Routes
     Route::get('admin/user-manager', UserManager::class)->name('admin.users');

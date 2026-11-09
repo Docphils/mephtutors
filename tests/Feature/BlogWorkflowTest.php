@@ -60,7 +60,11 @@ class BlogWorkflowTest extends TestCase
             ->assertSee('line-clamp-2', false)
             ->assertSee('line-clamp-3', false);
         $this->get(route('blog.show', $post->slug))->assertOk()->assertSee($post->title);
-        $this->get(route('blog.feed'))->assertOk()->assertSee($post->title);
+        $this->get(route('blog.feed'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/rss+xml; charset=UTF-8')
+            ->assertSee('<?xml version="1.0" encoding="UTF-8"?>', false)
+            ->assertSee($post->title);
         $this->get(route('sitemap'))->assertOk()
             ->assertSee(route('blog.index'), false)
             ->assertSee(route('blog.show', $post->slug), false);
