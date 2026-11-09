@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Livewire\Admin\IncomeManager;
+use App\Models\Cohort;
 use App\Models\Crm;
+use App\Models\Enrollee;
 use App\Models\IncomeTransaction;
 use App\Models\Service;
 use App\Models\ServiceItem;
@@ -32,7 +34,9 @@ class IncomeManagerTest extends TestCase
             ->assertSee('Outgoing tutor payouts remain');
 
         Livewire::actingAs($admin)->test(IncomeManager::class)
+            ->assertSee('wire:click="openForm"', false)
             ->call('openForm')
+            ->assertSee('Record manual income')
             ->set('amount', '2500.50')
             ->set('description', 'Consultation payment')
             ->set('payerName', 'Example Client')
@@ -130,5 +134,64 @@ class IncomeManagerTest extends TestCase
         $this->assertSame(1, IncomeTransaction::query()
             ->where('gateway_reference', 'crm-income-reference')
             ->count());
+    }
+
+    public function test_backfill_imports_paid_bootcamp_enrolments_without_duplicate_rows(): void
+    {
+        $service = Service::query()->create([
+            'name' => 'Bootcamp Service',
+            'slug' => 'bootcamp-service',
+            'target' => 'bootcamp',
+        ]);
+        $serviceItem = ServiceItem::query()->create([
+            'service_id' => $service->id,
+            'name' => 'Coding Bootcamp',
+            'slug' => 'coding-bootcamp',
+            'target' => 'bootcamp',
+        ]);
+        $cohort = Cohort::query()->create([
+            'service_id' => $service->id,
+            'service_item_id' => $serviceItem->id,
+            'name' => 'November Coding Cohort',
+            'code' => 'NOV-CODING-2026',
+            'start_date' => '2026-11-01',
+            'fee' => 85000,
+        ]);
+        $paidEnrollee = Enrollee::query()->create([
+            'cohort_id' => $cohort->id,
+            'name' => 'Paid Learner',
+            'email' => 'paid@example.com',
+            'phone' => '08000000000',
+            'address' => 'Lagos',
+            'status' => 'confirmed',
+            'confirmed_at' => '2026-11-08 10:00:00',
+            'meta' => [
+                'payment_status' => 'paid',
+                'payment_reference' => 'bootcamp-payment-100',
+            ],
+        ]);
+        Enrollee::query()->create([
+            'cohort_id' => $cohort->id,
+            'name' => 'Unpaid Learner',
+            'email' => 'unpaid@example.com',
+            'phone' => '08000000001',
+            'address' => 'Lagos',
+            'meta' => ['payment_status' => 'pending'],
+        ]);
+
+        $migration = require database_path('migrations/2026_11_09_100000_backfill_paid_bootcamp_income.php');
+        $migration->up();
+        $migration->up();
+
+        $income = IncomeTransaction::query()
+            ->where('source_type', 'enrollee')
+            ->where('source_id', $paidEnrollee->id)
+            ->sole();
+
+        $this->assertSame('85000.00', $income->amount);
+        $this->assertSame('paystack', $income->method);
+        $this->assertSame('bootcamp-payment-100', $income->gateway_reference);
+        $this->assertSame('2026-11-08 10:00:00', $income->received_at?->format('Y-m-d H:i:s'));
+        $this->assertSame(1, IncomeTransaction::query()->where('source_type', 'enrollee')->count());
     }
 }
