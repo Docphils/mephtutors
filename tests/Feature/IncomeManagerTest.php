@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Admin\IncomeManager;
+use App\Livewire\Admin\BootcampManager;
 use App\Models\Cohort;
 use App\Models\Crm;
 use App\Models\Enrollee;
@@ -193,5 +194,125 @@ class IncomeManagerTest extends TestCase
         $this->assertSame('bootcamp-payment-100', $income->gateway_reference);
         $this->assertSame('2026-11-08 10:00:00', $income->received_at?->format('Y-m-d H:i:s'));
         $this->assertSame(1, IncomeTransaction::query()->where('source_type', 'enrollee')->count());
+    }
+
+    public function test_legacy_backfill_recovers_confirmed_enrollees_when_payment_metadata_was_overwritten(): void
+    {
+        $service = Service::query()->create([
+            'name' => 'Bootcamp Service',
+            'slug' => 'legacy-bootcamp-service',
+            'target' => 'bootcamp',
+        ]);
+        $serviceItem = ServiceItem::query()->create([
+            'service_id' => $service->id,
+            'name' => 'Legacy Coding Bootcamp',
+            'slug' => 'legacy-coding-bootcamp',
+            'target' => 'bootcamp',
+        ]);
+        $cohort = Cohort::query()->create([
+            'service_id' => $service->id,
+            'service_item_id' => $serviceItem->id,
+            'name' => 'Legacy Cohort',
+            'code' => 'LEGACY-BOOTCAMP-2025',
+            'start_date' => '2025-01-01',
+            'fee' => 75000,
+        ]);
+        $confirmedEnrollee = Enrollee::query()->create([
+            'cohort_id' => $cohort->id,
+            'name' => 'Confirmed Learner',
+            'email' => 'confirmed@example.com',
+            'phone' => '08000000002',
+            'address' => 'Lagos',
+            'status' => 'completed',
+            'meta' => ['notes' => 'Old admin edit replaced the Paystack metadata.'],
+        ]);
+        $paidEnrollee = Enrollee::query()->create([
+            'cohort_id' => $cohort->id,
+            'name' => 'Paid Learner',
+            'email' => 'paid@example.com',
+            'phone' => '08000000003',
+            'address' => 'Lagos',
+            'status' => 'pending',
+            'meta' => [
+                'payment_status' => 'paid',
+                'payment_reference' => 'legacy-paid-reference',
+            ],
+        ]);
+        Enrollee::query()->create([
+            'cohort_id' => $cohort->id,
+            'name' => 'Pending Learner',
+            'email' => 'pending@example.com',
+            'phone' => '08000000004',
+            'address' => 'Lagos',
+            'status' => 'pending',
+            'meta' => ['payment_status' => 'pending'],
+        ]);
+
+        $migration = require database_path('migrations/2026_11_09_110000_backfill_legacy_confirmed_bootcamp_income.php');
+        $migration->up();
+        $migration->up();
+
+        $unverifiedIncome = IncomeTransaction::query()
+            ->where('source_type', 'enrollee')
+            ->where('source_id', $confirmedEnrollee->id)
+            ->sole();
+        $verifiedIncome = IncomeTransaction::query()
+            ->where('source_type', 'enrollee')
+            ->where('source_id', $paidEnrollee->id)
+            ->sole();
+
+        $this->assertSame('unrecorded', $unverifiedIncome->method);
+        $this->assertNull($unverifiedIncome->gateway_reference);
+        $this->assertStringContainsString('could not be verified', $unverifiedIncome->notes);
+        $this->assertSame('paystack', $verifiedIncome->method);
+        $this->assertSame('legacy-paid-reference', $verifiedIncome->gateway_reference);
+        $this->assertSame(2, IncomeTransaction::query()->where('source_type', 'enrollee')->count());
+    }
+
+    public function test_admin_enrollee_edits_preserve_existing_payment_metadata(): void
+    {
+        $service = Service::query()->create([
+            'name' => 'Bootcamp Service',
+            'slug' => 'metadata-bootcamp-service',
+            'target' => 'bootcamp',
+        ]);
+        $serviceItem = ServiceItem::query()->create([
+            'service_id' => $service->id,
+            'name' => 'Metadata Bootcamp',
+            'slug' => 'metadata-bootcamp',
+            'target' => 'bootcamp',
+        ]);
+        $cohort = Cohort::query()->create([
+            'service_id' => $service->id,
+            'service_item_id' => $serviceItem->id,
+            'name' => 'Metadata Cohort',
+            'code' => 'METADATA-BOOTCAMP-2026',
+            'start_date' => '2026-11-01',
+            'fee' => 85000,
+        ]);
+        $enrollee = Enrollee::query()->create([
+            'cohort_id' => $cohort->id,
+            'name' => 'Learner With Payment',
+            'email' => 'learner@example.com',
+            'phone' => '08000000005',
+            'address' => 'Lagos',
+            'status' => 'confirmed',
+            'meta' => [
+                'payment_status' => 'paid',
+                'payment_reference' => 'preserve-this-reference',
+                'notes' => 'Existing private note',
+            ],
+        ]);
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+
+        Livewire::actingAs($admin)->test(BootcampManager::class)
+            ->call('editEnrollee', $enrollee->id)
+            ->set('enrollee_notes', 'Updated private note')
+            ->call('saveEnrollee')
+            ->assertHasNoErrors();
+
+        $this->assertSame('paid', $enrollee->fresh()->meta['payment_status']);
+        $this->assertSame('preserve-this-reference', $enrollee->fresh()->meta['payment_reference']);
+        $this->assertSame('Updated private note', $enrollee->fresh()->meta['notes']);
     }
 }

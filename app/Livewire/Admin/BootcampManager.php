@@ -293,6 +293,12 @@ class BootcampManager extends Component
     {
         $this->validate($this->enrolleeRules());
 
+        $existingEnrollee = $this->editingEnrolleeId
+            ? Enrollee::query()->findOrFail($this->editingEnrolleeId)
+            : null;
+        $meta = (array) ($existingEnrollee?->meta ?? []);
+        $meta['notes'] = $this->enrollee_notes;
+
         $payload = [
             'cohort_id' => $this->cohort_id,
             'name' => $this->enrollee_name,
@@ -302,13 +308,11 @@ class BootcampManager extends Component
             'status' => $this->enrollee_status,
             'is_read' => $this->is_read,
             'confirmed_at' => $this->enrollee_status === 'confirmed' ? now() : null,
-            'meta' => [
-                'notes' => $this->enrollee_notes,
-            ],
+            'meta' => $meta,
         ];
 
-        if ($this->editingEnrolleeId) {
-            Enrollee::findOrFail($this->editingEnrolleeId)->update($payload);
+        if ($existingEnrollee) {
+            $existingEnrollee->update($payload);
             session()->flash('success', 'Enrollee updated successfully.');
         } else {
             Enrollee::create($payload);

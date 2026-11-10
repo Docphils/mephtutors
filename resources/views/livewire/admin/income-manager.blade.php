@@ -90,7 +90,7 @@
         <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div>
                 <h2 class="font-black text-slate-900">Incoming transactions</h2>
-                <p class="mt-1 text-xs text-slate-500">Outgoing tutor payouts remain in Manage Payments.</p>
+                <p class="mt-1 text-xs text-slate-500">All payments received through connected services.</p>
             </div>
             <span wire:loading class="text-xs font-semibold text-cyan-700">Updating…</span>
         </div>
