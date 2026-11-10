@@ -5,7 +5,9 @@ namespace App\Livewire\Admin;
 use App\Models\Booking;
 use App\Models\Contact;
 use App\Models\Crm;
+use App\Models\EbookOrder;
 use App\Models\Enrollee;
+use App\Models\IncomeTransaction;
 use App\Models\Newsletter;
 use App\Models\OnlineMeeting;
 use App\Models\Payment;
@@ -68,8 +70,12 @@ class AdminDashboardController extends Component
             'active_bookings' => Booking::where('status', 'Active')->count(),
             'completed_bookings' => Booking::where('status', 'Completed')->count(),
             'new_bookings_week' => array_sum($chartData['bookings']),
-            'earned_payments' => Payment::where('status', 'Earned')->sum('amount'),
-            'earned_payments_month' => Payment::where('status', 'Earned')->where('created_at', '>=', $monthStart)->sum('amount'),
+            'tutor_earned' => Payment::where('status', 'Earned')->sum('amount'),
+            'tutor_earned_month' => Payment::where('status', 'Earned')->where('created_at', '>=', $monthStart)->sum('amount'),
+            'income_total' => IncomeTransaction::query()->where('currency', 'NGN')->sum('amount'),
+            'income_month' => IncomeTransaction::query()->where('currency', 'NGN')->whereBetween('received_at', [$monthStart, $today->endOfDay()])->sum('amount'),
+            'ebook_orders' => EbookOrder::count(),
+            'paid_ebook_orders' => EbookOrder::where('status', 'paid')->count(),
             'pending_payments' => Payment::where('status', 'Pending')->count(),
             'new_crm' => Crm::where('status', 'new')->count(),
             'pending_tutors' => TutorProfile::where('status', 'Pending')->count(),
@@ -117,6 +123,7 @@ class AdminDashboardController extends Component
                     'tutor_name' => $tutor instanceof User ? $tutor->name : 'No tutor',
                 ];
             });
+        $recentEbookOrders = EbookOrder::query()->with('ebook')->latest()->limit(5)->get();
 
         return view('livewire.admin.admin-dashboard-controller', [
             'stats' => $stats,
@@ -129,6 +136,7 @@ class AdminDashboardController extends Component
             'recentUsers' => $recentUsers,
             'recentMessages' => $recentMessages,
             'upcomingMeetings' => $upcomingMeetings,
+            'recentEbookOrders' => $recentEbookOrders,
         ]);
     }
 
