@@ -29,6 +29,14 @@ class BlogStudio extends Component
 
     public string $statusFilter = '';
 
+    public string $operationsTab = 'articles';
+
+    public int $articlesPerPage = 10;
+
+    public int $activityPerPage = 10;
+
+    public int $topicsPerPage = 10;
+
     public ?string $statusMessage = null;
 
     public string $statusType = 'success';
@@ -286,6 +294,35 @@ class BlogStudio extends Component
         $this->resetPage();
     }
 
+    public function setOperationsTab(string $tab): void
+    {
+        Gate::authorize('Admin');
+        abort_unless(in_array($tab, ['articles', 'activity', 'topics'], true), 422);
+
+        $this->operationsTab = $tab;
+    }
+
+    public function updatedArticlesPerPage(): void
+    {
+        Gate::authorize('Admin');
+        abort_unless(in_array($this->articlesPerPage, [5, 10, 25, 50, 100], true), 422);
+        $this->resetPage();
+    }
+
+    public function updatedActivityPerPage(): void
+    {
+        Gate::authorize('Admin');
+        abort_unless(in_array($this->activityPerPage, [5, 10, 25, 50, 100], true), 422);
+        $this->resetPage('generationRunsPage');
+    }
+
+    public function updatedTopicsPerPage(): void
+    {
+        Gate::authorize('Admin');
+        abort_unless(in_array($this->topicsPerPage, [5, 10, 25, 50, 100], true), 422);
+        $this->resetPage('topicsPage');
+    }
+
     public function render()
     {
         Gate::authorize('Admin');
@@ -294,7 +331,7 @@ class BlogStudio extends Component
             ->with(['category', 'facebookShare'])
             ->when($this->statusFilter !== '', fn ($query) => $query->where('status', $this->statusFilter))
             ->latest('updated_at')
-            ->paginate(15)
+            ->paginate($this->articlesPerPage)
             ->through(fn (BlogPost $post): array => [
                 'id' => $post->id,
                 'title' => $post->title,
@@ -327,9 +364,8 @@ class BlogStudio extends Component
         $generationRuns = BlogGenerationRun::query()
             ->with(['post', 'topic'])
             ->latest('id')
-            ->limit(8)
-            ->get()
-            ->map(fn (BlogGenerationRun $run): array => [
+            ->paginate($this->activityPerPage, pageName: 'generationRunsPage')
+            ->through(fn (BlogGenerationRun $run): array => [
                 'id' => $run->id,
                 'status' => $run->status,
                 'status_message' => match ($run->status) {
@@ -357,7 +393,7 @@ class BlogStudio extends Component
             ->withCount('generationRuns')
             ->whereIn('status', [BlogTopic::STATUS_PENDING, BlogTopic::STATUS_APPROVED])
             ->latest('created_at')
-            ->paginate(10, pageName: 'topicsPage')
+            ->paginate($this->topicsPerPage, pageName: 'topicsPage')
             ->through(fn (BlogTopic $topic): array => [
                 'id' => $topic->id,
                 'title' => $topic->title,
