@@ -39,6 +39,9 @@ class EbookOperationsDashboard extends Component
             ->whereIn('type', ['landing_view', 'checkout_started', 'payment_succeeded'])
             ->selectRaw('ebook_id, type, count(*) as aggregate')->groupBy('ebook_id', 'type')->with('ebook:id,title')->get();
         $downloads = EbookEvent::query()->where('type', 'download')->where('created_at', '>=', $now->copy()->subDays(30))->count();
+        $freeChapterViews = EbookEvent::query()->where('type', 'free_chapter_view')->where('created_at', '>=', $now->copy()->subDays(30))->count();
+        $freeChapterDownloads = EbookEvent::query()->where('type', 'free_chapter_download')->where('created_at', '>=', $now->copy()->subDays(30))->count();
+        $cheatSheetDownloads = EbookEvent::query()->where('type', 'cheat_sheet_download')->where('created_at', '>=', $now->copy()->subDays(30))->count();
         $resends = EbookEvent::query()->where('type', 'link_resent')->where('created_at', '>=', $now->copy()->subDays(30))->count();
         $deliveryFailures = EbookEvent::query()->whereIn('type', ['fulfilment_failed', 'link_resend_failed'])->where('created_at', '>=', $now->copy()->subDays(30))->count();
         $expiredLinks = EbookDownload::query()->where(function ($query) use ($now): void {
@@ -73,6 +76,6 @@ class EbookOperationsDashboard extends Component
                 return 'Other';
             })->map(fn ($orders) => ['orders' => $orders->count(), 'paid' => $orders->where('status', EbookOrderStatus::Paid)->count()]);
 
-        return view('livewire.admin.ebook-operations-dashboard', compact('sales', 'counts', 'pending', 'unfulfilled', 'webhookRejected', 'paymentMismatches', 'lastWebhook', 'lastRun', 'funnel', 'downloads', 'resends', 'oldestUnfulfilled', 'perBook', 'deliveryFailures', 'expiredLinks', 'queueBacklog', 'traffic'));
+        return view('livewire.admin.ebook-operations-dashboard', compact('sales', 'counts', 'pending', 'unfulfilled', 'webhookRejected', 'paymentMismatches', 'lastWebhook', 'lastRun', 'funnel', 'downloads', 'freeChapterViews', 'freeChapterDownloads', 'cheatSheetDownloads', 'resends', 'oldestUnfulfilled', 'perBook', 'deliveryFailures', 'expiredLinks', 'queueBacklog', 'traffic'));
     }
 }

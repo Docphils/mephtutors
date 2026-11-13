@@ -39,6 +39,8 @@ class EbookFulfillmentController extends Controller
         ];
 
         if ($request->boolean('download')) {
+            EbookEvent::query()->create(['type' => 'free_chapter_download', 'ebook_id' => $ebook->id]);
+
             return response()->download($path, $filename, $headers);
         }
 
@@ -54,7 +56,7 @@ class EbookFulfillmentController extends Controller
         abort_unless($ebook->cheat_sheet_path && str_starts_with($ebook->cheat_sheet_path, 'ebooks/cheat-sheets/'), 404);
         $disk = Storage::disk('local');
         abort_unless($disk->exists($ebook->cheat_sheet_path), 404);
-        EbookEvent::query()->create(['type' => 'free_chapter_download', 'ebook_id' => $ebook->id]);
+        EbookEvent::query()->create(['type' => 'cheat_sheet_download', 'ebook_id' => $ebook->id]);
 
         return $disk->download($ebook->cheat_sheet_path, Str::slug($ebook->title).'-cheat-sheet.pdf', [
             'X-Robots-Tag' => 'noindex, nofollow',

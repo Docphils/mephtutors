@@ -160,6 +160,9 @@ class EbookDataTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf')
             ->assertHeader('Content-Disposition', 'attachment; filename=pdf-sample-book-free-chapter.pdf');
+
+        $this->assertDatabaseHas('ebook_events', ['type' => 'free_chapter_view', 'ebook_id' => $ebook->id]);
+        $this->assertDatabaseHas('ebook_events', ['type' => 'free_chapter_download', 'ebook_id' => $ebook->id]);
     }
 
     public function test_sitemap_lists_public_ebook_pages_and_omits_drafts(): void

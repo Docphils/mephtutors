@@ -91,7 +91,7 @@ class EbookFulfillmentTest extends TestCase
 
         $this->get(route('ebooks.cheat-sheet', ['slug' => $ebook->slug]))
             ->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
-        $this->assertDatabaseHas('ebook_events', ['type' => 'free_chapter_download', 'ebook_id' => $ebook->id]);
+        $this->assertDatabaseHas('ebook_events', ['type' => 'cheat_sheet_download', 'ebook_id' => $ebook->id]);
 
         $ebook->update(['status' => EbookStatus::Draft]);
         $this->get(route('ebooks.cheat-sheet', ['slug' => $ebook->slug]))->assertNotFound();

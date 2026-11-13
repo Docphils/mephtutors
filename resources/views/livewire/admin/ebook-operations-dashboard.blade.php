@@ -210,7 +210,7 @@
                 </div>
                 <div class="grid grid-cols-3 gap-3">
                     <div>
-                        <p class="text-xs text-slate-500">Events <small>(30d)</small></p>
+                        <p class="text-xs text-slate-500">Paid downloads <small>(30d)</small></p>
                         <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($downloads) }}</p>
                     </div>
                     <div>
@@ -220,6 +220,23 @@
                     <div>
                         <p class="text-xs text-slate-500">Expired links</p>
                         <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($expiredLinks) }}</p>
+                    </div>
+                </div>
+                <div class="mt-5 border-t border-slate-100 pt-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Free resources <small>(30d)</small></h3>
+                    <div class="mt-3 grid grid-cols-3 gap-3">
+                        <div>
+                            <p class="text-xs text-slate-500">Free chapter views</p>
+                            <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($freeChapterViews) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">Chapter downloads</p>
+                            <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($freeChapterDownloads) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500">Cheat sheet downloads</p>
+                            <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($cheatSheetDownloads) }}</p>
+                        </div>
                     </div>
                 </div>
             </article>

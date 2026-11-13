@@ -83,6 +83,37 @@ class EbookOperationsTest extends TestCase
         Livewire::actingAs($admin)->test(EbookOperationsDashboard::class)->assertSee('eBook operations');
     }
 
+    public function test_operations_dashboard_reports_free_resource_views_and_downloads_for_the_last_30_days(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $ebook = Ebook::factory()->create();
+
+        foreach ([
+            ['free_chapter_view', now()],
+            ['free_chapter_view', now()],
+            ['free_chapter_view', now()->subDays(31)],
+            ['free_chapter_download', now()],
+            ['cheat_sheet_download', now()],
+            ['cheat_sheet_download', now()],
+        ] as [$type, $createdAt]) {
+            EbookEvent::query()->create([
+                'type' => $type,
+                'ebook_id' => $ebook->id,
+                'created_at' => $createdAt,
+            ]);
+        }
+
+        $html = Livewire::actingAs($admin)->test(EbookOperationsDashboard::class)
+            ->assertSee('Free chapter views')
+            ->assertSee('Chapter downloads')
+            ->assertSee('Cheat sheet downloads')
+            ->html();
+
+        $this->assertMatchesRegularExpression('/<p class="text-xs text-slate-500">Free chapter views<\/p>\s*<p[^>]*>2<\/p>/', $html);
+        $this->assertMatchesRegularExpression('/<p class="text-xs text-slate-500">Chapter downloads<\/p>\s*<p[^>]*>1<\/p>/', $html);
+        $this->assertMatchesRegularExpression('/<p class="text-xs text-slate-500">Cheat sheet downloads<\/p>\s*<p[^>]*>2<\/p>/', $html);
+    }
+
     public function test_repeated_alert_for_same_failure_is_emailed_once(): void
     {
         config(['ebooks.alert_emails' => ['ops@example.com'], 'ebooks.alert_dedupe_minutes' => 60]);
