@@ -8,7 +8,7 @@
             @endif
         </nav>
 
-        <article class="mt-7">
+        <article class="mt-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
             @if ($post->hero_image_path)
                 <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($post->hero_image_path) }}" alt="Illustration for {{ $post->title }}" width="1200" height="630" class="mb-7 aspect-[1200/630] w-full rounded-2xl object-cover shadow-sm">
             @endif

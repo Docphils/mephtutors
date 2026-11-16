@@ -238,10 +238,12 @@ class BlogWorkflowTest extends TestCase
         config(['blog.public_enabled' => true]);
         $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
         $body = '<h2 style="text-align: center">A useful heading</h2>'
+            .'<h3>Subheading</h3><h4>Section</h4><h5>Detail</h5><h6>Small heading</h6>'
             .'<p style="text-align: justify"><span style="font-family: Georgia; font-size: 24px; color: #0e7490">'
             .'<u>Styled text</u></span> <mark style="background-color: #fef08a">Highlight</mark> H<sub>2</sub>O x<sup>2</sup></p>'
+            .'<p></p><p style="text-align: right"><s>Old advice</s> <em>Updated advice</em><br>A deliberate line break</p>'
             .'<ol start="3"><li><p>First item</p><ul><li><p>Nested item</p></li></ul></li></ol>'
-            .'<blockquote><p>A quotation</p></blockquote><pre><code>code &lt;example&gt;</code></pre><hr>';
+            .'<blockquote><p>A quotation</p><p>Another paragraph</p></blockquote><pre><code>code &lt;example&gt;</code></pre><hr>';
 
         Livewire::actingAs($admin)->test(BlogEditor::class)
             ->set('title', 'Formatting retention')
@@ -259,9 +261,19 @@ class BlogWorkflowTest extends TestCase
             ->assertHasNoErrors();
         $this->assertSame($body, $post->fresh()->body);
 
-        $this->get(route('admin.blog.preview', $post->id))->assertOk()->assertSee($body, false);
+        $this->get(route('admin.blog.preview', $post->id))
+            ->assertOk()
+            ->assertSee('Preview of the saved article')
+            ->assertSee($body, false)
+            ->assertSee('trix@2.0.8/dist/trix.umd.min.js', false);
         $post->update(['status' => BlogPost::STATUS_PUBLISHED, 'published_at' => now()]);
-        $this->get(route('blog.show', $post->slug))->assertOk()->assertSee($body, false);
+        $this->app['auth']->guard()->logout();
+        $this->assertGuest();
+        $this->get(route('blog.show', $post->slug))
+            ->assertOk()
+            ->assertSee($body, false)
+            ->assertDontSee('Preview of the saved article')
+            ->assertSee('trix@2.0.8/dist/trix.umd.min.js', false);
     }
 
     public function test_changing_a_published_slug_redirects_the_old_public_url(): void
