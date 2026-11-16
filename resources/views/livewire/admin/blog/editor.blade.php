@@ -1,18 +1,28 @@
 <section class="mx-auto max-w-5xl space-y-5">
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <div><p class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-700">Blog Studio</p><h1 class="text-xl font-black text-slate-900">{{ $postId ? 'Edit article' : 'Create article' }}</h1></div>
-            <a wire:navigate href="{{ route('admin.blog.index') }}" class="text-sm font-bold text-cyan-800 underline">Back to article list</a>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-700">Blog Studio</p>
+                <h1 class="text-xl font-black text-slate-900">{{ $postId ? 'Edit article' : 'Create article' }}</h1>
+            </div>
+            <a wire:navigate href="{{ route('admin.blog.index') }}" class="text-sm font-bold text-cyan-800 underline">Back
+                to article list</a>
         </div>
     </x-slot>
 
     @if (session('success'))
-        <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">{{ session('success') }}</div>
+        <div role="status"
+            class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
+            {{ session('success') }}</div>
     @endif
     @if ($errors->any())
         <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
             <p class="font-bold">A few details need your attention.</p>
-            <ul class="mt-2 list-inside list-disc text-sm">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+            <ul class="mt-2 list-inside list-disc text-sm">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
     @if ($aiSuggestionField)
@@ -22,13 +32,20 @@
             @elseif ($aiSuggestion)
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0">
-                        <h2 class="text-sm font-black text-violet-950">AI suggestion preview: {{ $aiSuggestionFieldLabel }}</h2>
-                        <p class="mt-2 max-h-72 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-violet-100 bg-white p-3 text-sm leading-6 text-slate-800">{{ $aiSuggestion }}</p>
-                        <p class="mt-2 text-xs text-violet-900">Your current field has not changed. Apply only if this suggestion looks right.</p>
+                        <h2 class="text-sm font-black text-violet-950">AI suggestion preview:
+                            {{ $aiSuggestionFieldLabel }}</h2>
+                        <p
+                            class="mt-2 max-h-72 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-violet-100 bg-white p-3 text-sm leading-6 text-slate-800">
+                            {{ $aiSuggestion }}</p>
+                        <p class="mt-2 text-xs text-violet-900">Your current field has not changed. Apply only if this
+                            suggestion looks right.</p>
                     </div>
                     <div class="flex shrink-0 gap-2">
-                        <button type="button" wire:click="applyAiSuggestion" class="rounded-lg bg-violet-800 px-3 py-2 text-xs font-bold text-white hover:bg-violet-900">Apply suggestion</button>
-                        <button type="button" wire:click="dismissAiSuggestion" class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100">Dismiss</button>
+                        <button type="button" wire:click="applyAiSuggestion"
+                            class="rounded-lg bg-violet-800 px-3 py-2 text-xs font-bold text-white hover:bg-violet-900">Apply
+                            suggestion</button>
+                        <button type="button" wire:click="dismissAiSuggestion"
+                            class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100">Dismiss</button>
                     </div>
                 </div>
             @endif
@@ -39,115 +56,297 @@
         <section class="space-y-5" aria-labelledby="article-content-heading">
             <div>
                 <h2 id="article-content-heading" class="text-lg font-black text-slate-900">Article content</h2>
-                <p class="mt-1 text-sm text-slate-500">Write for readers first. Your draft is private until you publish it.</p>
-                <label for="blog-ai-instruction" class="mt-3 block text-xs font-semibold text-slate-600">Optional instruction for AI assistance
-                    <input id="blog-ai-instruction" wire:model="aiAssistInstruction" maxlength="500" class="mt-1 w-full rounded-lg border-slate-300 text-sm font-normal" placeholder="e.g. Make this clearer for parents of primary-school learners">
+                <p class="mt-1 text-sm text-slate-500">Write for readers first. Your draft is private until you publish
+                    it.</p>
+                <label for="blog-ai-instruction" class="mt-3 block text-xs font-semibold text-slate-600">Optional
+                    instruction for AI assistance
+                    <input id="blog-ai-instruction" wire:model="aiAssistInstruction" maxlength="500"
+                        class="mt-1 w-full rounded-lg border-slate-300 text-sm font-normal"
+                        placeholder="e.g. Make this clearer for parents of primary-school learners">
                 </label>
-                @error('aiAssistInstruction')<span class="text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
-                <p wire:loading wire:target="requestAiSuggestion" role="status" class="mt-2 text-xs font-semibold text-violet-800">Preparing a preview. Your current field will not change.</p>
+                @error('aiAssistInstruction')
+                    <span class="text-xs font-medium text-rose-700">{{ $message }}</span>
+                @enderror
+                <p wire:loading wire:target="requestAiSuggestion" role="status"
+                    class="mt-2 text-xs font-semibold text-violet-800">Preparing a preview. Your current field will not
+                    change.</p>
             </div>
             <div>
-                <div class="flex items-center justify-between gap-2"><label for="blog-title" class="text-sm font-bold text-slate-700">Headline</label><button type="button" wire:click="requestAiSuggestion('title')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                <input id="blog-title" wire:model="title" maxlength="200" required class="mt-1.5 w-full rounded-xl border-slate-300 text-lg font-semibold" placeholder="A clear, useful article title">
-                @error('title')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                <div class="flex items-center justify-between gap-2"><label for="blog-title"
+                        class="text-sm font-bold text-slate-700">Headline</label><button type="button"
+                        wire:click="requestAiSuggestion('title')" wire:loading.attr="disabled"
+                        wire:target="requestAiSuggestion"
+                        class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                <input id="blog-title" wire:model="title" maxlength="200" required
+                    class="mt-1.5 w-full rounded-xl border-slate-300 text-lg font-semibold"
+                    placeholder="A clear, useful article title">
+                @error('title')
+                    <span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>
+                @enderror
             </div>
             <label class="block text-sm font-bold text-slate-700">URL slug
-                <input wire:model="slug" maxlength="180" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Generated from the headline if left blank">
-                <span class="mt-1 block text-xs font-normal text-slate-500">Changing a published article’s slug automatically creates a redirect.</span>
-                @error('slug')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                <input wire:model="slug" maxlength="180" class="mt-1.5 w-full rounded-xl border-slate-300"
+                    placeholder="Generated from the headline if left blank">
+                <span class="mt-1 block text-xs font-normal text-slate-500">Changing a published article’s slug
+                    automatically creates a redirect.</span>
+                @error('slug')
+                    <span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>
+                @enderror
             </label>
             <div>
-                <div class="flex items-center justify-between gap-2"><label for="blog-excerpt" class="text-sm font-bold text-slate-700">Article summary</label><button type="button" wire:click="requestAiSuggestion('excerpt')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                <textarea id="blog-excerpt" wire:model="excerpt" rows="3" maxlength="500" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="A short overview for the blog index and search results"></textarea>
-                <span class="mt-1 block text-right text-xs font-normal text-slate-500">{{ mb_strlen($excerpt) }}/500</span>
-                @error('excerpt')<span class="text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                <div class="flex items-center justify-between gap-2"><label for="blog-excerpt"
+                        class="text-sm font-bold text-slate-700">Article summary</label><button type="button"
+                        wire:click="requestAiSuggestion('excerpt')" wire:loading.attr="disabled"
+                        wire:target="requestAiSuggestion"
+                        class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
+                <textarea id="blog-excerpt" wire:model="excerpt" rows="3" maxlength="500"
+                    class="mt-1.5 w-full rounded-xl border-slate-300"
+                    placeholder="A short overview for the blog index and search results"></textarea>
+                <span
+                    class="mt-1 block text-right text-xs font-normal text-slate-500">{{ mb_strlen($excerpt) }}/500</span>
+                @error('excerpt')
+                    <span class="text-xs font-medium text-rose-700">{{ $message }}</span>
+                @enderror
             </div>
 
             <section aria-labelledby="featured-image-heading" class="space-y-3">
                 <div>
                     <h3 id="featured-image-heading" class="text-sm font-bold text-slate-700">Featured image</h3>
-                    <p class="mt-1 text-xs font-normal text-slate-500">Upload a JPG, PNG, or WebP image up to 5 MB. A landscape image around 1200 × 630 works best for article cards and social sharing.</p>
+                    <p class="mt-1 text-xs font-normal text-slate-500">Upload a JPG, PNG, or WebP image up to 5 MB. A
+                        landscape image around 1200 × 630 works best for article cards and social sharing.</p>
                 </div>
                 @if ($heroImage && in_array($heroImage->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true))
-                    <img src="{{ $heroImage->temporaryUrl() }}" alt="New featured image preview" class="aspect-[1200/630] w-full max-w-2xl rounded-xl border border-slate-200 bg-slate-50 object-cover">
-                    <p class="text-xs font-medium text-cyan-800">New image selected; it will replace the current image when you save.</p>
+                    <img src="{{ $heroImage->temporaryUrl() }}" alt="New featured image preview"
+                        class="aspect-[1200/630] w-full max-w-2xl rounded-xl border border-slate-200 bg-slate-50 object-cover">
+                    <p class="text-xs font-medium text-cyan-800">New image selected; it will replace the current image
+                        when you save.</p>
                 @elseif ($heroImage)
-                    <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Selected file: {{ $heroImage->getClientOriginalName() }}. Choose a JPG, PNG, or WebP image to continue.</p>
+                    <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Selected
+                        file: {{ $heroImage->getClientOriginalName() }}. Choose a JPG, PNG, or WebP image to continue.
+                    </p>
                 @elseif ($existingHeroImagePath)
-                    <img src="{{ $existingHeroImageUrl }}" alt="Current featured image" class="aspect-[1200/630] w-full max-w-2xl rounded-xl border border-slate-200 bg-slate-50 object-cover">
+                    <img src="{{ $existingHeroImageUrl }}" alt="Current featured image"
+                        class="aspect-[1200/630] w-full max-w-2xl rounded-xl border border-slate-200 bg-slate-50 object-cover">
                 @else
-                    <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">No featured image yet. Generated article artwork, if available, is kept until you upload a replacement.</p>
+                    <p
+                        class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                        No featured image yet. Generated article artwork, if available, is kept until you upload a
+                        replacement.</p>
                 @endif
                 <label for="blog-hero-image" class="block text-sm font-semibold text-slate-700">Choose an image
-                    <input id="blog-hero-image" wire:model="heroImage" type="file" accept="image/jpeg,image/png,image/webp" class="mt-1.5 block w-full rounded-xl border border-slate-300 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-50 file:px-4 file:py-2 file:font-bold file:text-cyan-900 hover:file:bg-cyan-100">
+                    <input id="blog-hero-image" wire:model="heroImage" type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        class="mt-1.5 block w-full rounded-xl border border-slate-300 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-50 file:px-4 file:py-2 file:font-bold file:text-cyan-900 hover:file:bg-cyan-100">
                 </label>
-                <span wire:loading wire:target="heroImage" role="status" class="block text-xs font-medium text-cyan-800">Uploading image…</span>
-                @error('heroImage')<span class="block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                <span wire:loading wire:target="heroImage" role="status"
+                    class="block text-xs font-medium text-cyan-800">Uploading image…</span>
+                @error('heroImage')
+                    <span class="block text-xs font-medium text-rose-700">{{ $message }}</span>
+                @enderror
                 @if ($existingHeroImagePath)
                     <label class="flex items-start gap-2 text-sm font-medium text-slate-700">
-                        <input wire:model="removeHeroImage" type="checkbox" class="mt-0.5 rounded border-slate-300 text-rose-700 focus:ring-rose-600">
+                        <input wire:model="removeHeroImage" type="checkbox"
+                            class="mt-0.5 rounded border-slate-300 text-rose-700 focus:ring-rose-600">
                         <span>Remove the current featured image when saving</span>
                     </label>
-                    @error('removeHeroImage')<span class="block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                    @error('removeHeroImage')
+                        <span class="block text-xs font-medium text-rose-700">{{ $message }}</span>
+                    @enderror
                 @endif
             </section>
 
             <div class="block text-sm font-bold text-slate-700">
-                <div class="flex items-center justify-between gap-2"><span>Article body</span><button type="button" wire:click="requestAiSuggestion('body')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                <div wire:ignore wire:key="blog-body-trix-{{ $postId ?? 'new' }}" class="blog-editor-richtext mt-1.5">
-                    <input id="blog-body-editor" type="hidden" value="{{ $bodyForEditor }}">
-                    <trix-editor input="blog-body-editor" role="textbox" aria-label="Article body" aria-multiline="true"
-                        x-data x-on:trix-change="$wire.set('body', $event.target.value)"
-                        x-on:blog-body-suggestion-applied.window="$el.editor.loadHTML($event.detail.body)"
-                        x-on:trix-file-accept.prevent
-                        class="trix-content blog-rich-text-editor w-full rounded-xl border border-slate-300 bg-white p-3 text-sm leading-7 focus:border-cyan-700 focus:ring-2 focus:ring-cyan-100">
-                    </trix-editor>
+                <div class="flex items-center justify-between gap-2"><span>Article body</span><button type="button"
+                        wire:click="requestAiSuggestion('body')" wire:loading.attr="disabled"
+                        wire:target="requestAiSuggestion"
+                        class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button>
                 </div>
-                <span class="mt-1 block text-xs font-normal text-slate-500">Use the formatting toolbar for headings, lists, emphasis, quotes, and links. Unsafe elements and attributes are removed when saved.</span>
-                @error('body')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                <div wire:ignore wire:key="blog-body-richtext-{{ $postId ?? 'new' }}" data-blog-editor
+                    class="blog-editor-richtext mt-1.5 overflow-hidden rounded-xl border border-slate-300 bg-white font-normal">
+                    <input data-editor-content type="hidden" value="{{ $bodyForEditor }}">
+                    <fieldset data-editor-toolbar disabled class="blog-editor-toolbar"
+                        aria-label="Article formatting">
+                        <div role="group" aria-label="Text style" class="blog-editor-tool-group">
+                            <label class="sr-only" for="blog-body-block">Paragraph style</label>
+                            <select id="blog-body-block" data-editor-select="block" title="Paragraph style">
+                                <option value="paragraph">Paragraph</option>
+                                @foreach (range(1, 6) as $level)
+                                    <option value="{{ $level }}">Heading {{ $level }}</option>
+                                @endforeach
+                            </select>
+                            <label class="sr-only" for="blog-body-font">Font</label>
+                            <select id="blog-body-font" data-editor-select="fontFamily" title="Font">
+                                <option value="">Default font</option>
+                                @foreach (['Arial', 'Georgia', 'Verdana', 'Times New Roman', 'Courier New'] as $font)
+                                    <option value="{{ $font }}">{{ $font }}</option>
+                                @endforeach
+                            </select>
+                            <label class="sr-only" for="blog-body-size">Font size</label>
+                            <select id="blog-body-size" data-editor-select="fontSize" title="Font size">
+                                <option value="">Default size</option>
+                                @foreach ([12, 14, 16, 18, 20, 24, 32, 48, 64, 72] as $size)
+                                    <option value="{{ $size }}px">{{ $size }} px</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div role="group" aria-label="Text emphasis" class="blog-editor-tool-group">
+                            @foreach (['bold' => ['Bold (Ctrl+B)', 'bold'], 'italic' => ['Italic (Ctrl+I)', 'italic'], 'underline' => ['Underline (Ctrl+U)', 'underline'], 'strike' => ['Strikethrough', 'strikethrough'], 'subscript' => ['Subscript', 'subscript'], 'superscript' => ['Superscript', 'superscript']] as $command => [$label, $icon])
+                                <button type="button" data-editor-command="{{ $command }}"
+                                    title="{{ $label }}" aria-label="{{ $label }}"
+                                    aria-pressed="false"><i class="fas fa-{{ $icon }}"
+                                        aria-hidden="true"></i></button>
+                            @endforeach
+                            <label class="blog-editor-color" title="Text color"><span class="sr-only">Text
+                                    color</span><i class="fas fa-font" aria-hidden="true"></i><input type="color"
+                                    data-editor-color="color" value="#0f172a" aria-label="Text color"></label>
+                            <label class="blog-editor-color" title="Highlight color"><span class="sr-only">Highlight
+                                    color</span><i class="fas fa-highlighter" aria-hidden="true"></i><input
+                                    type="color" data-editor-color="highlight" value="#fef08a"
+                                    aria-label="Highlight color"></label>
+                            <button type="button" data-editor-command="clearHighlight" title="Remove highlight"
+                                aria-label="Remove highlight"><i class="fas fa-eraser"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                        <div role="group" aria-label="Text alignment" class="blog-editor-tool-group">
+                            @foreach (['left' => 'Align left', 'center' => 'Align center', 'right' => 'Align right', 'justify' => 'Justify'] as $alignment => $label)
+                                <button type="button" data-editor-command="align-{{ $alignment }}"
+                                    title="{{ $label }}" aria-label="{{ $label }}"
+                                    aria-pressed="false"><i class="fas fa-align-{{ $alignment }}"
+                                        aria-hidden="true"></i></button>
+                            @endforeach
+                        </div>
+                        <div role="group" aria-label="Lists and blocks" class="blog-editor-tool-group">
+                            @foreach (['bulletList' => ['Bullet list', 'list-ul'], 'orderedList' => ['Numbered list', 'list-ol'], 'indent' => ['Indent list item', 'indent'], 'outdent' => ['Outdent list item', 'outdent'], 'blockquote' => ['Block quote', 'quote-left'], 'code' => ['Inline code', 'code'], 'codeBlock' => ['Code block', 'file-code'], 'horizontalRule' => ['Horizontal rule', 'minus']] as $command => [$label, $icon])
+                                <button type="button" data-editor-command="{{ $command }}"
+                                    title="{{ $label }}" aria-label="{{ $label }}"
+                                    @if (in_array($command, ['bulletList', 'orderedList', 'blockquote', 'code', 'codeBlock'])) aria-pressed="false" @endif><i
+                                        class="fas fa-{{ $icon }}" aria-hidden="true"></i></button>
+                            @endforeach
+                        </div>
+                        <div role="group" aria-label="Links and editing" class="blog-editor-tool-group">
+                            @foreach (['link' => ['Insert or edit link', 'link'], 'unlink' => ['Remove link', 'link-slash'], 'clearFormat' => ['Clear formatting', 'remove-format'], 'undo' => ['Undo (Ctrl+Z)', 'rotate-left'], 'redo' => ['Redo (Ctrl+Shift+Z)', 'rotate-right']] as $command => [$label, $icon])
+                                <button type="button" data-editor-command="{{ $command }}"
+                                    title="{{ $label }}" aria-label="{{ $label }}"
+                                    @if ($command === 'link') aria-pressed="false" @endif><i
+                                        class="fas fa-{{ $icon }}" aria-hidden="true"></i></button>
+                            @endforeach
+                        </div>
+                    </fieldset>
+                    <div data-editor-link-panel hidden class="blog-editor-link-panel">
+                        <label for="blog-body-link" class="text-xs font-semibold text-slate-700">Link URL</label>
+                        <input id="blog-body-link" data-editor-link-url type="text"
+                            placeholder="https://example.com or /blog/article"
+                            class="min-w-0 flex-1 rounded-lg border-slate-300 text-sm"
+                            aria-describedby="blog-body-link-error">
+                        <button type="button" data-editor-link-apply
+                            class="rounded-lg bg-cyan-800 px-3 py-2 text-xs font-bold text-white">Apply link</button>
+                        <button type="button" data-editor-link-cancel
+                            class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700">Cancel</button>
+                        <p id="blog-body-link-error" data-editor-link-error role="alert"
+                            class="w-full text-xs text-rose-700"></p>
+                    </div>
+                    <div id="blog-body-editor" data-editor-surface
+                        class="blog-article-content blog-rich-text-editor p-4 text-base leading-8 text-slate-800">
+                        {!! $bodyForEditor !!}</div>
+                    <div
+                        class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500">
+                        <span data-editor-status role="status">Loading editor...</span>
+                        <span data-editor-word-count>0 words</span>
+                    </div>
+                </div>
+                <span id="blog-body-help" class="mt-1 block text-xs font-normal text-slate-500">Format headings,
+                    alignment, fonts, colors, lists, quotes, code, and links. Choose Save draft to keep your
+                    changes.</span>
+                @error('body')
+                    <span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>
+                @enderror
             </div>
             <div class="grid gap-5 sm:grid-cols-2">
                 <div class="block text-sm font-bold text-slate-700">
-                    <div class="flex items-center justify-between gap-2"><label for="blog-category">Category</label><button type="button" wire:click="requestAiSuggestion('category')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                    <input id="blog-category" wire:model="category" list="blog-categories" maxlength="100" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="e.g. Teaching">
-                    <datalist id="blog-categories">@foreach ($categories as $category)<option value="{{ $category }}">@endforeach</datalist>
-                    @error('category')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                    <div class="flex items-center justify-between gap-2"><label
+                            for="blog-category">Category</label><button type="button"
+                            wire:click="requestAiSuggestion('category')" wire:loading.attr="disabled"
+                            wire:target="requestAiSuggestion"
+                            class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button>
+                    </div>
+                    <input id="blog-category" wire:model="category" list="blog-categories" maxlength="100"
+                        class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="e.g. Teaching">
+                    <datalist id="blog-categories">
+                        @foreach ($categories as $category)
+                            <option value="{{ $category }}">
+                        @endforeach
+                    </datalist>
+                    @error('category')
+                        <span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div class="block text-sm font-bold text-slate-700">
-                    <div class="flex items-center justify-between gap-2"><label for="blog-tags">Tags</label><button type="button" wire:click="requestAiSuggestion('tags')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                    <input id="blog-tags" wire:model="tags" maxlength="500" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Learning, study skills">
-                    <span class="mt-1 block text-xs font-normal text-slate-500">Separate up to 10 tags with commas.</span>
-                    @error('tags')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                    <div class="flex items-center justify-between gap-2"><label for="blog-tags">Tags</label><button
+                            type="button" wire:click="requestAiSuggestion('tags')" wire:loading.attr="disabled"
+                            wire:target="requestAiSuggestion"
+                            class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button>
+                    </div>
+                    <input id="blog-tags" wire:model="tags" maxlength="500"
+                        class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Learning, study skills">
+                    <span class="mt-1 block text-xs font-normal text-slate-500">Separate up to 10 tags with
+                        commas.</span>
+                    @error('tags')
+                        <span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
         </section>
 
         <details class="group rounded-xl border border-slate-200">
-            <summary class="cursor-pointer list-none p-4 font-bold text-slate-900"><span class="flex items-center justify-between">Search and sharing metadata <span class="text-xs font-semibold text-slate-500 group-open:hidden">Optional</span><span class="hidden text-slate-500 group-open:inline">−</span></span></summary>
+            <summary class="cursor-pointer list-none p-4 font-bold text-slate-900"><span
+                    class="flex items-center justify-between">Search and sharing metadata <span
+                        class="text-xs font-semibold text-slate-500 group-open:hidden">Optional</span><span
+                        class="hidden text-slate-500 group-open:inline">−</span></span></summary>
             <div class="space-y-4 border-t border-slate-200 p-4">
                 <div class="block text-sm font-bold text-slate-700">
-                    <div class="flex items-center justify-between gap-2"><label for="blog-meta-title">SEO title</label><button type="button" wire:click="requestAiSuggestion('metaTitle')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                    <input id="blog-meta-title" wire:model="metaTitle" maxlength="70" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the headline">
-                    <span class="mt-1 block text-right text-xs font-normal text-slate-500">{{ mb_strlen($metaTitle) }}/70</span>
+                    <div class="flex items-center justify-between gap-2"><label for="blog-meta-title">SEO
+                            title</label><button type="button" wire:click="requestAiSuggestion('metaTitle')"
+                            wire:loading.attr="disabled" wire:target="requestAiSuggestion"
+                            class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button>
+                    </div>
+                    <input id="blog-meta-title" wire:model="metaTitle" maxlength="70"
+                        class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the headline">
+                    <span
+                        class="mt-1 block text-right text-xs font-normal text-slate-500">{{ mb_strlen($metaTitle) }}/70</span>
                 </div>
                 <div class="block text-sm font-bold text-slate-700">
-                    <div class="flex items-center justify-between gap-2"><label for="blog-meta-description">SEO description</label><button type="button" wire:click="requestAiSuggestion('metaDescription')" wire:loading.attr="disabled" wire:target="requestAiSuggestion" class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button></div>
-                    <textarea id="blog-meta-description" wire:model="metaDescription" rows="2" maxlength="320" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the summary"></textarea>
+                    <div class="flex items-center justify-between gap-2"><label for="blog-meta-description">SEO
+                            description</label><button type="button"
+                            wire:click="requestAiSuggestion('metaDescription')" wire:loading.attr="disabled"
+                            wire:target="requestAiSuggestion"
+                            class="text-xs font-bold text-violet-800 underline disabled:opacity-50">AI assist</button>
+                    </div>
+                    <textarea id="blog-meta-description" wire:model="metaDescription" rows="2" maxlength="320"
+                        class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Defaults to the summary"></textarea>
                 </div>
                 <label class="block text-sm font-bold text-slate-700">Canonical URL override
-                    <input wire:model="canonicalUrl" type="url" class="mt-1.5 w-full rounded-xl border-slate-300" placeholder="Leave blank to use this article’s URL">
-                    @error('canonicalUrl')<span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>@enderror
+                    <input wire:model="canonicalUrl" type="url" class="mt-1.5 w-full rounded-xl border-slate-300"
+                        placeholder="Leave blank to use this article’s URL">
+                    @error('canonicalUrl')
+                        <span class="mt-1 block text-xs font-medium text-rose-700">{{ $message }}</span>
+                    @enderror
                 </label>
             </div>
         </details>
 
-        <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-5 pt-4 backdrop-blur sm:-mx-8 sm:px-8">
-            <p class="text-xs text-slate-500"><span wire:loading.remove wire:target="save">Draft changes are saved when you choose Save draft.</span><span wire:loading wire:target="save">Saving and securing your content…</span></p>
+        <div
+            class="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-5 pt-4 backdrop-blur sm:-mx-8 sm:px-8">
+            <p class="text-xs text-slate-500"><span wire:loading.remove wire:target="save">Draft changes are saved
+                    when you choose Save draft.</span><span wire:loading wire:target="save">Saving and securing your
+                    content…</span></p>
             <div class="flex gap-2">
                 @if ($postId)
-                    <a wire:navigate href="{{ route('admin.blog.preview', $postId) }}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Preview</a>
+                    <a wire:navigate href="{{ route('admin.blog.preview', $postId) }}"
+                        class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Preview</a>
                 @endif
-                <button type="submit" wire:loading.attr="disabled" wire:target="save" class="rounded-xl bg-cyan-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-cyan-900 disabled:opacity-60">Save draft</button>
+                <button type="submit" wire:loading.attr="disabled" wire:target="save"
+                    class="rounded-xl bg-cyan-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-cyan-900 disabled:opacity-60">Save
+                    draft</button>
             </div>
         </div>
     </form>

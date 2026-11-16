@@ -1,6 +1,22 @@
 import './bootstrap';
 import './pwa';
 
+async function bindBlogEditors() {
+    if (!document.querySelector('[data-blog-editor]')) return;
+    try {
+        const { mountBlogEditors } = await import('./blog-editor');
+        mountBlogEditors();
+    } catch (error) {
+        console.error('Unable to load the blog editor.', error);
+        document.querySelectorAll('[data-editor-status]').forEach((status) => {
+            status.textContent = 'Editor could not load. Refresh the page to try again.';
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', bindBlogEditors);
+document.addEventListener('livewire:navigated', bindBlogEditors);
+
 const revealObserver = new IntersectionObserver(
     (entries) => {
         entries.forEach((entry) => {

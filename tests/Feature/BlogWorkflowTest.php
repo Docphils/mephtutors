@@ -184,14 +184,17 @@ class BlogWorkflowTest extends TestCase
         $this->get(route('blog.feed'))->assertOk()->assertDontSee($post->title);
     }
 
-    public function test_blog_editor_uses_trix_and_supports_featured_image_upload_and_removal(): void
+    public function test_blog_editor_supports_rich_formatting_and_featured_image_upload_and_removal(): void
     {
         Storage::fake('public');
         $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
 
         $this->actingAs($admin)->get(route('admin.blog.create'))
             ->assertOk()
-            ->assertSee('<trix-editor', false)
+            ->assertSee('data-blog-editor', false)
+            ->assertSee('data-editor-command="align-center"', false)
+            ->assertSee('data-editor-select="fontSize"', false)
+            ->assertDontSee('<trix-editor', false)
             ->assertSee('id="blog-hero-image"', false)
             ->assertSee('1200 × 630');
 
@@ -228,6 +231,37 @@ class BlogWorkflowTest extends TestCase
 
         $this->assertNull($post->fresh()->hero_image_path);
         Storage::disk('public')->assertMissing($imagePath);
+    }
+
+    public function test_draft_formatting_survives_saving_reopening_and_publishing(): void
+    {
+        config(['blog.public_enabled' => true]);
+        $admin = User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+        $body = '<h2 style="text-align: center">A useful heading</h2>'
+            .'<p style="text-align: justify"><span style="font-family: Georgia; font-size: 24px; color: #0e7490">'
+            .'<u>Styled text</u></span> <mark style="background-color: #fef08a">Highlight</mark> H<sub>2</sub>O x<sup>2</sup></p>'
+            .'<ol start="3"><li><p>First item</p><ul><li><p>Nested item</p></li></ul></li></ol>'
+            .'<blockquote><p>A quotation</p></blockquote><pre><code>code &lt;example&gt;</code></pre><hr>';
+
+        Livewire::actingAs($admin)->test(BlogEditor::class)
+            ->set('title', 'Formatting retention')
+            ->set('body', $body)
+            ->call('save')
+            ->assertHasNoErrors();
+        $post = BlogPost::query()->where('slug', 'formatting-retention')->firstOrFail();
+        $this->assertSame($body, $post->body);
+
+        Livewire::actingAs($admin)->test(BlogEditor::class, ['postId' => $post->id])
+            ->assertSet('body', $body)
+            ->assertViewHas('bodyForEditor', $body)
+            ->set('excerpt', 'An updated summary')
+            ->call('save')
+            ->assertHasNoErrors();
+        $this->assertSame($body, $post->fresh()->body);
+
+        $this->get(route('admin.blog.preview', $post->id))->assertOk()->assertSee($body, false);
+        $post->update(['status' => BlogPost::STATUS_PUBLISHED, 'published_at' => now()]);
+        $this->get(route('blog.show', $post->slug))->assertOk()->assertSee($body, false);
     }
 
     public function test_changing_a_published_slug_redirects_the_old_public_url(): void
