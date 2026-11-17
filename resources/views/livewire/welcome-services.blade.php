@@ -40,13 +40,13 @@
                             ? route('apply.crm', ['serviceItem' => $item['slug']])
                             : route('apply.tutor', ['serviceItem' => $item['slug']])) }}"
                         class="block">
-                        <img src="{{ asset('storage/' . ($item['image_path'] ?? '/images/default.jpg')) }}"
+                        <img src="{{ $item['image_url'] }}"
                             alt="{{ $item['name'] }}" class="w-full h-40 object-cover rounded">
                         <h4
                             class="mt-4 font-bold text-lg group-hover:text-cyan-900 group-hover:underline group-active:text-cyan-900 group-active:underline group-focus:text-cyan-900 group-focus:underline">
                             {{ $item['name'] }}</h4>
                     </a>
-                    <p class="text-gray-600 mt-2">{{ \Illuminate\Support\Str::limit($item['description'], 120) }}</p>
+                    <p class="text-gray-600 mt-2">{{ \Illuminate\Support\Str::limit($item['description'] ?? '', 120) }}</p>
                 </div>
             @endforeach
         </div>

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\EbookStatus;
+use App\Exceptions\BlogDraftFieldLimitException;
 use App\Exceptions\BlogDraftRejectedException;
 use App\Jobs\GenerateBlogDraft;
 use App\Jobs\GenerateBlogTopicSuggestions;
@@ -40,6 +41,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class BlogWorkflowTest extends TestCase
@@ -570,6 +572,7 @@ class BlogWorkflowTest extends TestCase
             ->call('generateNow')
             ->assertHasNoErrors()
             ->assertSee('Draft generation was queued.')
+            ->call('setOperationsTab', 'activity')
             ->assertSee('Queued and waiting for the blog worker to start.');
 
         Log::shouldHaveReceived('info')->with(
@@ -629,6 +632,7 @@ class BlogWorkflowTest extends TestCase
         ]);
 
         Livewire::actingAs($admin)->test(BlogStudio::class)
+            ->call('setOperationsTab', 'topics')
             ->assertSee($topic->title)
             ->call('approveTopic', $topic->id)
             ->assertHasNoErrors()
@@ -851,7 +855,8 @@ class BlogWorkflowTest extends TestCase
         Queue::assertPushedOn('blog', SendBlogDraftReviewEmail::class);
     }
 
-    public function test_pipeline_revises_overlong_metadata_once_before_saving_the_draft(): void
+    #[DataProvider('draftFieldLimitViolations')]
+    public function test_pipeline_revises_field_limit_violations_once_before_saving_the_draft(array $invalidFields, string $issue): void
     {
         Storage::fake('public');
         Queue::fake();
@@ -883,9 +888,14 @@ class BlogWorkflowTest extends TestCase
             'source_indices' => [1],
             'internal_link_indices' => [],
         ];
-        $overlongDraft = [...$validDraft, 'meta_description' => str_repeat('x', 321)];
-        $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock) use ($overlongDraft, $validDraft): void {
-            $mock->shouldReceive('write')->twice()->andReturn($overlongDraft, $validDraft);
+        $invalidDraft = [...$validDraft, ...$invalidFields];
+        $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock) use ($invalidDraft, $validDraft, $issue): void {
+            $mock->shouldReceive('write')->once()
+                ->with(Mockery::any(), Mockery::any(), Mockery::any(), null, Mockery::type(BlogTopic::class), Mockery::type('int'))
+                ->andReturn($invalidDraft);
+            $mock->shouldReceive('write')->once()
+                ->with(Mockery::any(), Mockery::any(), Mockery::any(), Mockery::on(fn (?string $revision): bool => $revision !== null && str_contains($revision, $issue)), Mockery::type(BlogTopic::class), Mockery::type('int'))
+                ->andReturn($validDraft);
         }));
 
         app(BlogDraftPipeline::class)->run($run->id);
@@ -893,6 +903,65 @@ class BlogWorkflowTest extends TestCase
         $this->assertSame(BlogGenerationRun::STATUS_COMPLETED, $run->fresh()->status);
         $this->assertSame('An evidence-led guide for educators.', $run->fresh()->post->meta_description);
         $this->assertDatabaseCount('blog_posts', 1);
+    }
+
+    public static function draftFieldLimitViolations(): array
+    {
+        return [
+            'overlong metadata' => [['meta_description' => str_repeat('x', 321)], 'meta_description is 321 characters (maximum 320).'],
+            'too many tags' => [['tags' => array_map(fn (int $index): string => 'Tag '.$index, range(1, 11))], 'tags contains 11 unique tags (maximum 10).'],
+            'no citations' => [['source_indices' => []], 'source_indices contains 0 citations (minimum 1, maximum 5).'],
+            'too many citations' => [['source_indices' => range(1, 6)], 'source_indices contains 6 citations (minimum 1, maximum 5).'],
+        ];
+    }
+
+    public function test_repeated_collection_limit_violations_record_the_reason_without_queue_retries(): void
+    {
+        Queue::fake();
+        Log::spy();
+        $run = BlogGenerationRun::query()->create([
+            'run_key' => 'manual:collection-limit-failure',
+            'status' => BlogGenerationRun::STATUS_QUEUED,
+            'blog_topic_id' => $this->createTopic()->id,
+        ]);
+        $sources = [[
+            'title' => 'A verified education update',
+            'summary' => 'A reliable source summary.',
+            'url' => 'https://education.gov.ng/update',
+            'published_at' => null,
+            'source_host' => 'education.gov.ng',
+        ]];
+        $this->instance(BlogResearchService::class, Mockery::mock(BlogResearchService::class, function ($mock) use ($sources): void {
+            $mock->shouldReceive('fetch')->once()->andReturn(['items' => $sources, 'errors' => []]);
+        }));
+        $this->instance(BlogDraftWriter::class, Mockery::mock(BlogDraftWriter::class, function ($mock): void {
+            $mock->shouldReceive('write')->twice()->andReturn([
+                'title' => 'A Practical Guide for Nigerian Educators',
+                'excerpt' => 'Practical, evidence-led advice for educators.',
+                'body_html' => '<p>'.str_repeat('Practical education advice supports informed decisions. ', 100).'</p>',
+                'category' => 'Education',
+                'tags' => array_map(fn (int $index): string => 'Tag '.$index, range(1, 11)),
+                'meta_title' => 'A Practical Guide for Nigerian Educators',
+                'meta_description' => 'An evidence-led guide for educators.',
+                'source_indices' => [],
+            ]);
+        }));
+
+        (new GenerateBlogDraft($run->id))->handle(app(BlogDraftPipeline::class));
+
+        $run->refresh();
+        $this->assertSame(BlogGenerationRun::STATUS_FAILED, $run->status);
+        $this->assertNotNull($run->finished_at);
+        $this->assertStringContainsString('tags contains 11 unique tags (maximum 10).', $run->error_message);
+        $this->assertStringContainsString('source_indices contains 0 citations (minimum 1, maximum 5).', $run->error_message);
+        $this->assertDatabaseCount('blog_posts', 0);
+        Queue::assertNothingPushed();
+        Log::shouldHaveReceived('error')->with(
+            'The blog draft generation run failed.',
+            Mockery::on(fn (array $context): bool => $context['run_id'] === $run->id
+                && $context['exception'] === BlogDraftFieldLimitException::class
+                && $context['reason'] === $run->error_message),
+        )->once();
     }
 
     public function test_pipeline_revises_a_near_duplicate_instead_of_saving_it(): void
@@ -960,6 +1029,7 @@ class BlogWorkflowTest extends TestCase
 
     public function test_invalid_model_citations_fail_the_run_without_saving_a_post(): void
     {
+        Log::spy();
         $run = BlogGenerationRun::query()->create([
             'run_key' => 'manual:invalid-citation',
             'status' => BlogGenerationRun::STATUS_QUEUED,
@@ -997,6 +1067,15 @@ class BlogWorkflowTest extends TestCase
 
         $this->assertSame(BlogGenerationRun::STATUS_FAILED, $run->fresh()->status);
         $this->assertDatabaseCount('blog_posts', 0);
+        $this->assertSame('The generated article cites a source that was not provided.', $run->fresh()->error_message);
+        Log::shouldHaveReceived('error')->with(
+            'The blog draft generation run failed.',
+            Mockery::on(fn (array $context): bool => $context['run_id'] === $run->id
+                && $context['topic_id'] === $run->blog_topic_id
+                && $context['provider'] === $run->fresh()->provider
+                && $context['exception'] === BlogDraftRejectedException::class
+                && $context['reason'] === $run->fresh()->error_message),
+        )->once();
     }
 
     public function test_review_email_contains_an_authenticated_signed_preview_link(): void

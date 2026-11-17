@@ -92,7 +92,7 @@ class BlogDraftPipeline
                         throw $exception;
                     }
                     $revisionInstruction = $exception->revisionInstructions();
-                    Log::notice('The blog writer is revising metadata that exceeded field limits.', [
+                    Log::notice('The blog writer is revising a draft that did not meet editorial field limits.', [
                         'run_id' => $run->id,
                         'issues' => $exception->issues,
                     ]);
@@ -126,14 +126,18 @@ class BlogDraftPipeline
                 'provider' => $run->provider,
             ]);
         } catch (Throwable $exception) {
+            $reason = mb_substr($exception->getMessage(), 0, 1000);
             $run->refresh()->update([
                 'status' => BlogGenerationRun::STATUS_FAILED,
-                'error_message' => mb_substr($exception->getMessage(), 0, 1000),
+                'error_message' => $reason,
                 'finished_at' => now(),
             ]);
             Log::error('The blog draft generation run failed.', [
                 'run_id' => $run->id,
+                'topic_id' => $run->blog_topic_id,
+                'provider' => $run->provider,
                 'exception' => $exception::class,
+                'reason' => $reason,
             ]);
 
             throw $exception;
@@ -203,11 +207,15 @@ class BlogDraftPipeline
                 $fieldLimitIssues[] = $field.' is '.$length.' characters (maximum '.$limit.').';
             }
         }
+        if (count($tags) > 10) {
+            $fieldLimitIssues[] = 'tags contains '.count($tags).' unique tags (maximum 10).';
+        }
+        $citationCount = count($draft['source_indices']);
+        if ($citationCount < 1 || $citationCount > 5) {
+            $fieldLimitIssues[] = 'source_indices contains '.$citationCount.' citations (minimum 1, maximum 5).';
+        }
         if ($fieldLimitIssues !== []) {
             throw new BlogDraftFieldLimitException($fieldLimitIssues);
-        }
-        if (count($tags) > 10 || count($draft['source_indices']) < 1 || count($draft['source_indices']) > 5) {
-            throw new BlogDraftRejectedException('The generated article contains too many tags or an invalid number of citations.');
         }
 
         foreach ($tags as $tag) {
